@@ -7,7 +7,7 @@
 <meta name="description" content="StudyFlow — Areyhan &amp; Verity. Organize your study. Own your time.">
 <meta name="theme-color" content="#3E6259">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="icon" href="icons/favicon-32.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -37,6 +37,18 @@
     --shadow:0 1px 2px rgba(32,35,31,.06), 0 4px 14px rgba(32,35,31,.05);
     --font-display:'Fraunces', Georgia, serif;
     --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* ---- design tokens: gradients, shadow/spacing tiers (v5.0 polish) ---- */
+    --accent-2:#5C8B79;
+    --gradient-primary:linear-gradient(135deg, var(--accent), var(--accent-2));
+    --gradient-soft:linear-gradient(135deg, var(--accent-soft), var(--surface-2));
+    --gradient-hero:linear-gradient(160deg, var(--accent-soft) 0%, var(--surface) 65%);
+    --shadow-sm:0 1px 2px rgba(32,35,31,.05);
+    --shadow-md:var(--shadow);
+    --shadow-lg:0 8px 28px rgba(32,35,31,.10), 0 2px 6px rgba(32,35,31,.06);
+    --shadow-accent-glow:0 0 0 rgba(0,0,0,0);
+    --spacing-xs:4px; --spacing-sm:8px; --spacing-md:16px; --spacing-lg:24px; --spacing-xl:36px;
+    --radius-xl:26px;
+    --ease-standard:cubic-bezier(.2,.7,.3,1);
   }
   [data-theme="dark"]{
     --bg:#181A17;
@@ -57,6 +69,16 @@
     --orange-soft:#3A2C1E;
     --grey-soft:#2E302A;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+    /* dark mode: layered surfaces, not pure inversion — gradients stay
+       muted and glow is used instead of harsh borders (spec §14) */
+    --accent-2:#5FA08B;
+    --gradient-primary:linear-gradient(135deg, var(--accent), var(--accent-2));
+    --gradient-soft:linear-gradient(135deg, var(--accent-soft), var(--surface-2));
+    --gradient-hero:linear-gradient(160deg, rgba(127,174,159,.14) 0%, var(--surface) 70%);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.25);
+    --shadow-md:var(--shadow);
+    --shadow-lg:0 10px 30px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.3);
+    --shadow-accent-glow:0 0 0 1px rgba(127,174,159,.25), 0 0 18px rgba(127,174,159,.12);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -76,6 +98,8 @@
 
   /* ---------- LAYOUT SHELL ---------- */
   .app{display:flex; min-height:100vh;}
+  [data-theme="dark"] .sidebar{background:var(--surface-2); border-right-color:var(--border);}
+  [data-theme="dark"] .main{background:radial-gradient(1200px 400px at 15% -10%, rgba(127,174,159,.06), transparent 60%);}
   .sidebar{
     width:230px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
     display:flex; flex-direction:column; padding:22px 16px; gap:26px; position:sticky; top:0; height:100vh;
@@ -88,15 +112,19 @@
   .nav-item{
     display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:var(--radius-s);
     color:var(--ink-soft); background:none; border:none; text-align:left; font-size:14px; font-weight:500; width:100%;
+    position:relative; transition:background .15s var(--ease-standard), color .15s var(--ease-standard);
   }
   .nav-item svg{width:17px; height:17px; flex-shrink:0;}
   .nav-item:hover{background:var(--surface-2); color:var(--ink);}
-  .nav-item.active{background:var(--accent-soft); color:var(--accent);}
+  .nav-item.active{background:var(--gradient-soft); color:var(--accent); font-weight:700;}
+  .nav-item.active::before{content:""; position:absolute; left:-6px; top:50%; transform:translateY(-50%); width:3px; height:60%; border-radius:3px; background:var(--gradient-primary);}
   .sidebar-foot{margin-top:auto; display:flex; flex-direction:column; gap:8px;}
 
   .main{flex:1; min-width:0; padding:26px 34px 90px; max-width:1180px;}
   .page{display:none;}
   .page.active{display:block;}
+  .page.active.page-transition-in{animation:pageFadeIn .28s var(--ease-standard);}
+  @keyframes pageFadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
 
   .topbar{display:flex; align-items:center; gap:14px; margin-bottom:22px; flex-wrap:wrap;}
   .page-title{font-size:24px;}
@@ -112,10 +140,13 @@
   .btn{
     display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:999px; border:1px solid var(--border);
     background:var(--surface); color:var(--ink); font-size:13.5px; font-weight:600; white-space:nowrap;
+    transition:transform .12s var(--ease-standard), box-shadow .15s var(--ease-standard), filter .15s var(--ease-standard), background .15s var(--ease-standard);
   }
-  .btn:hover{background:var(--surface-2);}
-  .btn-primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
-  .btn-primary:hover{filter:brightness(1.06);}
+  .btn:hover{background:var(--surface-2); box-shadow:var(--shadow-sm); transform:translateY(-1px);}
+  .btn:active{transform:translateY(0) scale(.97);}
+  .btn-primary{background:var(--gradient-primary); color:var(--accent-ink); border-color:transparent; box-shadow:var(--shadow-accent-glow);}
+  .btn-primary:hover{filter:brightness(1.07); box-shadow:var(--shadow-lg), var(--shadow-accent-glow); transform:translateY(-1px);}
+  .btn-primary:active{transform:translateY(0) scale(.97); filter:brightness(1);}
   .btn-danger{background:var(--red); color:#fff; border-color:var(--red);}
   .btn-ghost{background:none; border-color:transparent;}
   .btn-icon{width:36px; height:36px; padding:0; justify-content:center; border-radius:999px;}
@@ -196,6 +227,30 @@
   .cal-more{font-size:10px; color:var(--ink-faint);}
 
   /* ---------- MODAL ---------- */
+  /* ---------- FIRST-LAUNCH ONBOARDING (spec §25) ---------- */
+  .onboard-overlay{
+    position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; padding:20px;
+    background:var(--gradient-hero);
+  }
+  .onboard-overlay.open{display:flex;}
+  .onboard-card{
+    width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-xl);
+    box-shadow:var(--shadow-lg); padding:36px 28px 24px; text-align:center;
+  }
+  .onboard-screens{position:relative; min-height:200px; display:flex; align-items:center; justify-content:center;}
+  .onboard-screen{display:none; animation:pageFadeIn .3s var(--ease-standard);}
+  .onboard-screen.active{display:block;}
+  .onboard-mark{width:64px; height:64px; margin:0 auto 16px; border-radius:18px; overflow:hidden; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center;}
+  .onboard-mark img{width:100%; height:100%; object-fit:contain;}
+  .onboard-emoji{font-size:44px; margin-bottom:12px; animation:verityIdle 3.2s ease-in-out infinite;}
+  .onboard-card h2{font-family:var(--font-display); font-size:21px; margin:0 0 8px;}
+  .onboard-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin:0;}
+  .onboard-tagline{color:var(--accent); font-weight:600;}
+  .onboard-dots{display:flex; gap:6px; justify-content:center; margin:20px 0 18px;}
+  .onboard-dots .dot{width:6px; height:6px; border-radius:50%; background:var(--border); transition:background .2s, width .2s;}
+  .onboard-dots .dot.active{background:var(--accent); width:16px; border-radius:3px;}
+  .onboard-actions{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+
   .modal-overlay{
     position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-start; justify-content:center;
     padding:40px 16px; overflow-y:auto; z-index:100;
@@ -204,7 +259,9 @@
   .modal{
     background:var(--surface); border-radius:var(--radius-l); max-width:560px; width:100%; padding:26px 26px 22px;
     box-shadow:0 20px 60px rgba(0,0,0,.25);
+    animation:modalIn .22s var(--ease-standard);
   }
+  @keyframes modalIn{from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);}}
   .modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
   .modal-head h2{font-size:19px;}
   .field{margin-bottom:14px;}
@@ -305,9 +362,11 @@
     .bn-item.active{color:var(--accent);}
     .bn-item svg{width:20px; height:20px;}
     .fab{
-      position:fixed; right:18px; bottom:78px; width:54px; height:54px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+      position:fixed; right:18px; bottom:78px; width:54px; height:54px; border-radius:50%; background:var(--gradient-primary); color:var(--accent-ink);
       display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.25); border:none; z-index:60;
+      transition:transform .12s var(--ease-standard), box-shadow .15s var(--ease-standard);
     }
+    .fab:active{transform:scale(.93);}
     .fab svg{width:24px; height:24px;}
     .topbar-actions .btn-primary.desktop-only, .topbar .btn-icon.cal-jump{display:none;}
     .verity-dock{display:none !important;}
@@ -316,6 +375,11 @@
   @media (min-width:881px){
     .fab{display:none;}
     .verity-fab{display:none !important;}
+  }
+
+  @media (max-width:480px){
+    .main{padding:18px 14px 90px;}
+    .focus-ring{width:min(232px, 78vw); height:min(232px, 78vw);}
   }
 
   /* touch targets on small screens */
@@ -364,6 +428,18 @@
     .matrix-card:hover{transform:none;}
   }
 
+  /* ---------- ACCESSIBILITY: visible keyboard focus (spec §23) ---------- */
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+  .task-check:focus-visible, .switch:focus-visible, .verity-dock:focus-visible{outline-offset:3px;}
+
+  /* ---------- CARD MICRO-INTERACTIONS ---------- */
+  .summary-card, .matrix-card{transition:transform .15s var(--ease-standard), box-shadow .15s var(--ease-standard), border-color .15s var(--ease-standard);}
+  .summary-card:hover, .matrix-card:hover{box-shadow:var(--shadow-lg); border-color:var(--accent);}
+  .task-check{transition:background .15s var(--ease-standard), border-color .15s var(--ease-standard), transform .15s var(--ease-standard);}
+  .task-check.checked{animation:checkPop .25s var(--ease-standard);}
+  @keyframes checkPop{0%{transform:scale(.8);} 60%{transform:scale(1.15);} 100%{transform:scale(1);}}
+  .switch{transition:background .15s var(--ease-standard);}
+
   /* ---------- VERITY COMPANION ---------- */
   /* Persistent floating companion (spec: fixed, bottom-left, safe from
      sidebar/viewport/content). On desktop it floats inside the sidebar's
@@ -378,7 +454,7 @@
   .verity-dock:hover{border-color:var(--accent);}
   .verity-avatar{
     width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    font-size:17px; background:var(--accent-soft); position:relative;
+    font-size:17px; background:var(--gradient-soft); position:relative;
   }
   .verity-avatar .vface{display:block; animation:verityIdle 3.2s ease-in-out infinite;}
   @keyframes verityIdle{0%,100%{transform:translateY(0);} 50%{transform:translateY(-2px);}}
@@ -390,10 +466,11 @@
   .verity-dock-name{font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;}
   .verity-dock-msg{font-size:12.5px; color:var(--ink); line-height:1.4;}
   .verity-fab{
-    display:none; position:fixed; left:18px; bottom:78px; width:52px; height:52px; border-radius:50%;
+    display:none; position:fixed; left:18px; bottom:calc(78px + env(safe-area-inset-bottom,0px)); width:52px; height:52px; border-radius:50%;
     background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); align-items:center; justify-content:center;
-    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); z-index:59;
+    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); z-index:59; transition:transform .12s var(--ease-standard);
   }
+  .verity-fab:active{transform:scale(.92);}
   .verity-fab .badge-dot{position:absolute; top:-2px; right:-2px; width:11px; height:11px; border-radius:50%; background:var(--red); border:2px solid var(--bg);}
 
   .verity-panel-overlay{
@@ -449,7 +526,12 @@
   .stat-days{display:flex; gap:8px;}
   .stat-day{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;}
   .stat-day .col{width:100%; max-width:26px; height:70px; background:var(--surface-2); border-radius:6px; display:flex; align-items:flex-end; overflow:hidden;}
-  .stat-day .col-fill{width:100%; background:var(--accent); border-radius:6px 6px 0 0;}
+  .stat-day .col-fill{width:100%; background:var(--gradient-primary); border-radius:6px 6px 0 0;}
+  /* Focus Mode ring: gradient border via padding trick, calm pulse while running */
+  .focus-ring{width:232px; height:232px; border-radius:50%; background:var(--gradient-primary); padding:6px; box-shadow:var(--shadow-accent-glow);}
+  .focus-ring-inner{width:100%; height:100%; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center;}
+  .focus-wrap.running .focus-ring{animation:focusPulse 2.6s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.015);}}
   .stat-day .lbl{font-size:10px; color:var(--ink-faint);}
 </style>
 </head>
@@ -718,10 +800,12 @@
     <!-- FOCUS MODE -->
     <section class="page" id="page-focus">
       <div class="topbar"><h1 class="page-title">Focus Mode</h1></div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:18px; padding:24px 0 10px;">
+      <div class="focus-wrap" style="display:flex; flex-direction:column; align-items:center; gap:18px; padding:36px 20px; border-radius:var(--radius-xl); background:var(--gradient-hero);">
         <div id="focusTaskLabel" style="font-size:13px; color:var(--ink-soft); text-align:center; max-width:320px;">Pilih durasi lalu mulai fokus.</div>
-        <div style="width:220px; height:220px; border-radius:50%; border:6px solid var(--accent-soft); display:flex; align-items:center; justify-content:center; position:relative;">
-          <div style="font-family:var(--font-display); font-size:44px;" id="focusTimeDisplay">25:00</div>
+        <div class="focus-ring">
+          <div class="focus-ring-inner">
+            <div style="font-family:var(--font-display); font-size:44px;" id="focusTimeDisplay">25:00</div>
+          </div>
         </div>
         <div class="seg" id="focusDurationSeg" style="max-width:320px;">
           <button type="button" data-min="15">15m</button>
@@ -1089,6 +1173,36 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- First-launch onboarding (max 3 screens, spec §25) -->
+<div class="onboard-overlay" id="onboardOverlay" role="dialog" aria-modal="true" aria-label="Selamat datang di StudyFlow">
+  <div class="onboard-card">
+    <div class="onboard-screens">
+      <div class="onboard-screen active" data-screen="1">
+        <div class="onboard-mark"><img src="icons/logo.png" alt="" aria-hidden="true" onerror="this.style.display='none'"></div>
+        <h2>Welcome to StudyFlow</h2>
+        <p class="onboard-tagline">Organize your study. Own your time.</p>
+      </div>
+      <div class="onboard-screen" data-screen="2">
+        <div class="onboard-emoji" aria-hidden="true">🙂</div>
+        <h2>Kenalan sama Verity</h2>
+        <p>"Hai! Aku Verity. Aku bakal nemenin kamu ngatur aktivitas akademik."</p>
+      </div>
+      <div class="onboard-screen" data-screen="3">
+        <div class="onboard-emoji" aria-hidden="true">🚀</div>
+        <h2>Siap mulai?</h2>
+        <p>Tugas, jadwal, dosen, dan progress kamu — semuanya tersimpan lokal di perangkatmu.</p>
+      </div>
+    </div>
+    <div class="onboard-dots" aria-hidden="true">
+      <span class="dot active" data-dot="1"></span><span class="dot" data-dot="2"></span><span class="dot" data-dot="3"></span>
+    </div>
+    <div class="onboard-actions">
+      <button class="btn btn-ghost btn-sm" id="onboardSkip">Lewati</button>
+      <button class="btn btn-primary" id="onboardNext">Lanjut</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -2170,6 +2284,7 @@ const FocusTimer = (function(){
     if(running) return;
     running = true;
     SoundManager.play("focusStart");
+    document.querySelector(".focus-wrap").classList.add("running");
     document.getElementById("focusStartBtn").style.display="none";
     document.getElementById("focusPauseBtn").style.display="";
     document.getElementById("focusTaskLabel").textContent = "Fokus sedang berjalan — semangat!";
@@ -2178,6 +2293,7 @@ const FocusTimer = (function(){
       render();
       if(remainingSec<=0){
         clearInterval(tickHandle); running=false;
+        document.querySelector(".focus-wrap").classList.remove("running");
         DB.focusSessions = DB.focusSessions||[];
         DB.focusSessions.push({date:new Date().toISOString(), minutes:durationMin});
         persist();
@@ -2190,12 +2306,14 @@ const FocusTimer = (function(){
   }
   function pause(){
     running=false; clearInterval(tickHandle);
+    document.querySelector(".focus-wrap").classList.remove("running");
     document.getElementById("focusStartBtn").style.display="";
     document.getElementById("focusPauseBtn").style.display="none";
     document.getElementById("focusTaskLabel").textContent = "Dijeda. Lanjutkan kapan pun kamu siap.";
   }
   function reset(){
     running=false; clearInterval(tickHandle);
+    document.querySelector(".focus-wrap").classList.remove("running");
     remainingSec = durationMin*60;
     render();
     document.getElementById("focusStartBtn").style.display="";
@@ -2972,7 +3090,13 @@ document.getElementById("detailDeleteBtn").addEventListener("click", ()=>{
 function goToPage(page){
   currentPage = page;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById("page-"+page).classList.add("active");
+  const pageEl = document.getElementById("page-"+page);
+  pageEl.classList.add("active");
+  // brief fade+translate transition on page switch (spec §17) — restart the
+  // animation each time by toggling the class off and back on a frame later.
+  pageEl.classList.remove("page-transition-in");
+  void pageEl.offsetWidth;
+  pageEl.classList.add("page-transition-in");
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
   document.querySelectorAll(".bn-item[data-page]").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
   document.querySelectorAll(".bn-item[data-more]").forEach(n=>n.classList.toggle("active", MOBILE_NAV.secondary.includes(page)));
@@ -3473,6 +3597,33 @@ renderGeneralSettings();
 NotificationManager.scheduleDaily();
 calSelectedDate = ymd(new Date());
 renderAll();
+
+/* First-launch onboarding — max 3 screens, shown once. Stored outside the
+   main DB (UI-only flag) so it never interacts with data migration. */
+(function(){
+  const ONBOARD_KEY = "studiflow_onboarding_seen_v1";
+  const overlay = document.getElementById("onboardOverlay");
+  let screen = 1;
+  const TOTAL = 3;
+  function render(){
+    document.querySelectorAll(".onboard-screen").forEach(s=>s.classList.toggle("active", +s.dataset.screen===screen));
+    document.querySelectorAll(".onboard-dots .dot").forEach(d=>d.classList.toggle("active", +d.dataset.dot===screen));
+    document.getElementById("onboardNext").textContent = screen===TOTAL ? "Get Started" : "Lanjut";
+  }
+  function finish(){
+    try{ localStorage.setItem(ONBOARD_KEY, "1"); }catch(e){}
+    overlay.classList.remove("open");
+  }
+  document.getElementById("onboardNext").addEventListener("click", ()=>{
+    SoundManager.play("click");
+    if(screen===TOTAL){ finish(); return; }
+    screen++; render();
+  });
+  document.getElementById("onboardSkip").addEventListener("click", finish);
+  let seen = false;
+  try{ seen = localStorage.getItem(ONBOARD_KEY)==="1"; }catch(e){}
+  if(!seen){ overlay.classList.add("open"); render(); }
+})();
 
 /* Soft click sound: delegated so it covers primary buttons and the task
    checkbox without touching every individual handler. Deliberately NOT
