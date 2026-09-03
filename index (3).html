@@ -1,0 +1,3495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyFlow — Areyhan &amp; Verity</title>
+<meta name="description" content="StudyFlow — Areyhan &amp; Verity. Organize your study. Own your time.">
+<meta name="theme-color" content="#3E6259">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="StudyFlow">
+<style>
+  :root{
+    --bg:#F6F5F1;
+    --surface:#FFFFFF;
+    --surface-2:#EFEDE6;
+    --border:#E2DFD5;
+    --ink:#20231F;
+    --ink-soft:#5B5F56;
+    --ink-faint:#8A8E82;
+    --accent:#3E6259;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#DCE7E2;
+    --red:#B5462F;
+    --red-soft:#F5E1DC;
+    --amber:#B7862A;
+    --amber-soft:#F4E7CE;
+    --orange:#C06A2C;
+    --orange-soft:#F6E3D2;
+    --grey-soft:#E7E6E0;
+    --radius-s:8px;
+    --radius-m:14px;
+    --radius-l:20px;
+    --shadow:0 1px 2px rgba(32,35,31,.06), 0 4px 14px rgba(32,35,31,.05);
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  [data-theme="dark"]{
+    --bg:#181A17;
+    --surface:#21231F;
+    --surface-2:#2A2C27;
+    --border:#383A34;
+    --ink:#EDEEE8;
+    --ink-soft:#B2B5A9;
+    --ink-faint:#787C70;
+    --accent:#7FAE9F;
+    --accent-ink:#12211D;
+    --accent-soft:#243330;
+    --red:#E08469;
+    --red-soft:#3A2620;
+    --amber:#E3B96A;
+    --amber-soft:#3A311E;
+    --orange:#E39A64;
+    --orange-soft:#3A2C1E;
+    --grey-soft:#2E302A;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:600; margin:0;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select,textarea{font-family:inherit; font-size:14px;}
+  a{color:var(--accent);}
+  ::selection{background:var(--accent-soft);}
+
+  /* ---------- LAYOUT SHELL ---------- */
+  .app{display:flex; min-height:100vh;}
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:22px 16px; gap:26px; position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:0 6px;}
+  .brand-mark{width:30px; height:30px; border-radius:9px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:16px; overflow:hidden; flex-shrink:0;}
+  .brand-mark img{width:100%; height:100%; object-fit:contain; display:block;}
+  .brand-name{font-family:var(--font-display); font-size:19px; font-weight:600;}
+  .nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:var(--radius-s);
+    color:var(--ink-soft); background:none; border:none; text-align:left; font-size:14px; font-weight:500; width:100%;
+  }
+  .nav-item svg{width:17px; height:17px; flex-shrink:0;}
+  .nav-item:hover{background:var(--surface-2); color:var(--ink);}
+  .nav-item.active{background:var(--accent-soft); color:var(--accent);}
+  .sidebar-foot{margin-top:auto; display:flex; flex-direction:column; gap:8px;}
+
+  .main{flex:1; min-width:0; padding:26px 34px 90px; max-width:1180px;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .topbar{display:flex; align-items:center; gap:14px; margin-bottom:22px; flex-wrap:wrap;}
+  .page-title{font-size:24px;}
+  .topbar-actions{display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap;}
+
+  .search-wrap{position:relative; flex:1; min-width:180px; max-width:320px;}
+  .search-wrap input{
+    width:100%; padding:9px 12px 9px 34px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface); color:var(--ink);
+  }
+  .search-wrap svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--ink-faint);}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface); color:var(--ink); font-size:13.5px; font-weight:600; white-space:nowrap;
+  }
+  .btn:hover{background:var(--surface-2);}
+  .btn-primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-danger{background:var(--red); color:#fff; border-color:var(--red);}
+  .btn-ghost{background:none; border-color:transparent;}
+  .btn-icon{width:36px; height:36px; padding:0; justify-content:center; border-radius:999px;}
+  .btn svg{width:15px; height:15px;}
+  .btn-sm{padding:6px 11px; font-size:12.5px;}
+
+  /* ---------- SUMMARY CARDS ---------- */
+  .summary-row{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:26px;}
+  .summary-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:15px 16px; box-shadow:var(--shadow);}
+  .summary-card .num{font-family:var(--font-display); font-size:26px; line-height:1;}
+  .summary-card .lbl{font-size:12px; color:var(--ink-soft); margin-top:6px;}
+
+  /* ---------- MATRIX ---------- */
+  .matrix-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px;}
+  .matrix-card{
+    border-radius:var(--radius-l); padding:18px 20px; cursor:pointer; border:1px solid var(--border);
+    background:var(--surface); box-shadow:var(--shadow); transition:transform .12s ease;
+  }
+  .matrix-card:hover{transform:translateY(-2px);}
+  .matrix-card .dot{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:8px;}
+  .matrix-card h3{font-size:15px; margin-bottom:4px;}
+  .matrix-card p{margin:0; font-size:12.5px; color:var(--ink-soft);}
+  .matrix-card .count{font-family:var(--font-display); font-size:32px; margin-top:10px;}
+  .m-urgent-important{border-left:4px solid var(--red);}
+  .m-noturgent-important{border-left:4px solid var(--amber);}
+  .m-urgent-notimportant{border-left:4px solid var(--orange);}
+  .m-noturgent-notimportant{border-left:4px solid var(--ink-faint);}
+
+  section.block{margin-bottom:30px;}
+  .block-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .block-head h2{font-size:17px;}
+  .link-btn{background:none; border:none; color:var(--accent); font-weight:600; font-size:13px;}
+
+  /* ---------- TASK LIST/CARDS ---------- */
+  .task-list{display:flex; flex-direction:column; gap:9px;}
+  .task-card{
+    display:flex; align-items:flex-start; gap:12px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-m); padding:13px 15px; cursor:pointer;
+  }
+  .task-card:hover{border-color:var(--accent);}
+  .task-check{
+    width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center; background:var(--surface);
+  }
+  .task-check.checked{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .task-check svg{width:12px; height:12px;}
+  .task-main{flex:1; min-width:0;}
+  .task-title{font-weight:600; font-size:14.5px; margin-bottom:3px;}
+  .task-card.done .task-title{text-decoration:line-through; color:var(--ink-faint);}
+  .task-meta{display:flex; flex-wrap:wrap; gap:6px; font-size:11.5px; color:var(--ink-soft);}
+  .chip{padding:2px 9px; border-radius:999px; background:var(--grey-soft); font-weight:600; font-size:11px; white-space:nowrap;}
+  .chip-red{background:var(--red-soft); color:var(--red);}
+  .chip-amber{background:var(--amber-soft); color:var(--amber);}
+  .chip-orange{background:var(--orange-soft); color:var(--orange);}
+  .chip-accent{background:var(--accent-soft); color:var(--accent);}
+  .task-deadline{font-size:11.5px; color:var(--ink-faint); white-space:nowrap; text-align:right; padding-left:6px;}
+  .task-deadline.urgent{color:var(--red); font-weight:700;}
+  .task-deadline.overdue{color:var(--red); font-weight:700;}
+
+  .empty-state{text-align:center; padding:50px 20px; color:var(--ink-soft);}
+  .empty-state .emoji{font-size:38px; display:block; margin-bottom:10px;}
+  .empty-state p{margin:6px 0 16px;}
+
+  /* ---------- CALENDAR ---------- */
+  .cal-head{display:flex; align-items:center; gap:12px; margin-bottom:16px;}
+  .cal-head h2{font-size:19px; min-width:170px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-dow{text-align:center; font-size:11px; color:var(--ink-faint); font-weight:700; padding-bottom:4px; text-transform:uppercase;}
+  .cal-day{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-s); min-height:88px;
+    padding:6px; font-size:12px; cursor:pointer; display:flex; flex-direction:column; gap:3px;
+  }
+  .cal-day:hover{border-color:var(--accent);}
+  .cal-day.other-month{opacity:.35;}
+  .cal-day.today{border-color:var(--accent); border-width:2px;}
+  .cal-daynum{font-weight:700; font-size:12.5px;}
+  .cal-task-pill{background:var(--accent-soft); color:var(--accent); border-radius:5px; padding:1px 5px; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .cal-more{font-size:10px; color:var(--ink-faint);}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-start; justify-content:center;
+    padding:40px 16px; overflow-y:auto; z-index:100;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--surface); border-radius:var(--radius-l); max-width:560px; width:100%; padding:26px 26px 22px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+  .modal-head h2{font-size:19px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .field input[type=text], .field input[type=url], .field input[type=date], .field input[type=time],
+  .field select, .field textarea{
+    width:100%; padding:9px 11px; border-radius:var(--radius-s); border:1px solid var(--border); background:var(--bg); color:var(--ink);
+  }
+  .field textarea{resize:vertical; min-height:64px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .seg{display:flex; gap:8px;}
+  .seg button{
+    flex:1; padding:9px; border-radius:var(--radius-s); border:1px solid var(--border); background:var(--bg); color:var(--ink-soft); font-weight:600; font-size:13px;
+  }
+  .seg button.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+  .member-row{display:flex; gap:8px; margin-bottom:6px;}
+  .member-row input{flex:1;}
+  .member-row button{border:none; background:var(--red-soft); color:var(--red); border-radius:var(--radius-s); width:32px;}
+  .modal-foot{display:flex; justify-content:flex-end; gap:10px; margin-top:20px;}
+  .err-text{color:var(--red); font-size:12px; margin-top:4px; display:none;}
+  .field.error input, .field.error textarea, .field.error select{border-color:var(--red);}
+  .field.error .err-text{display:block;}
+  .hint{font-size:11.5px; color:var(--ink-faint); margin-top:8px;}
+  .inline-add{display:flex; gap:8px;}
+  .inline-add select{flex:1;}
+
+  /* detail panel */
+  .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin:14px 0;}
+  .detail-item .k{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.02em; margin-bottom:2px;}
+  .detail-item .v{font-size:14px; font-weight:600;}
+  .desc-box{background:var(--surface-2); border-radius:var(--radius-s); padding:11px 13px; font-size:13.5px; color:var(--ink-soft); margin-top:6px;}
+  .status-seg{display:flex; gap:8px; margin-top:6px;}
+
+  /* folders */
+  .folder-list{display:flex; flex-direction:column; gap:8px;}
+  .folder-row{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:13px 15px;}
+  .folder-row .fname{font-weight:600; flex:1; cursor:pointer;}
+  .folder-row .fcount{font-size:12px; color:var(--ink-soft); margin-right:8px;}
+
+  /* courses/lecturers */
+  .rowcard{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:13px 15px; margin-bottom:9px;}
+  .rowcard .rmain{flex:1;}
+  .rowcard .rtitle{font-weight:600; font-size:14px;}
+  .rowcard .rsub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+
+  /* settings */
+  .settings-block{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-l); padding:20px 22px; margin-bottom:16px;}
+  .settings-block h3{font-size:15px; margin-bottom:14px;}
+  .setting-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-top:1px solid var(--border);}
+  .setting-row:first-of-type{border-top:none;}
+  .setting-row .label{font-size:13.5px; font-weight:500;}
+  .setting-row .sub{font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
+  .switch{width:40px; height:23px; border-radius:999px; background:var(--grey-soft); position:relative; border:none; flex-shrink:0;}
+  .switch.on{background:var(--accent);}
+  .switch .knob{width:18px; height:18px; border-radius:50%; background:#fff; position:absolute; top:2.5px; left:3px; transition:left .15s;}
+  .switch.on .knob{left:19px;}
+  .theme-seg{display:flex; gap:8px;}
+  .theme-seg button{padding:7px 14px; border-radius:var(--radius-s); border:1px solid var(--border); background:var(--bg); color:var(--ink-soft); font-size:13px; font-weight:600;}
+  .theme-seg button.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+
+  /* filters bar */
+  .filters-bar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .filters-bar select{padding:8px 10px; border-radius:var(--radius-s); border:1px solid var(--border); background:var(--surface); color:var(--ink); font-size:12.5px;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg);
+    padding:11px 20px; border-radius:999px; font-size:13.5px; font-weight:600; z-index:200; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+  }
+  [data-theme="dark"] .toast{background:var(--accent); color:var(--accent-ink);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+  .weekly-track{display:flex; flex-direction:column; gap:0;}
+  .weekly-day{display:flex; gap:14px; padding:10px 0; border-top:1px solid var(--border);}
+  .weekly-day:first-child{border-top:none;}
+  .weekly-daylabel{width:70px; flex-shrink:0; font-weight:700; font-size:12.5px; color:var(--ink-soft); padding-top:2px;}
+  .weekly-items{flex:1; display:flex; flex-direction:column; gap:6px;}
+  .weekly-item{font-size:13px; display:flex; justify-content:space-between; gap:8px;}
+  .weekly-item .t{font-weight:600;}
+
+  /* mobile bottom nav */
+  .bottom-nav{display:none;}
+
+  @media (max-width: 880px){
+    .summary-row{grid-template-columns:repeat(3,1fr);}
+    .matrix-grid{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .main{padding:16px 14px 96px; max-width:100%;}
+    .field-row{grid-template-columns:1fr;}
+    .detail-grid{grid-template-columns:1fr;}
+    .bottom-nav{
+      display:flex; position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border);
+      z-index:50; padding:6px 4px calc(env(safe-area-inset-bottom,0px) + 4px);
+    }
+    .bn-item{
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 2px; background:none; border:none;
+      color:var(--ink-faint); font-size:10px; font-weight:600; min-height:44px; justify-content:center;
+    }
+    .bn-item.active{color:var(--accent);}
+    .bn-item svg{width:20px; height:20px;}
+    .fab{
+      position:fixed; right:18px; bottom:78px; width:54px; height:54px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+      display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.25); border:none; z-index:60;
+    }
+    .fab svg{width:24px; height:24px;}
+    .topbar-actions .btn-primary.desktop-only, .topbar .btn-icon.cal-jump{display:none;}
+    .verity-dock{display:none !important;}
+    .verity-fab{display:flex !important;}
+  }
+  @media (min-width:881px){
+    .fab{display:none;}
+    .verity-fab{display:none !important;}
+  }
+
+  /* touch targets on small screens */
+  @media (max-width:880px){
+    .btn, .btn-icon, .nav-item, .task-check, .switch{min-height:44px;}
+    .btn-icon{width:44px; height:44px;}
+    select, input[type=text], input[type=date], input[type=time], input[type=url]{min-height:44px;}
+  }
+
+  /* ---------- BOTTOM SHEET (More menu) ---------- */
+  .sheet-overlay{
+    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-end; justify-content:center; z-index:110;
+  }
+  .sheet-overlay.open{display:flex;}
+  .sheet{
+    background:var(--surface); width:100%; max-width:560px; border-radius:20px 20px 0 0; padding:10px 10px calc(env(safe-area-inset-bottom,0px) + 14px);
+    max-height:78vh; overflow-y:auto; box-shadow:0 -10px 40px rgba(0,0,0,.25);
+  }
+  .sheet-handle{width:36px; height:4px; border-radius:99px; background:var(--border); margin:6px auto 10px;}
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; padding:2px 10px 12px;}
+  .sheet-head h2{font-size:17px;}
+  .sheet-list{display:flex; flex-direction:column; gap:2px;}
+  .sheet-item{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left; background:none; border:none;
+    padding:13px 12px; border-radius:var(--radius-s); color:var(--ink); font-size:14.5px; font-weight:600; min-height:44px;
+  }
+  .sheet-item:hover{background:var(--surface-2);}
+  .sheet-item svg{width:19px; height:19px; flex-shrink:0; color:var(--ink-soft);}
+
+  /* ---------- COMMAND PALETTE (Ctrl+K / quick actions) ---------- */
+  .cmdk-overlay{
+    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-start; justify-content:center;
+    padding:80px 16px; z-index:120;
+  }
+  .cmdk-overlay.open{display:flex;}
+  .cmdk-box{background:var(--surface); border-radius:var(--radius-l); max-width:480px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.3); overflow:hidden;}
+  .cmdk-search{width:100%; padding:15px 18px; border:none; border-bottom:1px solid var(--border); background:transparent; color:var(--ink); font-size:15px;}
+  .cmdk-search:focus{outline:none;}
+  .cmdk-list{padding:6px; max-height:320px; overflow-y:auto;}
+  .cmdk-item{display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none; border:none; padding:11px 12px; border-radius:var(--radius-s); color:var(--ink); font-size:13.5px; font-weight:600; min-height:44px;}
+  .cmdk-item:hover, .cmdk-item.sel{background:var(--surface-2);}
+  .cmdk-item svg{width:16px; height:16px; color:var(--ink-soft); flex-shrink:0;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition-duration:.001ms !important; animation-duration:.001ms !important; animation-iteration-count:1 !important;}
+    .matrix-card:hover{transform:none;}
+  }
+
+  /* ---------- VERITY COMPANION ---------- */
+  /* Persistent floating companion (spec: fixed, bottom-left, safe from
+     sidebar/viewport/content). On desktop it floats inside the sidebar's
+     own footprint so it can never cover main content; on mobile it's
+     replaced by .verity-fab (see responsive rules above), which sits
+     above the bottom navigation instead. */
+  .verity-dock{
+    position:fixed; left:16px; bottom:16px; width:198px; z-index:56;
+    background:var(--surface-2); border-radius:var(--radius-m); padding:12px 12px 11px; display:flex; gap:9px; align-items:flex-start;
+    cursor:pointer; border:1px solid var(--border); box-shadow:var(--shadow);
+  }
+  .verity-dock:hover{border-color:var(--accent);}
+  .verity-avatar{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:17px; background:var(--accent-soft); position:relative;
+  }
+  .verity-avatar .vface{display:block; animation:verityIdle 3.2s ease-in-out infinite;}
+  @keyframes verityIdle{0%,100%{transform:translateY(0);} 50%{transform:translateY(-2px);}}
+  /* Subtle reaction bounce, triggered on mood changes / proactive toasts —
+     calm and brief, never a constant motion (spec §8/§24). */
+  .verity-toast.vbounce .verity-avatar{animation:verityBounce .38s ease-out;}
+  @keyframes verityBounce{0%{transform:scale(.7);} 55%{transform:scale(1.14);} 100%{transform:scale(1);}}
+  .verity-dock-body{flex:1; min-width:0;}
+  .verity-dock-name{font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;}
+  .verity-dock-msg{font-size:12.5px; color:var(--ink); line-height:1.4;}
+  .verity-fab{
+    display:none; position:fixed; left:18px; bottom:78px; width:52px; height:52px; border-radius:50%;
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); align-items:center; justify-content:center;
+    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); z-index:59;
+  }
+  .verity-fab .badge-dot{position:absolute; top:-2px; right:-2px; width:11px; height:11px; border-radius:50%; background:var(--red); border:2px solid var(--bg);}
+
+  .verity-panel-overlay{
+    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-end; justify-content:flex-end; z-index:115; padding:0;
+  }
+  .verity-panel-overlay.open{display:flex;}
+  .verity-panel{
+    background:var(--surface); width:100%; max-width:380px; height:min(78vh,620px); border-radius:20px 20px 0 0;
+    display:flex; flex-direction:column; box-shadow:0 -10px 40px rgba(0,0,0,.25); margin:0 12px 0 auto;
+  }
+  @media (min-width:881px){
+    .verity-panel-overlay{align-items:flex-end; justify-content:flex-start; padding:0 0 90px 20px;}
+    .verity-panel{border-radius:20px; height:min(70vh,560px); margin:0;}
+  }
+  .verity-panel-head{display:flex; align-items:center; gap:10px; padding:16px 16px 12px; border-bottom:1px solid var(--border);}
+  .verity-panel-head .verity-avatar{width:38px; height:38px; font-size:19px;}
+  .verity-panel-head .vname{font-weight:700; font-size:14.5px;}
+  .verity-panel-head .vmood{font-size:11px; color:var(--ink-faint);}
+  .verity-panel-close{margin-left:auto;}
+  .verity-msgs{flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px;}
+  .vmsg{max-width:85%; padding:9px 13px; border-radius:14px; font-size:13.5px; line-height:1.45;}
+  .vmsg.bot{background:var(--surface-2); align-self:flex-start; border-bottom-left-radius:4px;}
+  .vmsg.user{background:var(--accent); color:var(--accent-ink); align-self:flex-end; border-bottom-right-radius:4px;}
+  .verity-quick{display:flex; flex-wrap:wrap; gap:7px; padding:0 16px 12px;}
+  .verity-quick button{padding:7px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--ink-soft); font-size:12px; font-weight:600; min-height:36px;}
+  .verity-quick button:hover{border-color:var(--accent); color:var(--accent);}
+  .verity-input-row{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border);}
+  .verity-input-row input{flex:1; padding:10px 13px; border-radius:999px; border:1px solid var(--border); background:var(--bg); color:var(--ink);}
+  .verity-input-row button{width:40px; height:40px; border-radius:50%; background:var(--accent); color:var(--accent-ink); border:none; flex-shrink:0;}
+  .verity-toast{
+    position:fixed; left:18px; bottom:140px; max-width:260px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:11px 13px; display:flex; gap:9px; align-items:flex-start; box-shadow:var(--shadow); z-index:58; opacity:0; transform:translateY(8px);
+    transition:opacity .2s, transform .2s; pointer-events:none;
+  }
+  .verity-toast.show{opacity:1; transform:translateY(0);}
+  .verity-toast .verity-avatar{width:26px; height:26px; font-size:14px;}
+  .verity-toast .vtxt{font-size:12.5px; line-height:1.4; padding-top:2px;}
+  @media (max-width:880px){ .verity-toast{left:14px; bottom:150px; max-width:220px;} }
+
+  /* ---------- ABOUT MODAL ---------- */
+  .about-credit{text-align:center; padding:6px 4px 2px;}
+  .about-credit .tag{font-family:var(--font-display); font-size:14px; margin-bottom:2px;}
+  .about-credit .sub{font-size:11.5px; color:var(--ink-faint); line-height:1.5;}
+  .changelog-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .changelog-list li{font-size:13.5px; background:var(--surface-2); border-radius:var(--radius-s); padding:9px 12px;}
+
+  /* ---------- STATISTICS (simple, lightweight CSS bars — no external chart lib) ---------- */
+  .stat-bar-row{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:10px 13px; margin-bottom:8px;}
+  .stat-bar-label{width:120px; flex-shrink:0; font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stat-bar-track{flex:1; height:9px; background:var(--surface-2); border-radius:99px; overflow:hidden;}
+  .stat-bar-fill{height:100%; background:var(--accent); border-radius:99px;}
+  .stat-bar-pct{width:38px; text-align:right; font-size:11.5px; color:var(--ink-soft); flex-shrink:0;}
+  .stat-days{display:flex; gap:8px;}
+  .stat-day{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .stat-day .col{width:100%; max-width:26px; height:70px; background:var(--surface-2); border-radius:6px; display:flex; align-items:flex-end; overflow:hidden;}
+  .stat-day .col-fill{width:100%; background:var(--accent); border-radius:6px 6px 0 0;}
+  .stat-day .lbl{font-size:10px; color:var(--ink-faint);}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><img src="icons/logo.png" alt="StudyFlow logo" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'S'}))"></div>
+      <div class="brand-name">StudyFlow</div>
+    </div>
+    <nav class="nav" id="mainNav">
+      <button class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-page="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        Kalender
+      </button>
+      <button class="nav-item" data-page="tasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h11"/></svg>
+        Tugas
+      </button>
+      <button class="nav-item" data-page="folders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        Folder
+      </button>
+      <button class="nav-item" data-page="courses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Mata Kuliah
+      </button>
+      <button class="nav-item" data-page="schedule">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Jadwal
+      </button>
+      <button class="nav-item" data-page="lecturers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Dosen
+      </button>
+      <button class="nav-item" data-page="statistics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+        Statistik
+      </button>
+      <button class="nav-item" data-page="focus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+        Focus Mode
+      </button>
+      <button class="nav-item" data-page="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.2a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.2a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg>
+        Pengaturan
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="verity-dock" id="verityDock" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Verity assistant">
+        <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
+        <div class="verity-dock-body">
+          <div class="verity-dock-name">Verity</div>
+          <div class="verity-dock-msg" id="verityDockMsg">Menyiapkan...</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="exportBtnSide">Export Data</button>
+      <button class="btn btn-ghost btn-sm" id="aboutBtnSide">Tentang StudyFlow</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="topbar">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="topbar-actions">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="searchInput" placeholder="Cari tugas, mata kuliah, dosen...">
+          </div>
+          <button class="btn btn-icon" data-page-jump="calendar" title="Kalender">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          </button>
+          <button class="btn btn-icon" data-page-jump="folders" title="Folder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+          </button>
+          <button class="btn btn-primary" id="addTaskBtn">+ Tambah Tugas</button>
+        </div>
+      </div>
+
+      <div id="greetingBlock" style="margin-bottom:20px;">
+        <h2 style="font-size:21px; margin-bottom:2px;" id="greetingText">Selamat Datang</h2>
+        <div style="font-size:13px; color:var(--ink-soft);" id="greetingDate"></div>
+        <div class="chip chip-accent" style="margin-top:8px; display:inline-block;" id="activeSemesterChip"></div>
+      </div>
+
+      <section class="block" id="todayBlock">
+        <div class="block-head"><h2>📅 Hari Ini</h2></div>
+        <div id="todayContent"></div>
+      </section>
+
+      <div class="summary-row" id="summaryRow"></div>
+
+      <section class="block">
+        <div class="block-head"><h2>Eisenhower Matrix</h2></div>
+        <div class="matrix-grid" id="matrixGrid"></div>
+      </section>
+
+      <section class="block" id="overdueBlock" style="display:none;">
+        <div class="block-head"><h2>⚠ Tugas Terlambat</h2></div>
+        <div class="task-list" id="overdueList"></div>
+      </section>
+
+      <section class="block">
+        <div class="block-head"><h2>Tugas Minggu Ini</h2></div>
+        <div class="weekly-track" id="weeklyTrack"></div>
+      </section>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="page" id="page-calendar">
+      <div class="topbar">
+        <h1 class="page-title">Kalender</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" id="addTaskBtnCal">+ Tambah Tugas</button>
+        </div>
+      </div>
+      <div class="cal-head">
+        <button class="btn btn-icon" id="calPrev">‹</button>
+        <h2 id="calMonthLabel"></h2>
+        <button class="btn btn-icon" id="calNext">›</button>
+        <button class="btn btn-sm" id="calToday">Hari Ini</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+
+      <section class="block" style="margin-top:26px;" id="calSelectedBlock" style="display:none;">
+        <div class="block-head"><h2 id="calSelectedLabel">Tugas pada tanggal terpilih</h2></div>
+        <div class="task-list" id="calSelectedList"></div>
+      </section>
+    </section>
+
+    <!-- TASKS -->
+    <section class="page" id="page-tasks">
+      <div class="topbar">
+        <h1 class="page-title">Semua Tugas</h1>
+        <div class="topbar-actions">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="searchInputTasks" placeholder="Cari tugas...">
+          </div>
+          <button class="btn btn-primary" id="addTaskBtnTasks">+ Tambah Tugas</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <select id="filterStatus">
+          <option value="all">Semua Status</option>
+          <option value="todo">Belum Dimulai</option>
+          <option value="doing">Sedang Dikerjakan</option>
+          <option value="done">Selesai</option>
+        </select>
+        <select id="filterPriority">
+          <option value="all">Semua Prioritas</option>
+          <option value="important">Penting</option>
+          <option value="notimportant">Tidak Penting</option>
+        </select>
+        <select id="filterType">
+          <option value="all">Semua Jenis</option>
+          <option value="individual">Mandiri</option>
+          <option value="group">Kelompok</option>
+        </select>
+        <select id="filterCourse"><option value="all">Semua Mata Kuliah</option></select>
+        <select id="filterFolder"><option value="all">Semua Folder</option></select>
+        <select id="sortBy">
+          <option value="deadline-asc">Deadline Terdekat</option>
+          <option value="deadline-desc">Deadline Terjauh</option>
+          <option value="created-desc">Terbaru Dibuat</option>
+          <option value="az">Nama A-Z</option>
+        </select>
+      </div>
+      <div class="task-list" id="allTasksList"></div>
+    </section>
+
+    <!-- FOLDERS -->
+    <section class="page" id="page-folders">
+      <div class="topbar">
+        <h1 class="page-title">Folder</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" id="addFolderBtn">+ Buat Folder</button>
+        </div>
+      </div>
+      <div class="folder-list" id="folderList"></div>
+
+      <section class="block" id="folderTasksBlock" style="display:none; margin-top:24px;">
+        <div class="block-head"><h2 id="folderTasksLabel"></h2><button class="link-btn" id="backToFolders">‹ Kembali ke folder</button></div>
+        <div class="task-list" id="folderTasksList"></div>
+      </section>
+    </section>
+
+    <!-- COURSES -->
+    <section class="page" id="page-courses">
+      <div class="topbar">
+        <h1 class="page-title">Mata Kuliah</h1>
+        <div class="topbar-actions">
+          <select id="semesterFilterCourses" style="padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--ink); font-size:12.5px;"></select>
+          <button class="btn btn-primary" id="addCourseBtn">+ Tambah Mata Kuliah</button>
+        </div>
+      </div>
+      <div id="courseList"></div>
+
+      <section class="block" id="courseDashboardBlock" style="display:none; margin-top:24px;">
+        <div class="block-head"><h2 id="courseDashTitle"></h2><button class="link-btn" id="backToCourses">‹ Kembali ke Mata Kuliah</button></div>
+        <div id="courseDashBody"></div>
+      </section>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section class="page" id="page-schedule">
+      <div class="topbar">
+        <h1 class="page-title">Jadwal Kuliah</h1>
+        <div class="topbar-actions">
+          <select id="semesterFilterSchedule" style="padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--ink); font-size:12.5px;"></select>
+          <button class="btn btn-primary" id="addScheduleBtn">+ Tambah Jadwal</button>
+        </div>
+      </div>
+      <div class="weekly-track" id="scheduleWeeklyTrack"></div>
+
+      <section class="block" style="margin-top:28px;">
+        <div class="block-head"><h2>🎓 Semester</h2>
+          <button class="link-btn" id="addSemesterBtn">+ Semester Baru</button>
+        </div>
+        <div id="semesterList"></div>
+      </section>
+    </section>
+
+    <!-- LECTURERS -->
+    <section class="page" id="page-lecturers">
+      <div class="topbar">
+        <h1 class="page-title">Dosen</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" id="addLecturerBtn">+ Tambah Dosen</button>
+        </div>
+      </div>
+      <div id="lecturerList"></div>
+    </section>
+
+    <!-- STATISTICS -->
+    <section class="page" id="page-statistics">
+      <div class="topbar"><h1 class="page-title">Statistik</h1></div>
+      <div class="summary-row" id="statSummaryRow" style="grid-template-columns:repeat(4,1fr);"></div>
+
+      <section class="block">
+        <div class="block-head"><h2>Penyelesaian per Mata Kuliah</h2></div>
+        <div id="statByCourse" class="task-list"></div>
+      </section>
+
+      <section class="block">
+        <div class="block-head"><h2>Tugas 7 Hari Terakhir</h2></div>
+        <div id="statLast7"></div>
+      </section>
+
+      <section class="block">
+        <div class="block-head"><h2>🎯 Sesi Focus Mode</h2></div>
+        <div id="statFocus"></div>
+      </section>
+    </section>
+
+    <!-- FOCUS MODE -->
+    <section class="page" id="page-focus">
+      <div class="topbar"><h1 class="page-title">Focus Mode</h1></div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:18px; padding:24px 0 10px;">
+        <div id="focusTaskLabel" style="font-size:13px; color:var(--ink-soft); text-align:center; max-width:320px;">Pilih durasi lalu mulai fokus.</div>
+        <div style="width:220px; height:220px; border-radius:50%; border:6px solid var(--accent-soft); display:flex; align-items:center; justify-content:center; position:relative;">
+          <div style="font-family:var(--font-display); font-size:44px;" id="focusTimeDisplay">25:00</div>
+        </div>
+        <div class="seg" id="focusDurationSeg" style="max-width:320px;">
+          <button type="button" data-min="15">15m</button>
+          <button type="button" data-min="25" class="active">25m</button>
+          <button type="button" data-min="50">50m</button>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="focusStartBtn">Mulai</button>
+          <button class="btn" id="focusPauseBtn" style="display:none;">Jeda</button>
+          <button class="btn btn-ghost" id="focusResetBtn">Reset</button>
+        </div>
+        <p class="hint" style="text-align:center; max-width:320px;">Sesi fokus dicatat secara lokal dan akan muncul di halaman Statistik. Verity akan memberi selamat begitu sesi selesai.</p>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="page" id="page-settings">
+      <div class="topbar"><h1 class="page-title">Pengaturan</h1></div>
+
+      <div class="settings-block">
+        <h3>Umum</h3>
+        <div class="setting-row">
+          <div><div class="label">Nama Kamu</div><div class="sub">Ditampilkan di sapaan dashboard</div></div>
+          <input type="text" id="settingUserName" placeholder="Nama" style="padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--ink); max-width:180px;">
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Semester Aktif</div><div class="sub">Dipakai di dashboard &amp; jadwal</div></div>
+          <select id="settingActiveSemester" style="padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--ink);"></select>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Tampilan</h3>
+        <div class="setting-row">
+          <div><div class="label">Tema</div><div class="sub">Pilih tampilan terang, gelap, atau ikuti sistem</div></div>
+          <div class="theme-seg">
+            <button data-theme-opt="light">Light</button>
+            <button data-theme-opt="dark">Dark</button>
+            <button data-theme-opt="system">System</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Notifikasi</h3>
+        <div class="setting-row">
+          <div><div class="label">Notifikasi Harian</div><div class="sub">Pengingat tugas yang belum selesai setiap hari</div></div>
+          <button class="switch" id="notifDailyToggle"><span class="knob"></span></button>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Waktu Pengingat</div><div class="sub">Jam pengingat harian dikirim</div></div>
+          <input type="time" id="notifTime" value="19:00" style="padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--ink);">
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Izin Browser Notification</div><div class="sub" id="notifPermStatus">Belum diminta</div></div>
+          <button class="btn btn-sm" id="notifPermBtn">Minta Izin</button>
+        </div>
+        <p class="hint">Catatan: browser membatasi JavaScript berjalan ketika tab/halaman benar-benar ditutup, sehingga notifikasi harian hanya dapat terkirim secara andal saat StudyFlow terbuka di salah satu tab. Untuk pengingat latar belakang yang lebih baik, install StudyFlow sebagai aplikasi (PWA) melalui menu browser "Tambahkan ke Layar Utama / Install App".</p>
+      </div>
+
+      <div class="settings-block">
+        <h3>Suara</h3>
+        <div class="setting-row">
+          <div><div class="label">Efek Suara</div><div class="sub">Klik, notifikasi, dan reaksi Verity yang halus</div></div>
+          <button class="switch" id="soundEnabledToggle"><span class="knob"></span></button>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Volume Utama</div><div class="sub">Volume keseluruhan sistem suara</div></div>
+          <input type="range" id="soundMasterVol" min="0" max="1" step="0.05" style="max-width:160px;">
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Volume UI</div><div class="sub">Klik tombol, tugas selesai, fokus</div></div>
+          <input type="range" id="soundUiVol" min="0" max="1" step="0.05" style="max-width:160px;">
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Volume Verity</div><div class="sub">Reaksi kecil dari Verity</div></div>
+          <input type="range" id="soundVerityVol" min="0" max="1" step="0.05" style="max-width:160px;">
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Suara Notifikasi</div><div class="sub">Chime singkat saat ada notifikasi</div></div>
+          <button class="switch" id="soundNotifToggle"><span class="knob"></span></button>
+        </div>
+        <p class="hint">Semua suara dibuat langsung di browser (tanpa file audio eksternal), jadi StudyFlow tetap ringan dan berfungsi penuh secara offline. Suara mengikuti kebijakan autoplay browser — hanya aktif setelah kamu berinteraksi.</p>
+      </div>
+
+      <div class="settings-block">
+        <h3>Verity</h3>
+        <div class="setting-row">
+          <div><div class="label">Aktifkan Verity</div><div class="sub">Companion akademik dengan avatar &amp; chat</div></div>
+          <button class="switch" id="verityEnabledToggle"><span class="knob"></span></button>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Kepribadian</div><div class="sub">Mengatur nada komentar Verity</div></div>
+          <div class="theme-seg" id="verityPersonalitySeg">
+            <button data-vp="friendly">Friendly</button>
+            <button data-vp="balanced">Balanced</button>
+            <button data-vp="strict">Strict</button>
+          </div>
+        </div>
+        <p class="hint">Verity hanya membaca data yang benar-benar ada di aplikasi kamu (tugas, deadline, progress) — dia tidak pernah mengarang informasi.</p>
+      </div>
+
+      <div class="settings-block">
+        <h3>About StudyFlow</h3>
+        <div class="about-credit" style="text-align:left;">
+          <div class="tag">StudyFlow — Areyhan &amp; Verity</div>
+          <div class="sub">Organize your study. Own your time.<br>Version <span id="aboutVersionInline"></span></div>
+        </div>
+        <p class="hint">StudyFlow adalah academic productivity app yang dibuat untuk membantu mahasiswa mengatur tugas, jadwal, deadline, kalender akademik, progress, dan fokus belajar dalam satu tempat.</p>
+        <div class="detail-grid" style="margin:0 0 10px;">
+          <div class="detail-item"><div class="k">Created by</div><div class="v">Areyhan<br><span style="font-weight:500;">Ahmad Roudhotun Ihsan</span></div></div>
+          <div class="detail-item"><div class="k">Institusi</div><div class="v">Universitas Lampung<br><span style="font-weight:500;">Pendidikan Bahasa Lampung</span></div></div>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">🙂 Meet Verity</div><div class="sub">Companion emoji StudyFlow — supportive, playful, caring, sometimes teasing, context-aware. Bukan dictator.</div></div>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">What's New</div><div class="sub">Lihat perubahan di versi ini</div></div>
+          <button class="btn btn-sm" id="changelogBtnSettings">Lihat</button>
+        </div>
+        <div id="changelogBoxSettings" style="display:none; margin:0 0 10px;">
+          <ul class="changelog-list" id="changelogListSettings"></ul>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Kolaborasi &amp; Bisnis</div><div class="sub">areyawva@gmail.com</div></div>
+          <a class="btn btn-sm" href="mailto:areyawva@gmail.com">Hubungi</a>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Cadangan Data</h3>
+        <div class="setting-row">
+          <div><div class="label">Export Data</div><div class="sub">Unduh seluruh data sebagai file JSON</div></div>
+          <button class="btn btn-sm" id="exportBtn">Export</button>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Import Data</div><div class="sub">Pulihkan data dari file JSON</div></div>
+          <button class="btn btn-sm" id="importBtn">Import</button>
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Reset Semua Data</div><div class="sub">Menghapus seluruh tugas, folder, mata kuliah, dan dosen</div></div>
+          <button class="btn btn-sm btn-danger" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Mobile bottom nav (primary items are configured via mobileNavigation.primary in JS; "More" opens secondary items as a bottom sheet) -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Navigasi utama"></nav>
+<button class="fab" id="fabAdd" aria-label="Tambah cepat" title="Tambah cepat (Ctrl+K)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<!-- MORE MENU (mobile secondary navigation) -->
+<div class="sheet-overlay" id="moreSheetOverlay" role="dialog" aria-modal="true" aria-label="Menu lainnya">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Lainnya</h2><button class="btn btn-icon btn-ghost" id="moreSheetClose" aria-label="Tutup">✕</button></div>
+    <div class="sheet-list" id="moreSheetList"></div>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE / QUICK ADD -->
+<div class="cmdk-overlay" id="cmdkOverlay" role="dialog" aria-modal="true" aria-label="Tambah cepat">
+  <div class="cmdk-box">
+    <input type="text" class="cmdk-search" id="cmdkSearch" placeholder="Ketik untuk aksi cepat... (Ctrl+K)">
+    <div class="cmdk-list" id="cmdkList"></div>
+  </div>
+</div>
+
+<!-- Verity floating avatar (mobile) -->
+<button class="verity-fab" id="verityFab" aria-label="Open Verity assistant" aria-haspopup="dialog" aria-expanded="false">
+  <span id="verityFabFace">🙂</span>
+  <span class="badge-dot" id="verityFabBadge" style="display:none;"></span>
+</button>
+
+<!-- Verity dialogue panel -->
+<div class="verity-panel-overlay" id="verityPanelOverlay" role="dialog" aria-modal="true" aria-label="Verity">
+  <div class="verity-panel">
+    <div class="verity-panel-head">
+      <div class="verity-avatar"><span id="verityPanelFace">🙂</span></div>
+      <div>
+        <div class="vname">Verity</div>
+        <div class="vmood" id="verityPanelMood">balanced</div>
+      </div>
+      <button class="btn btn-icon btn-ghost verity-panel-close" id="verityPanelClose" aria-label="Tutup">✕</button>
+    </div>
+    <div class="verity-msgs" id="verityMsgs"></div>
+    <div class="verity-quick" id="verityQuick"></div>
+    <div class="verity-input-row">
+      <input type="text" id="verityInput" placeholder="Tanya Verity...">
+      <button id="veritySendBtn" aria-label="Kirim">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Verity proactive toast -->
+<div class="verity-toast" id="verityToast">
+  <div class="verity-avatar"><span id="verityToastFace">🙂</span></div>
+  <div class="vtxt" id="verityToastMsg"></div>
+</div>
+
+<!-- ABOUT / CHANGELOG MODAL -->
+<div class="modal-overlay" id="aboutModalOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <h2>Tentang</h2>
+      <button class="btn btn-icon btn-ghost" data-close-modal="aboutModalOverlay" aria-label="Tutup">✕</button>
+    </div>
+    <div class="about-credit">
+      <div class="tag">StudyFlow — Areyhan &amp; Verity</div>
+      <div class="sub">Organize your study. Own your time.<br>Version <span id="aboutVersion"></span></div>
+    </div>
+    <div class="desc-box" style="margin-top:14px;">
+      StudyFlow adalah academic productivity app yang dibuat untuk membantu mahasiswa mengatur tugas, jadwal, deadline, kalender akademik, progress, dan fokus belajar dalam satu tempat.<br><br>
+      <em>Built for students, with students in mind.</em>
+    </div>
+    <div class="about-credit" style="margin-top:16px; text-align:left;">
+      <div class="detail-grid" style="margin:0;">
+        <div class="detail-item"><div class="k">Designed &amp; Developed by</div><div class="v">Areyhan<br><span style="font-weight:500;">Ahmad Roudhotun Ihsan</span></div></div>
+        <div class="detail-item"><div class="k">Institusi</div><div class="v">Universitas Lampung<br><span style="font-weight:500;">Pendidikan Bahasa Lampung</span></div></div>
+      </div>
+    </div>
+    <div class="setting-row" style="border-top:1px solid var(--border); margin-top:14px;">
+      <div><div class="label">What's New</div><div class="sub">Lihat perubahan di versi ini</div></div>
+      <button class="btn btn-sm" id="changelogBtn">Lihat</button>
+    </div>
+    <div class="setting-row">
+      <div><div class="label">Kolaborasi &amp; Bisnis</div><div class="sub">areyawva@gmail.com</div></div>
+      <a class="btn btn-sm" href="mailto:areyawva@gmail.com">Hubungi</a>
+    </div>
+    <div id="changelogBox" style="display:none; margin-top:12px;">
+      <ul class="changelog-list" id="changelogListModal"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="taskModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="taskModalTitle">Tambah Tugas</h2>
+      <button class="btn btn-icon btn-ghost" data-close-modal="taskModalOverlay">✕</button>
+    </div>
+    <form id="taskForm">
+      <input type="hidden" id="taskId">
+      <div class="field" id="f-title">
+        <label>Nama Tugas *</label>
+        <input type="text" id="f_title" placeholder="Makalah Perkembangan Bahasa">
+        <div class="err-text">Nama tugas wajib diisi.</div>
+      </div>
+      <div class="field-row">
+        <div class="field" id="f-course">
+          <label>Mata Kuliah *</label>
+          <div class="inline-add">
+            <select id="f_course"></select>
+            <button type="button" class="btn btn-sm" id="quickAddCourse">+ Baru</button>
+          </div>
+          <div class="err-text">Mata kuliah wajib diisi.</div>
+        </div>
+        <div class="field">
+          <label>Dosen</label>
+          <select id="f_lecturer"><option value="">— Pilih Dosen —</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Deskripsi</label>
+        <textarea id="f_desc" placeholder="Membuat makalah mengenai perkembangan sastra modern."></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field" id="f-date">
+          <label>Tanggal Deadline *</label>
+          <input type="date" id="f_date">
+          <div class="err-text">Deadline wajib diisi.</div>
+        </div>
+        <div class="field">
+          <label>Jam Deadline</label>
+          <input type="time" id="f_time" value="23:59">
+        </div>
+      </div>
+      <div class="field">
+        <label>Prioritas</label>
+        <div class="seg" id="f_priority">
+          <button type="button" data-val="important" class="active">Penting</button>
+          <button type="button" data-val="notimportant">Tidak Penting</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Jenis Tugas</label>
+        <div class="seg" id="f_type">
+          <button type="button" data-val="individual" class="active">Mandiri</button>
+          <button type="button" data-val="group">Kelompok</button>
+        </div>
+      </div>
+      <div id="groupFields" style="display:none;">
+        <div class="field">
+          <label>Nama Kelompok</label>
+          <input type="text" id="f_groupName" placeholder="Kelompok 3">
+        </div>
+        <div class="field" id="f-members">
+          <label>Anggota Kelompok</label>
+          <div id="membersWrap"></div>
+          <button type="button" class="btn btn-sm" id="addMemberBtn">+ Tambah Anggota</button>
+          <div class="err-text">Tambahkan minimal satu anggota kelompok.</div>
+        </div>
+      </div>
+      <div class="field" id="f-link">
+        <label>Link Pengumpulan</label>
+        <input type="url" id="f_link" placeholder="https://drive.google.com/...">
+        <div class="err-text">Masukkan URL yang valid (diawali http:// atau https://).</div>
+      </div>
+      <div class="field">
+        <label>Folder</label>
+        <div class="inline-add">
+          <select id="f_folder"><option value="">— Tanpa Folder —</option></select>
+          <button type="button" class="btn btn-sm" id="quickAddFolder">+ Baru</button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" data-close-modal="taskModalOverlay">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan Tugas</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="detailTitle">Judul Tugas</h2>
+      <button class="btn btn-icon btn-ghost" data-close-modal="detailModalOverlay">✕</button>
+    </div>
+    <div id="detailBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="detailDeleteBtn">Hapus</button>
+      <button class="btn" id="detailEditBtn">Edit</button>
+      <button class="btn btn-primary" id="detailDoneBtn">Tandai Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModalOverlay">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head"><h2 id="confirmTitle">Konfirmasi</h2></div>
+    <p id="confirmMsg" style="color:var(--ink-soft); font-size:14px;"></p>
+    <div class="modal-foot" id="confirmActions"></div>
+  </div>
+</div>
+
+<!-- GENERIC PROMPT MODAL (folder/course/lecturer create-edit) -->
+<div class="modal-overlay" id="promptModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head"><h2 id="promptTitle">Buat Folder</h2><button class="btn btn-icon btn-ghost" data-close-modal="promptModalOverlay">✕</button></div>
+    <div id="promptBody"></div>
+    <div class="modal-foot">
+      <button class="btn" data-close-modal="promptModalOverlay">Batal</button>
+      <button class="btn btn-primary" id="promptSaveBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   STORAGE MANAGER
+========================================================= */
+const APP_VERSION = "4.0.0";
+const CURRENT_DATA_VERSION = 6;
+const StorageManager = (function(){
+  const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
+  function defaultData(){
+    return {
+      version: CURRENT_DATA_VERSION,
+      tasks: [],
+      folders: [],
+      courses: [],
+      lecturers: [],
+      semesters: [],
+      activeSemesterId: null,
+      schedules: [],
+      academicEvents: [],
+      recurringTasks: [],
+      notifications: [],
+      focusSessions: [],
+      settings: {
+        theme:"system", notifDaily:false, notifTime:"19:00", userName:"", startOfWeek:"mon",
+        verityEnabled:true, verityPersonality:"balanced", verityLastProactiveAt:null, verityLastCompletedCount:0,
+        soundEnabled:true, soundMasterVolume:0.6, soundUiVolume:0.5, soundVerityVolume:0.7, soundNotif:true
+      }
+    };
+  }
+  /* Migrasi bertahap: setiap fungsi menaikkan data dari versi N ke N+1.
+     Data lama (tasks/folders/courses/lecturers/settings) TIDAK PERNAH dihapus atau direset. */
+  function migrate(parsed){
+    let d = parsed;
+    if(!d.version) d.version = 1;
+    if(d.version < 2){
+      // v1 -> v2: tambahkan struktur akademik baru (semester/jadwal/event/recurring/notif) tanpa menyentuh data lama
+      d.semesters = d.semesters || [];
+      d.activeSemesterId = d.activeSemesterId || null;
+      d.schedules = d.schedules || [];
+      d.academicEvents = d.academicEvents || [];
+      d.recurringTasks = d.recurringTasks || [];
+      d.notifications = d.notifications || [];
+      if(d.semesters.length===0){
+        const now = new Date();
+        const y = now.getMonth()>=6 ? now.getFullYear() : now.getFullYear()-1; // heuristik tahun ajaran mulai ~Juli
+        const sem = { id: uid("sem"), name:"Semester 1", academicYear: y+"/"+(y+1), archived:false, createdAt: now.toISOString() };
+        d.semesters.push(sem);
+        d.activeSemesterId = sem.id;
+      }
+      // beri setiap course/task semesterId default agar langsung terhubung ke sistem semester baru
+      (d.courses||[]).forEach(c=>{ if(!c.semesterId) c.semesterId = d.activeSemesterId; });
+      d.version = 2;
+    }
+    if(d.version < 3){
+      // v2 -> v3: tambahkan preferensi Verity tanpa menyentuh data lama
+      d.settings = d.settings || {};
+      if(d.settings.verityEnabled===undefined) d.settings.verityEnabled = true;
+      if(!d.settings.verityPersonality) d.settings.verityPersonality = "balanced";
+      if(d.settings.verityLastProactiveAt===undefined) d.settings.verityLastProactiveAt = null;
+      if(d.settings.verityLastCompletedCount===undefined) d.settings.verityLastCompletedCount = 0;
+      d.version = 3;
+    }
+    if(d.version < 4){
+      // v3 -> v4: log penyimpanan sesi Focus Mode, tanpa menyentuh data lama
+      d.focusSessions = d.focusSessions || [];
+      d.version = 4;
+    }
+    if(d.version < 5){
+      // v4 -> v5: rebrand ke StudyFlow — Areyhan & Verity (emoji companion).
+      // Tidak ada field yang dihapus/direset — hanya memastikan preferensi
+      // Verity punya default yang aman untuk pengguna lama.
+      d.settings = d.settings || {};
+      if(d.settings.verityEnabled===undefined) d.settings.verityEnabled = true;
+      if(!d.settings.verityPersonality) d.settings.verityPersonality = "balanced";
+      d.version = 5;
+    }
+    if(d.version < 6){
+      // v5 -> v6: sistem suara StudyFlow (default aktif, volume moderat).
+      // Tidak ada field yang dihapus/direset.
+      d.settings = d.settings || {};
+      if(d.settings.soundEnabled===undefined) d.settings.soundEnabled = true;
+      if(d.settings.soundMasterVolume===undefined) d.settings.soundMasterVolume = 0.6;
+      if(d.settings.soundUiVolume===undefined) d.settings.soundUiVolume = 0.5;
+      if(d.settings.soundVerityVolume===undefined) d.settings.soundVerityVolume = 0.7;
+      if(d.settings.soundNotif===undefined) d.settings.soundNotif = true;
+      d.version = 6;
+    }
+    return d;
+  }
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return defaultData();
+      let parsed = JSON.parse(raw);
+      const d = defaultData();
+      let merged = Object.assign(d, parsed, {settings: Object.assign(d.settings, parsed.settings||{})});
+      merged = migrate(merged);
+      return merged;
+    }catch(e){
+      console.error("Gagal memuat data, memakai default.", e);
+      return defaultData();
+    }
+  }
+  function save(data){
+    try{
+      data.version = CURRENT_DATA_VERSION;
+      localStorage.setItem(KEY, JSON.stringify(data));
+      return true;
+    }catch(e){
+      console.error("Gagal menyimpan data", e);
+      return false;
+    }
+  }
+  return {load, save, defaultData, migrate};
+})();
+
+let DB = StorageManager.load();
+
+/* =========================================================
+   STUDYFLOW SOUND SYSTEM
+   All sounds are synthesized in-browser via WebAudio (tiny
+   oscillator/noise envelopes) — no external audio files are
+   downloaded, so there is nothing to license or attribute.
+   This also keeps the app fully offline/PWA-safe and avoids
+   ever bypassing browser autoplay policy: the AudioContext is
+   only created/resumed after a real user gesture.
+========================================================= */
+const SoundManager = (function(){
+  let ctx = null;
+  function ensureCtx(){
+    if(ctx) return ctx;
+    try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ ctx = null; }
+    return ctx;
+  }
+  // Resume on first real user gesture (click/keydown/touch) — never auto-starts audio.
+  function primeOnGesture(){
+    const c = ensureCtx();
+    if(c && c.state === "suspended") c.resume().catch(()=>{});
+    window.removeEventListener("pointerdown", primeOnGesture);
+    window.removeEventListener("keydown", primeOnGesture);
+  }
+  window.addEventListener("pointerdown", primeOnGesture, {once:true});
+  window.addEventListener("keydown", primeOnGesture, {once:true});
+
+  function settings(){ return DB.settings; }
+  function volumeFor(bucket){
+    const s = settings();
+    if(!s.soundEnabled) return 0;
+    if(bucket==="notif" && !s.soundNotif) return 0;
+    const master = s.soundMasterVolume ?? 0.6;
+    const bucketVol = bucket==="verity" ? (s.soundVerityVolume ?? 0.7) : (s.soundUiVolume ?? 0.5);
+    return Math.max(0, Math.min(1, master * bucketVol));
+  }
+  // Tiny envelope-based tone. freqs = [start,end] glide, dur in seconds.
+  function tone(c, {freq=440, endFreq=null, dur=0.12, type="sine", gain=0.2, delay=0}){
+    const t0 = c.currentTime + delay;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if(endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(1,endFreq), t0+dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(gain,0.001), t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(g); g.connect(c.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }
+  const RECIPES = {
+    click:      (c,v)=> tone(c,{freq:720, endFreq:560, dur:0.045, type:"sine", gain:0.14*v}),
+    popup:      (c,v)=> { tone(c,{freq:520, endFreq:760, dur:0.09, type:"sine", gain:0.16*v}); },
+    success:    (c,v)=> { tone(c,{freq:520, dur:0.09, type:"sine", gain:0.18*v}); tone(c,{freq:780, dur:0.14, type:"sine", gain:0.18*v, delay:0.07}); },
+    taskComplete:(c,v)=>{ tone(c,{freq:600, dur:0.08, type:"triangle", gain:0.2*v}); tone(c,{freq:900, dur:0.16, type:"triangle", gain:0.2*v, delay:0.08}); },
+    notification:(c,v)=>{ tone(c,{freq:880, dur:0.08, type:"sine", gain:0.16*v}); tone(c,{freq:1046, dur:0.1, type:"sine", gain:0.14*v, delay:0.1}); },
+    error:      (c,v)=> { tone(c,{freq:300, endFreq:180, dur:0.18, type:"sawtooth", gain:0.12*v}); },
+    focusStart: (c,v)=> { tone(c,{freq:440, endFreq:660, dur:0.35, type:"sine", gain:0.14*v}); },
+    focusComplete:(c,v)=>{ tone(c,{freq:520, dur:0.1, type:"sine", gain:0.18*v}); tone(c,{freq:660, dur:0.1, type:"sine", gain:0.18*v, delay:0.1}); tone(c,{freq:880, dur:0.22, type:"sine", gain:0.18*v, delay:0.2}); },
+    verityReact:(c,v)=> { tone(c,{freq:900, endFreq:1200, dur:0.06, type:"sine", gain:0.12*v}); }
+  };
+  const SOUND_TYPES = Object.keys(RECIPES);
+  function play(name){
+    if(!RECIPES[name]) return;
+    const bucket = (name==="notification") ? "notif" : (name==="verityReact" ? "verity" : "ui");
+    const v = volumeFor(bucket);
+    if(v<=0) return;
+    const c = ensureCtx();
+    if(!c) return;
+    if(c.state === "suspended"){ c.resume().catch(()=>{}); }
+    try{ RECIPES[name](c, v); }catch(e){ /* fail silently — sound is decorative */ }
+  }
+  return { play, SOUND_TYPES };
+})();
+function persist(){ StorageManager.save(DB); }
+
+function uid(prefix){ return prefix+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+/* =========================================================
+   TOAST
+========================================================= */
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  SoundManager.play("notification");
+  clearTimeout(toast._tm);
+  toast._tm = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* =========================================================
+   TASK MANAGER
+========================================================= */
+const TaskManager = (function(){
+  function create(task){
+    task.id = uid("task");
+    task.createdAt = new Date().toISOString();
+    if(!task.status) task.status = "todo";
+    DB.tasks.push(task);
+    persist();
+    return task;
+  }
+  function update(id, patch){
+    const t = DB.tasks.find(x=>x.id===id);
+    if(!t) return null;
+    Object.assign(t, patch);
+    persist();
+    return t;
+  }
+  function remove(id){
+    DB.tasks = DB.tasks.filter(x=>x.id!==id);
+    persist();
+  }
+  function get(id){ return DB.tasks.find(x=>x.id===id); }
+  function all(){ return DB.tasks; }
+  function setStatus(id, status){
+    const patch = {status};
+    if(status==="done") patch.completedAt = new Date().toISOString();
+    return update(id, patch);
+  }
+  return {create, update, remove, get, all, setStatus};
+})();
+
+/* Eisenhower category — always computed live, never stored permanently */
+function isUrgent(task){
+  const deadline = new Date(task.deadline);
+  const now = new Date();
+  const diffMs = deadline - now;
+  const diffDays = diffMs / (1000*60*60*24);
+  return diffDays <= 3; // includes overdue (negative) as urgent
+}
+function getTaskCategory(task){
+  const important = task.priority === "important";
+  const urgent = isUrgent(task);
+  if(important && urgent) return "urgent-important";
+  if(important && !urgent) return "noturgent-important";
+  if(!important && urgent) return "urgent-notimportant";
+  return "noturgent-notimportant";
+}
+function isOverdue(task){
+  return new Date(task.deadline) < new Date() && task.status !== "done";
+}
+function isActiveTask(task){ return task.status !== "done"; }
+
+function countdownText(task){
+  const deadline = new Date(task.deadline);
+  const now = new Date();
+  let diff = deadline - now;
+  if(task.status === "done") return "Selesai";
+  if(diff < 0){
+    const days = Math.floor(-diff/(1000*60*60*24));
+    const hours = Math.floor((-diff%(1000*60*60*24))/(1000*60*60));
+    if(days>0) return `Terlambat ${days} hari`;
+    return `Terlambat ${hours} jam`;
+  }
+  const days = Math.floor(diff/(1000*60*60*24));
+  const hours = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  if(days === 0) return `Hari ini — ${hours} jam lagi`;
+  return `${days} hari ${hours} jam lagi`;
+}
+
+function fmtDate(iso){
+  const d = new Date(iso);
+  const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${hh}:${mm}`;
+}
+function ymd(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+/* =========================================================
+   FOLDER MANAGER
+========================================================= */
+const FolderManager = (function(){
+  function create(name){
+    const f = {id:uid("folder"), name};
+    DB.folders.push(f);
+    persist();
+    return f;
+  }
+  function rename(id, name){
+    const f = DB.folders.find(x=>x.id===id);
+    if(f){ f.name=name; persist(); }
+  }
+  function remove(id, deleteTasks){
+    DB.folders = DB.folders.filter(x=>x.id!==id);
+    if(deleteTasks){
+      DB.tasks = DB.tasks.filter(t=>t.folderId!==id);
+    } else {
+      DB.tasks.forEach(t=>{ if(t.folderId===id) t.folderId=""; });
+    }
+    persist();
+  }
+  function all(){ return DB.folders; }
+  function taskCount(id){ return DB.tasks.filter(t=>t.folderId===id).length; }
+  return {create, rename, remove, all, taskCount};
+})();
+
+/* =========================================================
+   COURSE MANAGER
+========================================================= */
+const CourseManager = (function(){
+  function create(data){
+    const c = {id:uid("course"), name:data.name, code:data.code||"", lecturerId:data.lecturerId||"", notes:data.notes||"", semesterId:data.semesterId||DB.activeSemesterId||""};
+    DB.courses.push(c);
+    persist();
+    return c;
+  }
+  function update(id, patch){
+    const c = DB.courses.find(x=>x.id===id);
+    if(c){ Object.assign(c, patch); persist(); }
+  }
+  function remove(id){
+    DB.courses = DB.courses.filter(x=>x.id!==id);
+    persist();
+  }
+  function get(id){ return DB.courses.find(x=>x.id===id); }
+  function all(){ return DB.courses; }
+  return {create, update, remove, get, all};
+})();
+
+/* =========================================================
+   LECTURER MANAGER
+========================================================= */
+const LecturerManager = (function(){
+  function create(data){
+    const l = {id:uid("lect"), name:data.name, notes:data.notes||""};
+    DB.lecturers.push(l);
+    persist();
+    return l;
+  }
+  function update(id, patch){
+    const l = DB.lecturers.find(x=>x.id===id);
+    if(l){ Object.assign(l, patch); persist(); }
+  }
+  function remove(id){
+    DB.lecturers = DB.lecturers.filter(x=>x.id!==id);
+    persist();
+  }
+  function get(id){ return DB.lecturers.find(x=>x.id===id); }
+  function all(){ return DB.lecturers; }
+  return {create, update, remove, get, all};
+})();
+
+/* =========================================================
+   SEMESTER MANAGER
+========================================================= */
+const SemesterManager = (function(){
+  function create(data){
+    const s = {id:uid("sem"), name:data.name, academicYear:data.academicYear||"", archived:false, createdAt:new Date().toISOString()};
+    DB.semesters.push(s);
+    if(!DB.activeSemesterId) DB.activeSemesterId = s.id;
+    persist();
+    return s;
+  }
+  function update(id, patch){
+    const s = DB.semesters.find(x=>x.id===id);
+    if(s){ Object.assign(s, patch); persist(); }
+  }
+  function remove(id){
+    DB.semesters = DB.semesters.filter(x=>x.id!==id);
+    if(DB.activeSemesterId===id) DB.activeSemesterId = DB.semesters[0] ? DB.semesters[0].id : null;
+    persist();
+  }
+  function setActive(id){ DB.activeSemesterId = id; persist(); }
+  function get(id){ return DB.semesters.find(x=>x.id===id); }
+  function all(){ return DB.semesters; }
+  function active(){ return DB.semesters.find(x=>x.id===DB.activeSemesterId) || null; }
+  return {create, update, remove, setActive, get, all, active};
+})();
+
+/* =========================================================
+   SCHEDULE MANAGER (Jadwal Kuliah)
+========================================================= */
+const ScheduleManager = (function(){
+  function create(data){
+    const s = {
+      id: uid("sched"),
+      courseId: data.courseId,
+      day: data.day, // "mon".."sun"
+      startTime: data.startTime,
+      endTime: data.endTime,
+      room: data.room||"",
+      building: data.building||"",
+      notes: data.notes||"",
+      semesterId: data.semesterId || DB.activeSemesterId || ""
+    };
+    DB.schedules.push(s);
+    persist();
+    return s;
+  }
+  function update(id, patch){
+    const s = DB.schedules.find(x=>x.id===id);
+    if(s){ Object.assign(s, patch); persist(); }
+  }
+  function remove(id){
+    DB.schedules = DB.schedules.filter(x=>x.id!==id);
+    persist();
+  }
+  function get(id){ return DB.schedules.find(x=>x.id===id); }
+  function all(){ return DB.schedules; }
+  function bySemester(semId){ return DB.schedules.filter(x=>x.semesterId===semId); }
+  return {create, update, remove, get, all, bySemester};
+})();
+const DOW_ORDER = ["mon","tue","wed","thu","fri","sat","sun"];
+const DOW_LABEL = {mon:"Senin", tue:"Selasa", wed:"Rabu", thu:"Kamis", fri:"Jumat", sat:"Sabtu", sun:"Minggu"};
+const JS_DAY_TO_DOW = ["sun","mon","tue","wed","thu","fri","sat"];
+
+/* =========================================================
+   NOTIFICATION MANAGER
+========================================================= */
+const NotificationManager = (function(){
+  let dailyTimer = null;
+
+  function updatePermStatusUI(){
+    const el = document.getElementById("notifPermStatus");
+    if(!("Notification" in window)){
+      el.textContent = "Browser tidak mendukung notifikasi";
+      return;
+    }
+    const map = {granted:"Diizinkan ✓", denied:"Ditolak — aktifkan lewat pengaturan browser", default:"Belum diminta"};
+    el.textContent = map[Notification.permission] || "Belum diminta";
+  }
+
+  async function requestPermission(){
+    if(!("Notification" in window)){
+      toast("Browser ini tidak mendukung notifikasi.");
+      return;
+    }
+    const res = await Notification.requestPermission();
+    updatePermStatusUI();
+    if(res === "granted") toast("Izin notifikasi diberikan.");
+    else toast("Izin notifikasi ditolak.");
+  }
+
+  function fireDailySummary(){
+    const active = DB.tasks.filter(isActiveTask);
+    if(active.length===0) return;
+    const sorted = active.slice().sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).slice(0,5);
+    const lines = sorted.map((t,i)=>{
+      const d = Math.round((new Date(t.deadline)-new Date())/(1000*60*60*24));
+      const dtext = d<0 ? `terlambat ${-d} hari` : (d===0 ? "hari ini" : `${d} hari lagi`);
+      return `${i+1}. ${t.title} — deadline ${dtext}`;
+    }).join("\n");
+    if("Notification" in window && Notification.permission==="granted"){
+      /* Routed through Verity's voice per the App Data -> Verity Context ->
+         Mood -> Response -> NotificationManager flow, using the same
+         DB.settings.verityEnabled toggle and mood logic as the in-app
+         companion — never a separate/duplicated data source. */
+      const m = DB.settings.verityEnabled ? VerityEngine.computeMood() : null;
+      const emoji = m ? (VERITY_EMOTIONS[m.mood]||VERITY_EMOTIONS.neutral) : "📚";
+      const title = m ? `${emoji} Verity — StudyFlow` : "📚 Pengingat Kuliah";
+      const intro = m ? m.text + "\n\n" : "";
+      new Notification(title, {
+        body: `${intro}Kamu memiliki ${active.length} tugas yang perlu diperhatikan:\n${lines}`
+      });
+    }
+  }
+
+  function scheduleDaily(){
+    clearTimeout(dailyTimer);
+    if(!DB.settings.notifDaily) return;
+    const [hh,mm] = (DB.settings.notifTime||"19:00").split(":").map(Number);
+    const now = new Date();
+    let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+    if(target <= now) target.setDate(target.getDate()+1);
+    const ms = target - now;
+    dailyTimer = setTimeout(()=>{
+      fireDailySummary();
+      scheduleDaily();
+    }, ms);
+  }
+
+  return {requestPermission, updatePermStatusUI, scheduleDaily, fireDailySummary};
+})();
+
+/* =========================================================
+   FILTER / SEARCH MANAGER
+========================================================= */
+function searchTasks(list, query){
+  if(!query) return list;
+  const q = query.toLowerCase();
+  return list.filter(t=>{
+    const course = CourseManager.get(t.courseId);
+    const lecturer = LecturerManager.get(t.lecturerId);
+    const hay = [
+      t.title, t.description, course?course.name:"", lecturer?lecturer.name:"",
+      (t.members||[]).join(" ")
+    ].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+function applyFilters(list, f){
+  return list.filter(t=>{
+    if(f.status && f.status!=="all" && t.status!==f.status) return false;
+    if(f.priority && f.priority!=="all" && t.priority!==f.priority) return false;
+    if(f.type && f.type!=="all" && t.type!==f.type) return false;
+    if(f.course && f.course!=="all" && t.courseId!==f.course) return false;
+    if(f.folder && f.folder!=="all" && (t.folderId||"")!==f.folder) return false;
+    return true;
+  });
+}
+function sortTasks(list, mode){
+  const arr = list.slice();
+  if(mode==="deadline-asc") arr.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+  else if(mode==="deadline-desc") arr.sort((a,b)=>new Date(b.deadline)-new Date(a.deadline));
+  else if(mode==="created-desc") arr.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  else if(mode==="az") arr.sort((a,b)=>a.title.localeCompare(b.title));
+  return arr;
+}
+
+/* =========================================================
+   UI MANAGER
+========================================================= */
+const catMeta = {
+  "urgent-important": {label:"Penting & Mendesak", cls:"chip-red", dot:"var(--red)"},
+  "noturgent-important": {label:"Penting & Tidak Mendesak", cls:"chip-amber", dot:"var(--amber)"},
+  "urgent-notimportant": {label:"Tidak Penting & Mendesak", cls:"chip-orange", dot:"var(--orange)"},
+  "noturgent-notimportant": {label:"Tidak Penting & Tidak Mendesak", cls:"chip", dot:"var(--ink-faint)"}
+};
+const statusLabel = {todo:"Belum Dimulai", doing:"Sedang Dikerjakan", done:"Selesai"};
+
+let currentPage = "dashboard";
+let currentFolderView = null; // folder id when viewing folder tasks
+let calDate = new Date();
+let calSelectedDate = null;
+let globalSearchQuery = "";
+
+function renderTaskCard(task){
+  const course = CourseManager.get(task.courseId);
+  const cat = catMeta[getTaskCategory(task)];
+  const done = task.status === "done";
+  const overdue = isOverdue(task);
+  const div = document.createElement("div");
+  div.className = "task-card"+(done?" done":"");
+  div.innerHTML = `
+    <div class="task-check ${done?'checked':''}" data-quickcheck="${task.id}">${done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>':''}</div>
+    <div class="task-main">
+      <div class="task-title">${escapeHtml(task.title)}</div>
+      <div class="task-meta">
+        <span class="chip">${course?escapeHtml(course.name):"—"}</span>
+        <span class="chip ${cat.cls}">${cat.label}</span>
+        <span class="chip">${task.type==="group"?"Kelompok":"Mandiri"}</span>
+        <span class="chip">${statusLabel[task.status]}</span>
+      </div>
+    </div>
+    <div class="task-deadline ${overdue?'overdue':(isUrgent(task)?'urgent':'')}">${overdue?'⚠ ':''}${countdownText(task)}</div>
+  `;
+  div.addEventListener("click", (e)=>{
+    if(e.target.closest("[data-quickcheck]")) return;
+    if(div.dataset.swiped==="1"){ div.dataset.swiped=""; return; }
+    openDetail(task.id);
+  });
+  div.querySelector("[data-quickcheck]").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    TaskManager.setStatus(task.id, done ? "todo" : "done");
+    toast(done ? "Ditandai belum selesai." : "Tugas selesai! 🎉");
+    if(!done) VerityEngine.notifyTaskCompleted(task);
+    renderAll();
+  });
+  wireTaskSwipe(div, task, done);
+  return div;
+}
+
+/* Optional swipe gestures (mobile only, touch pointers only): swipe right
+   to complete, swipe left to open the detail/more-actions sheet. Regular
+   tap and the checkbox button keep working exactly as before — swipe is
+   purely additive, never required. */
+function wireTaskSwipe(div, task, done){
+  let startX=0, startY=0, dx=0, dragging=false, decided=false, isHorizontal=false;
+  const THRESHOLD = 72;
+  div.addEventListener("touchstart", (e)=>{
+    if(e.touches.length!==1) return;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    dx = 0; dragging = true; decided = false; isHorizontal = false;
+    div.style.transition = "none";
+  }, {passive:true});
+  div.addEventListener("touchmove", (e)=>{
+    if(!dragging) return;
+    const x = e.touches[0].clientX, y = e.touches[0].clientY;
+    dx = x - startX;
+    const dy = y - startY;
+    if(!decided){
+      if(Math.abs(dx) > 8 || Math.abs(dy) > 8){ decided = true; isHorizontal = Math.abs(dx) > Math.abs(dy); }
+    }
+    if(isHorizontal){
+      const clamped = Math.max(-100, Math.min(100, dx));
+      div.style.transform = `translateX(${clamped}px)`;
+      div.style.background = clamped>0 ? "var(--accent-soft)" : (clamped<0 ? "var(--surface-2)" : "");
+    }
+  }, {passive:true});
+  const reset = ()=>{
+    div.style.transition = "transform .15s ease, background .15s ease";
+    div.style.transform = "";
+    div.style.background = "";
+  };
+  div.addEventListener("touchend", ()=>{
+    dragging = false;
+    if(isHorizontal && Math.abs(dx) > THRESHOLD){
+      div.dataset.swiped = "1";
+      if(dx > 0){
+        TaskManager.setStatus(task.id, done ? "todo" : "done");
+        toast(done ? "Ditandai belum selesai." : "Tugas selesai! 🎉");
+        if(!done) VerityEngine.notifyTaskCompleted(task);
+        renderAll();
+        return;
+      } else {
+        openDetail(task.id);
+      }
+    }
+    reset();
+  }, {passive:true});
+  div.addEventListener("touchcancel", reset, {passive:true});
+}
+
+function escapeHtml(s){
+  const d = document.createElement("div");
+  d.textContent = s==null?"":String(s);
+  return d.innerHTML;
+}
+
+function renderEmpty(container, msg, sub, showBtn, emotion){
+  container.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "empty-state";
+  const face = (DB.settings.verityEnabled!==false) ? (VERITY_EMOTIONS[emotion]||VERITY_EMOTIONS.relaxed) : "🎉";
+  div.innerHTML = `<span class="emoji">${face}</span><h3>${msg}</h3><p>${sub||""}</p>${showBtn?'<button class="btn btn-primary" id="emptyAddBtn">+ Tambah Tugas</button>':''}`;
+  container.appendChild(div);
+  if(showBtn) div.querySelector("#emptyAddBtn").addEventListener("click", ()=>openTaskModal());
+}
+
+function renderSummary(){
+  const tasks = DB.tasks;
+  const total = tasks.length;
+  const done = tasks.filter(t=>t.status==="done").length;
+  const undone = total - done;
+  const urgent = tasks.filter(t=>t.status!=="done" && isUrgent(t)).length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrowLimit = new Date(today); tomorrowLimit.setDate(tomorrowLimit.getDate()+1);
+  const weekLimit = new Date(today); weekLimit.setDate(weekLimit.getDate()+7);
+  const dueToday = tasks.filter(t=> t.status!=="done" && new Date(t.deadline)>=today && new Date(t.deadline)<tomorrowLimit).length;
+  const dueWeek = tasks.filter(t=> t.status!=="done" && new Date(t.deadline)>=today && new Date(t.deadline)<weekLimit).length;
+
+  const items = [
+    {num: total, lbl:"Total Tugas"},
+    {num: undone, lbl:"Belum Selesai"},
+    {num: done, lbl:"Selesai"},
+    {num: urgent, lbl:"Mendesak"},
+    {num: dueToday, lbl:"Deadline Hari Ini"},
+    {num: dueWeek, lbl:"Deadline Minggu Ini"},
+  ];
+  const row = document.getElementById("summaryRow");
+  row.innerHTML = items.map(i=>`<div class="summary-card"><div class="num">${i.num}</div><div class="lbl">${i.lbl}</div></div>`).join("");
+}
+
+function renderMatrix(){
+  const grid = document.getElementById("matrixGrid");
+  const active = DB.tasks.filter(isActiveTask);
+  const groups = {
+    "urgent-important": {icon:"🔴", cls:"m-urgent-important", desc:"Tugas deadline ≤ 3 hari"},
+    "noturgent-important": {icon:"🟡", cls:"m-noturgent-important", desc:"Deadline > 3 hari"},
+    "urgent-notimportant": {icon:"🟠", cls:"m-urgent-notimportant", desc:"Deadline ≤ 3 hari"},
+    "noturgent-notimportant": {icon:"⚪", cls:"m-noturgent-notimportant", desc:"Deadline > 3 hari"},
+  };
+  grid.innerHTML = "";
+  Object.keys(groups).forEach(key=>{
+    const count = active.filter(t=>getTaskCategory(t)===key).length;
+    const meta = catMeta[key], g = groups[key];
+    const card = document.createElement("div");
+    card.className = "matrix-card "+g.cls;
+    card.innerHTML = `<h3>${g.icon} ${meta.label.toUpperCase()}</h3><p>${g.desc}</p><div class="count">${count}</div>`;
+    card.addEventListener("click", ()=>{
+      goToPage("tasks");
+      document.getElementById("filterStatus").value="all";
+      document.getElementById("filterPriority").value = key.includes("notimportant") ? "notimportant" : "important";
+      // urgent filter isn't a stored field; filter client side via search-less approach:
+      renderTasksPage(key);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function renderOverdue(){
+  const block = document.getElementById("overdueBlock");
+  const list = document.getElementById("overdueList");
+  const overdue = DB.tasks.filter(isOverdue);
+  if(overdue.length===0){ block.style.display="none"; return; }
+  block.style.display="block";
+  list.innerHTML="";
+  overdue.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).forEach(t=>list.appendChild(renderTaskCard(t)));
+}
+
+function renderWeekly(){
+  const track = document.getElementById("weeklyTrack");
+  const days = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekLimit = new Date(today); weekLimit.setDate(weekLimit.getDate()+7);
+  const upcoming = DB.tasks.filter(t=> t.status!=="done" && new Date(t.deadline)>=today && new Date(t.deadline)<weekLimit)
+    .sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+  if(upcoming.length===0){
+    track.innerHTML = `<div class="empty-state"><span class="emoji">🗓️</span><p>Tidak ada deadline dalam 7 hari ke depan.</p></div>`;
+    return;
+  }
+  const byDay = {};
+  upcoming.forEach(t=>{
+    const d = new Date(t.deadline);
+    const key = ymd(d);
+    if(!byDay[key]) byDay[key]=[];
+    byDay[key].push(t);
+  });
+  track.innerHTML = Object.keys(byDay).sort().map(key=>{
+    const d = new Date(key+"T00:00:00");
+    const label = days[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1);
+    const items = byDay[key].map(t=>`<div class="weekly-item"><span class="t">${escapeHtml(t.title)}</span><span>${countdownText(t)}</span></div>`).join("");
+    return `<div class="weekly-day"><div class="weekly-daylabel">${label}</div><div class="weekly-items">${items}</div></div>`;
+  }).join("");
+}
+
+function renderDashboard(){
+  renderGreetingAndToday();
+  renderSummary();
+  renderMatrix();
+  renderOverdue();
+  renderWeekly();
+  VerityEngine.onDataRefresh();
+}
+
+/* =========================================================
+   VERITY — ACADEMIC COMPANION
+   Context-aware, rule-based (no external AI API). Everything Verity
+   says is derived from real DB data — it never invents information.
+========================================================= */
+/* Centralized emoji configuration — Verity IS an emoji, never an image/SVG
+   character/illustration. Every mood maps to exactly one Unicode glyph;
+   nothing in the app hardcodes an emoji for Verity outside this table. */
+const VERITY_EMOTIONS = {
+  neutral:"🙂", happy:"😄", excited:"🤩", proud:"🥹", concerned:"😐",
+  angry:"😠", laughing:"😂", sad:"🥲", surprised:"😳", relaxed:"😌",
+  thinking:"🤔", sleepy:"😴"
+};
+/* Live mood state (recomputed continuously — never the source of truth,
+   just a mirror of the last computeMood() result for convenience/telemetry). */
+let verityMood = "neutral";
+
+const VerityEngine = (function(){
+  const MOODS = VERITY_EMOTIONS; // legacy alias used elsewhere in this file
+  function userName(){ return (DB.settings.userName||"").trim() || "kamu"; }
+  function stats(){
+    const tasks = DB.tasks;
+    const overdue = tasks.filter(isOverdue).length;
+    const dueToday = tasks.filter(t=>t.status!=="done" && ymd(new Date(t.deadline))===ymd(new Date())).length;
+    const upcoming = tasks.filter(t=>t.status!=="done" && isUrgent(t) && !isOverdue(t)).length;
+    const active = tasks.filter(isActiveTask).length;
+    const todayKey = ymd(new Date());
+    const completedToday = tasks.filter(t=>t.status==="done" && t.completedAt && ymd(new Date(t.completedAt))===todayKey).length;
+    const allDone = tasks.length>0 && active===0;
+    return {overdue, dueToday, upcoming, active, completedToday, allDone, total: tasks.length};
+  }
+  /* ---- response pools (spec §8): randomize only when context changes,
+     never spam the same line back to back. ---- */
+  const POOLS = {
+    empty: ["Selamat, bisa santai wekekeke.", "Hari ini cukup tenang.", "Belum ada tugas. Nikmati dulu ketenangannya.", "Aman untuk sekarang 😌"],
+    allDone: ["SEMUA BERES?! Aku bahkan nggak sempat ngomel. 😭✨", "Hari ini bersih. Kamu aman. 🥹", "Semuanya kelar. Keren banget."],
+    criticalOverdue: (n,u)=>[`${userName().toUpperCase()}. 😠 Ada ${n} tugas yang sudah lewat deadline dan ${u} lagi mulai mendekat. Ayo, satu dulu.`,`Kita perlu bicara serius nih. ${n} tugas terlambat, ${u} lagi menyusul.`],
+    overdue: (n)=>[`Oke... kita perlu ngobrol. 😐 Ada ${n} tugas yang terlambat.`, `Ada tugas yang kelewat deadline. Coba cek dulu. 🥲`, `${n} tugas udah lewat deadline nih. Yuk ditangani.`],
+    dueToday: (n)=>[`Hmm... ada ${n} tugas yang deadline-nya hari ini. 😐`, `Waduh, ${n} tugas due hari ini. Jangan lupa cek tugasmu.`],
+    completedMany: (n)=>[`Hari ini produktif banget. ${n} tugas selesai! 👏`, `Wih, progresmu naik! ${n} tugas beres hari ini. 🤩`],
+    completed: ["Mantap, satu lagi beres!", "Nice! Berkurang satu.", "Selesai juga. Good job!", "Nah, gitu dong 😄", "YES! Aku bangga sama kamu."],
+    upcoming: (n)=>[`Hmm... kita punya ${n} deadline yang mulai mendekat.`, `Ada ${n} deadline dalam 3 hari ke depan. Yuk disiapkan.`, `Waduh, rame juga tugasnya — ${n} deadline mendekat. 😳`],
+    relaxed: ["Hari ini cukup aman. Kamu bisa bernapas dulu. 😌", "Nggak ada yang mendesak. Santai dulu.", "Kondisi aman terkendali."]
+  };
+  const lastByCategory = {};
+  function pick(category, arr){
+    if(!arr || arr.length===0) return "";
+    if(arr.length===1) return arr[0];
+    let choice;
+    do { choice = arr[Math.floor(Math.random()*arr.length)]; } while(choice===lastByCategory[category] && arr.length>1);
+    lastByCategory[category] = choice;
+    return choice;
+  }
+  /* ---- priority system (spec §7): higher-numbered checks never get
+     overridden by a lower-priority "everything's fine" state. ---- */
+  function computeMood(){
+    const s = stats();
+    let result;
+    if(s.total===0){ result = {mood:"relaxed", text:pick("empty", POOLS.empty)}; }
+    else if(s.overdue>=2 && s.upcoming>=3){ result = {mood:"angry", text:pick("criticalOverdue", POOLS.criticalOverdue(s.overdue, s.upcoming))}; }
+    else if(s.overdue>0){ result = {mood: s.completedToday>0 ? "sad" : "angry", text: s.completedToday>0 ? `Satu beres. Tapi masih ada ${s.overdue} tugas yang perlu kamu cek. 🥲` : pick("overdue", POOLS.overdue(s.overdue))}; }
+    else if(s.dueToday>0){ result = {mood:"concerned", text:pick("dueToday", POOLS.dueToday(s.dueToday))}; }
+    else if(s.allDone){ result = {mood:"proud", text:pick("allDone", POOLS.allDone)}; }
+    else if(s.completedToday>=3){ result = {mood:"excited", text:pick("completedMany", POOLS.completedMany(s.completedToday))}; }
+    else if(s.completedToday>0){ result = {mood:"happy", text:pick("completed", POOLS.completed)}; }
+    else if(s.upcoming>=3){ result = {mood:"surprised", text:pick("upcoming", POOLS.upcoming(s.upcoming))}; }
+    else if(s.upcoming>0){ result = {mood:"concerned", text:pick("upcoming", POOLS.upcoming(s.upcoming))}; }
+    else { result = {mood:"relaxed", text:pick("relaxed", POOLS.relaxed)}; }
+    verityMood = result.mood;
+    return result;
+  }
+  /* ---- per-page contextual presence (spec §11) — only used when nothing
+     higher-priority (overdue / due today / critical) is happening. ---- */
+  const PAGE_CONTEXT = {
+    dashboard:{mood:"neutral", text:"Oke, mari lihat kondisi akademikmu."},
+    tasks:{mood:"neutral", text:"Wah, ada tugas tuh."},
+    calendar:{mood:"thinking", text:"Coba cek jadwalmu hari ini."},
+    courses:{mood:"neutral", text:"Daftar mata kuliahmu ada di sini."},
+    lecturers:{mood:"neutral", text:"Siapa dosen yang perlu kamu hubungi?"},
+    schedule:{mood:"relaxed", text:"Biar besok nggak salah jadwal."},
+    statistics:{mood:"excited", text:"Wih, progresmu mulai kelihatan!"},
+    focus:{mood:"relaxed", text:"Oke. Sekarang kita fokus."},
+    folders:{mood:"neutral", text:"Belum ada folder."},
+    settings:{mood:"thinking", text:"Mau mengatur StudyFlow?"}
+  };
+  let currentPageMoodOverride = null;
+  function onPageChange(page){
+    const s = stats();
+    // priority: only let the page line take over when nothing urgent is going on
+    if(s.overdue>0 || s.dueToday>0){ currentPageMoodOverride = null; renderDock(); return; }
+    const ctx = PAGE_CONTEXT[page];
+    currentPageMoodOverride = ctx || null;
+    renderDock();
+  }
+  function renderDock(){
+    if(!DB.settings.verityEnabled){
+      document.getElementById("verityDock").style.display = "none";
+      document.getElementById("verityFab").style.display = "none";
+      return;
+    }
+    document.getElementById("verityDock").style.display = "";
+    const m = currentPageMoodOverride || computeMood();
+    if(currentPageMoodOverride) verityMood = m.mood;
+    document.getElementById("verityDockFace").textContent = MOODS[m.mood]||MOODS.neutral;
+    document.getElementById("verityDockMsg").textContent = m.text;
+    document.getElementById("verityFabFace").textContent = MOODS[m.mood]||MOODS.neutral;
+    document.getElementById("verityFabBadge").style.display = (m.mood==="angry"||m.mood==="sad"||m.mood==="concerned") ? "block" : "none";
+  }
+  /* ---- proactive commentary (cooldown to avoid spam) ---- */
+  const PROACTIVE_COOLDOWN_MS = 60*1000; // min gap between unsolicited toasts
+  function canProactive(){
+    const last = DB.settings.verityLastProactiveAt ? new Date(DB.settings.verityLastProactiveAt).getTime() : 0;
+    return (Date.now()-last) > PROACTIVE_COOLDOWN_MS;
+  }
+  function showToast(text, mood){
+    const el = document.getElementById("verityToast");
+    document.getElementById("verityToastFace").textContent = MOODS[mood]||MOODS.neutral;
+    document.getElementById("verityToastMsg").textContent = text;
+    el.classList.add("show");
+    el.classList.remove("vbounce"); void el.offsetWidth; el.classList.add("vbounce");
+    SoundManager.play("verityReact");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>el.classList.remove("show"), 4200);
+    DB.settings.verityLastProactiveAt = new Date().toISOString();
+    persist();
+  }
+  function notifyTaskCompleted(task){
+    SoundManager.play("taskComplete");
+    if(!DB.settings.verityEnabled || !canProactive()) return;
+    currentPageMoodOverride = null;
+    const s = stats();
+    if(s.overdue>0){ showToast(`Satu beres — "${task.title}". Tapi masih ada ${s.overdue} tugas yang perlu kamu cek. 🥲`, "sad"); }
+    else { showToast(`${pick("completed", POOLS.completed)} (${task.title}) ✓`, "happy"); }
+  }
+  function notifyFocusComplete(minutes){
+    SoundManager.play("focusComplete");
+    if(!DB.settings.verityEnabled || !canProactive()) return;
+    showToast(`${minutes} menit fokus. Good job.`, "proud");
+  }
+  /* ---- rule-based intent detection for chat ---- */
+  function nearestDeadlineTask(){
+    const active = DB.tasks.filter(isActiveTask).slice().sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+    return active[0]||null;
+  }
+  function priorityRecommendation(){
+    const active = DB.tasks.filter(isActiveTask);
+    if(active.length===0) return null;
+    // urgent+important first, then by nearest deadline
+    const scored = active.slice().sort((a,b)=>{
+      const catRank = {"urgent-important":0,"noturgent-important":1,"urgent-notimportant":2,"noturgent-notimportant":3};
+      const ra = catRank[getTaskCategory(a)], rb = catRank[getTaskCategory(b)];
+      if(ra!==rb) return ra-rb;
+      return new Date(a.deadline)-new Date(b.deadline);
+    });
+    return scored[0];
+  }
+  function answer(message){
+    const q = (message||"").toLowerCase();
+    const s = stats();
+    if(/progress|kemajuan/.test(q)) return progressAnswer();
+    if(/deadline|terdekat/.test(q)) return deadlineAnswer();
+    if(/hari ini|harus.*(lakukan|kerjakan)|kerjakan apa|apa yang harus/.test(q)) return recommendationAnswer();
+    return recommendationAnswer();
+  }
+  function progressAnswer(){
+    const s = stats();
+    if(s.total===0) return "Datanya belum ada — belum ada tugas yang dicatat sama sekali.";
+    const done = DB.tasks.filter(t=>t.status==="done").length;
+    const rate = Math.round((done/s.total)*100);
+    return `Progress kamu: ${done}/${s.total} tugas selesai (${rate}%). Sisa aktif: ${s.active}, terlambat: ${s.overdue}.`;
+  }
+  function deadlineAnswer(){
+    const t = nearestDeadlineTask();
+    if(!t) return "Datanya belum ada — tidak ada tugas aktif dengan deadline saat ini.";
+    return `Deadline terdekat: "${t.title}" — ${countdownText(t)}.`;
+  }
+  function recommendationAnswer(){
+    const t = priorityRecommendation();
+    if(!t) return "Datanya belum ada — semua tugas sudah selesai atau belum ada tugas yang dicatat. 🌱";
+    const next = priorityRecommendation2(t);
+    let msg = `Aku sarankan mulai dari "${t.title}". ${countdownText(t)}, status: ${({todo:"belum dimulai",doing:"sedang dikerjakan",done:"selesai"})[t.status]}.`;
+    if(next) msg += ` Setelah itu kita bisa lanjut ke "${next.title}".`;
+    return msg;
+  }
+  function priorityRecommendation2(exclude){
+    const active = DB.tasks.filter(t=>isActiveTask(t) && t.id!==exclude.id);
+    if(active.length===0) return null;
+    return active.slice().sort((a,b)=>new Date(a.deadline)-new Date(b.deadline))[0];
+  }
+  const QUICK_QUESTIONS = [
+    {label:"Apa yang harus kukerjakan?", handler:recommendationAnswer},
+    {label:"Deadline terdekat apa?", handler:deadlineAnswer},
+    {label:"Bagaimana progress-ku?", handler:progressAnswer},
+  ];
+  function openPanel(){
+    SoundManager.play("popup");
+    const m = currentPageMoodOverride || computeMood();
+    document.getElementById("verityPanelFace").textContent = MOODS[m.mood]||MOODS.neutral;
+    document.getElementById("verityPanelMood").textContent = personalityLabel();
+    const msgs = document.getElementById("verityMsgs");
+    msgs.innerHTML = "";
+    addBotMsg(m.text);
+    document.getElementById("verityQuick").innerHTML = QUICK_QUESTIONS.map((qq,i)=>`<button data-qi="${i}">${qq.label}</button>`).join("");
+    document.getElementById("verityQuick").querySelectorAll("[data-qi]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const qq = QUICK_QUESTIONS[+b.dataset.qi];
+        addUserMsg(qq.label);
+        addBotMsg(qq.handler());
+      });
+    });
+    document.getElementById("verityPanelOverlay").classList.add("open");
+    document.getElementById("verityDock").setAttribute("aria-expanded", "true");
+    document.getElementById("verityFab").setAttribute("aria-expanded", "true");
+  }
+  function closePanel(){
+    document.getElementById("verityPanelOverlay").classList.remove("open");
+    document.getElementById("verityDock").setAttribute("aria-expanded", "false");
+    document.getElementById("verityFab").setAttribute("aria-expanded", "false");
+  }
+  function addBotMsg(text){
+    const msgs = document.getElementById("verityMsgs");
+    const d = document.createElement("div"); d.className="vmsg bot"; d.textContent = text;
+    msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+  }
+  function addUserMsg(text){
+    const msgs = document.getElementById("verityMsgs");
+    const d = document.createElement("div"); d.className="vmsg user"; d.textContent = text;
+    msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+  }
+  function personalityLabel(){
+    return ({friendly:"friendly", balanced:"balanced", strict:"strict"})[DB.settings.verityPersonality] || "balanced";
+  }
+  function sendChat(){
+    const input = document.getElementById("verityInput");
+    const val = input.value.trim();
+    if(!val) return;
+    addUserMsg(val);
+    input.value = "";
+    setTimeout(()=>addBotMsg(answer(val)), 150);
+  }
+  function wire(){
+    document.getElementById("verityDock").addEventListener("click", openPanel);
+    document.getElementById("verityDock").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") { e.preventDefault(); openPanel(); }});
+    document.getElementById("verityFab").addEventListener("click", openPanel);
+    document.getElementById("verityPanelClose").addEventListener("click", closePanel);
+    document.getElementById("verityPanelOverlay").addEventListener("click", (e)=>{ if(e.target.id==="verityPanelOverlay") closePanel(); });
+    document.getElementById("veritySendBtn").addEventListener("click", sendChat);
+    document.getElementById("verityInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") sendChat(); });
+  }
+  function onDataRefresh(){ currentPageMoodOverride = null; renderDock(); }
+  return {wire, onDataRefresh, onPageChange, notifyTaskCompleted, notifyFocusComplete, computeMood};
+})();
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+function renderStatisticsPage(){
+  const tasks = DB.tasks;
+  const done = tasks.filter(t=>t.status==="done").length;
+  const overdue = tasks.filter(isOverdue).length;
+  const rate = tasks.length ? Math.round((done/tasks.length)*100) : 0;
+  document.getElementById("statSummaryRow").innerHTML = [
+    {num:tasks.length, lbl:"Total Tugas"},
+    {num:done, lbl:"Selesai"},
+    {num:rate+"%", lbl:"Completion Rate"},
+    {num:overdue, lbl:"Terlambat"}
+  ].map(s=>`<div class="summary-card"><div class="num">${s.num}</div><div class="lbl">${s.lbl}</div></div>`).join("");
+
+  const byCourse = {};
+  tasks.forEach(t=>{
+    const c = CourseManager.get(t.courseId);
+    const key = c ? c.name : "Tanpa Mata Kuliah";
+    if(!byCourse[key]) byCourse[key] = {total:0, done:0};
+    byCourse[key].total++;
+    if(t.status==="done") byCourse[key].done++;
+  });
+  const courseEntries = Object.entries(byCourse);
+  const courseBox = document.getElementById("statByCourse");
+  if(courseEntries.length===0){
+    renderEmpty(courseBox, "Belum cukup data untuk membuat statistik.", "Tambahkan tugas untuk melihat statistik per mata kuliah.", false, "thinking");
+  } else {
+    courseBox.innerHTML = courseEntries.map(([name,v])=>{
+      const pct = v.total ? Math.round((v.done/v.total)*100) : 0;
+      return `<div class="stat-bar-row"><div class="stat-bar-label" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;"></div></div>
+        <div class="stat-bar-pct">${pct}%</div></div>`;
+    }).join("");
+  }
+
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    days.push(d);
+  }
+  const maxCount = Math.max(1, ...days.map(d=>tasks.filter(t=>t.completedAt && ymd(new Date(t.completedAt))===ymd(d)).length));
+  const dowShort = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+  document.getElementById("statLast7").innerHTML = `<div class="stat-days">` + days.map(d=>{
+    const c = tasks.filter(t=>t.completedAt && ymd(new Date(t.completedAt))===ymd(d)).length;
+    const h = Math.max(4, Math.round((c/maxCount)*70));
+    return `<div class="stat-day"><div class="col"><div class="col-fill" style="height:${h}px;"></div></div><div class="lbl">${dowShort[d.getDay()]}</div></div>`;
+  }).join("") + `</div>`;
+
+  const sessions = DB.focusSessions||[];
+  const totalMin = sessions.reduce((a,s)=>a+s.minutes,0);
+  document.getElementById("statFocus").innerHTML = sessions.length===0
+    ? `<div class="hint">Datanya belum ada — belum ada sesi Focus Mode yang diselesaikan.</div>`
+    : `<div class="summary-row" style="grid-template-columns:repeat(2,1fr);">
+        <div class="summary-card"><div class="num">${sessions.length}</div><div class="lbl">Sesi Selesai</div></div>
+        <div class="summary-card"><div class="num">${totalMin}</div><div class="lbl">Total Menit Fokus</div></div>
+      </div>`;
+}
+
+/* =========================================================
+   FOCUS MODE
+========================================================= */
+const FocusTimer = (function(){
+  let durationMin = 25, remainingSec = 25*60, tickHandle = null, running = false;
+  function fmt(sec){
+    const m = Math.floor(sec/60), s = sec%60;
+    return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  }
+  function render(){ document.getElementById("focusTimeDisplay").textContent = fmt(remainingSec); }
+  function setDuration(min){
+    durationMin = min; remainingSec = min*60;
+    document.querySelectorAll("#focusDurationSeg button").forEach(b=>b.classList.toggle("active", +b.dataset.min===min));
+    render();
+  }
+  function start(){
+    if(running) return;
+    running = true;
+    SoundManager.play("focusStart");
+    document.getElementById("focusStartBtn").style.display="none";
+    document.getElementById("focusPauseBtn").style.display="";
+    document.getElementById("focusTaskLabel").textContent = "Fokus sedang berjalan — semangat!";
+    tickHandle = setInterval(()=>{
+      remainingSec--;
+      render();
+      if(remainingSec<=0){
+        clearInterval(tickHandle); running=false;
+        DB.focusSessions = DB.focusSessions||[];
+        DB.focusSessions.push({date:new Date().toISOString(), minutes:durationMin});
+        persist();
+        document.getElementById("focusTaskLabel").textContent = "Sesi selesai! Reset untuk mulai sesi baru.";
+        document.getElementById("focusStartBtn").style.display="";
+        document.getElementById("focusPauseBtn").style.display="none";
+        VerityEngine.notifyFocusComplete(durationMin);
+      }
+    }, 1000);
+  }
+  function pause(){
+    running=false; clearInterval(tickHandle);
+    document.getElementById("focusStartBtn").style.display="";
+    document.getElementById("focusPauseBtn").style.display="none";
+    document.getElementById("focusTaskLabel").textContent = "Dijeda. Lanjutkan kapan pun kamu siap.";
+  }
+  function reset(){
+    running=false; clearInterval(tickHandle);
+    remainingSec = durationMin*60;
+    render();
+    document.getElementById("focusStartBtn").style.display="";
+    document.getElementById("focusPauseBtn").style.display="none";
+    document.getElementById("focusTaskLabel").textContent = "Pilih durasi lalu mulai fokus.";
+  }
+  function wire(){
+    document.querySelectorAll("#focusDurationSeg button").forEach(b=>{
+      b.addEventListener("click", ()=>{ if(!running) setDuration(+b.dataset.min); });
+    });
+    document.getElementById("focusStartBtn").addEventListener("click", start);
+    document.getElementById("focusPauseBtn").addEventListener("click", pause);
+    document.getElementById("focusResetBtn").addEventListener("click", reset);
+  }
+  return {wire, render};
+})();
+function renderFocusPage(){ FocusTimer.render(); }
+
+/* ---- Tasks page ---- */
+function populateCourseFilterOptions(){
+  const sels = [document.getElementById("filterCourse")];
+  sels.forEach(sel=>{
+    const cur = sel.value;
+    sel.innerHTML = '<option value="all">Semua Mata Kuliah</option>' + CourseManager.all().map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+    sel.value = cur || "all";
+  });
+  const fsel = document.getElementById("filterFolder");
+  const curF = fsel.value;
+  fsel.innerHTML = '<option value="all">Semua Folder</option>' + FolderManager.all().map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join("");
+  fsel.value = curF || "all";
+}
+
+function renderTasksPage(forceCategory){
+  populateCourseFilterOptions();
+  const q = document.getElementById("searchInputTasks").value.trim();
+  let list = DB.tasks;
+  list = searchTasks(list, q);
+  const f = {
+    status: document.getElementById("filterStatus").value,
+    priority: document.getElementById("filterPriority").value,
+    type: document.getElementById("filterType").value,
+    course: document.getElementById("filterCourse").value,
+    folder: document.getElementById("filterFolder").value,
+  };
+  list = applyFilters(list, f);
+  if(forceCategory){
+    list = list.filter(t=>getTaskCategory(t)===forceCategory);
+  }
+  list = sortTasks(list, document.getElementById("sortBy").value);
+
+  const container = document.getElementById("allTasksList");
+  container.innerHTML = "";
+  if(list.length===0){
+    renderEmpty(container, DB.tasks.length===0 ? "Belum ada tugas. Sepertinya hari ini cukup tenang." : "Tidak ada tugas di kategori ini.",
+      DB.tasks.length===0 ? "Tambahkan tugas pertamamu untuk mulai mengatur kuliah." : "", DB.tasks.length===0);
+    return;
+  }
+  list.forEach(t=>container.appendChild(renderTaskCard(t)));
+}
+
+/* ---- Calendar ---- */
+function renderCalendar(){
+  const label = document.getElementById("calMonthLabel");
+  const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  label.textContent = months[calDate.getMonth()]+" "+calDate.getFullYear();
+
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+  const dows = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+  dows.forEach(d=>{
+    const el = document.createElement("div");
+    el.className="cal-dow"; el.textContent=d;
+    grid.appendChild(el);
+  });
+
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const today = new Date(); const todayKey = ymd(today);
+
+  const tasksByDate = {};
+  DB.tasks.forEach(t=>{
+    const key = ymd(new Date(t.deadline));
+    if(!tasksByDate[key]) tasksByDate[key]=[];
+    tasksByDate[key].push(t);
+  });
+
+  const totalCells = Math.ceil((startOffset+daysInMonth)/7)*7;
+  for(let i=0;i<totalCells;i++){
+    let dayNum, cellMonth = month, cellYear = year, otherMonth=false;
+    if(i < startOffset){
+      dayNum = daysInPrevMonth - startOffset + i + 1;
+      cellMonth = month-1; otherMonth = true;
+    } else if(i >= startOffset+daysInMonth){
+      dayNum = i - (startOffset+daysInMonth) + 1;
+      cellMonth = month+1; otherMonth = true;
+    } else {
+      dayNum = i - startOffset + 1;
+    }
+    const cellDate = new Date(cellYear, cellMonth, dayNum);
+    const key = ymd(cellDate);
+    const cell = document.createElement("div");
+    cell.className = "cal-day"+(otherMonth?" other-month":"")+(key===todayKey?" today":"");
+    const dayTasks = tasksByDate[key]||[];
+    let pillsHtml = dayTasks.slice(0,2).map(t=>`<div class="cal-task-pill">${escapeHtml(t.title)}</div>`).join("");
+    if(dayTasks.length>2) pillsHtml += `<div class="cal-more">+${dayTasks.length-2} lagi</div>`;
+    cell.innerHTML = `<div class="cal-daynum">${dayNum}</div>${pillsHtml}`;
+    cell.addEventListener("click", ()=>{ calSelectedDate = key; renderCalSelected(); });
+    grid.appendChild(cell);
+  }
+  if(calSelectedDate) renderCalSelected(); else document.getElementById("calSelectedBlock").style.display="none";
+}
+
+function renderCalSelected(){
+  const block = document.getElementById("calSelectedBlock");
+  const list = document.getElementById("calSelectedList");
+  const label = document.getElementById("calSelectedLabel");
+  if(!calSelectedDate){ block.style.display="none"; return; }
+  block.style.display="block";
+  const d = new Date(calSelectedDate+"T00:00:00");
+  const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  label.textContent = `Tugas pada ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  const tasks = DB.tasks.filter(t=>ymd(new Date(t.deadline))===calSelectedDate);
+  list.innerHTML="";
+  if(tasks.length===0){ renderEmpty(list, "Tidak ada event atau deadline untuk tanggal ini.", "", false, "relaxed"); return; }
+  tasks.forEach(t=>list.appendChild(renderTaskCard(t)));
+}
+
+/* ---- Folders page ---- */
+function renderFolders(){
+  const list = document.getElementById("folderList");
+  const folders = FolderManager.all();
+  list.innerHTML = "";
+  if(folders.length===0){
+    renderEmpty(list, "Belum ada folder.", "Buat folder untuk mengorganisasi tugasmu.", false, "neutral");
+    return;
+  }
+  folders.forEach(f=>{
+    const row = document.createElement("div");
+    row.className="folder-row";
+    row.innerHTML = `
+      <span>📁</span>
+      <span class="fname">${escapeHtml(f.name)}</span>
+      <span class="fcount">${FolderManager.taskCount(f.id)} tugas</span>
+      <button class="btn btn-sm" data-act="rename">Ubah Nama</button>
+      <button class="btn btn-sm btn-danger" data-act="delete">Hapus</button>
+    `;
+    row.querySelector(".fname").addEventListener("click", ()=>openFolderTasks(f.id));
+    row.querySelector('[data-act="rename"]').addEventListener("click", ()=>{
+      openPrompt("Ubah Nama Folder", [{id:"pname", label:"Nama Folder", value:f.name}], (vals)=>{
+        if(!vals.pname.trim()) return toast("Nama folder tidak boleh kosong.");
+        FolderManager.rename(f.id, vals.pname.trim());
+        toast("Nama folder diperbarui.");
+        renderAll();
+      });
+    });
+    row.querySelector('[data-act="delete"]').addEventListener("click", ()=>{
+      openConfirm("Hapus folder?", `Folder "${f.name}" berisi ${FolderManager.taskCount(f.id)} tugas. Apa yang ingin dilakukan dengan tugas di dalamnya?`, [
+        {label:"Batal", cls:"btn"},
+        {label:"Hapus folder saja", cls:"btn", action:()=>{ FolderManager.remove(f.id, false); toast("Folder dihapus."); renderAll(); }},
+        {label:"Hapus folder + tugas", cls:"btn btn-danger", action:()=>{ FolderManager.remove(f.id, true); toast("Folder dan tugas dihapus."); renderAll(); }},
+      ]);
+    });
+    list.appendChild(row);
+  });
+}
+function openFolderTasks(folderId){
+  currentFolderView = folderId;
+  const folder = FolderManager.all().find(f=>f.id===folderId);
+  document.getElementById("folderTasksBlock").style.display="block";
+  document.getElementById("folderTasksLabel").textContent = "📁 "+folder.name;
+  const list = document.getElementById("folderTasksList");
+  list.innerHTML="";
+  const tasks = DB.tasks.filter(t=>t.folderId===folderId);
+  if(tasks.length===0){ renderEmpty(list, "Tidak ada tugas di folder ini.", "", false); return; }
+  tasks.forEach(t=>list.appendChild(renderTaskCard(t)));
+}
+
+/* ---- Courses page ---- */
+function renderCourses(){
+  const wrap = document.getElementById("courseList");
+  const fsel = document.getElementById("semesterFilterCourses");
+  const curSem = fsel.value;
+  fsel.innerHTML = '<option value="all">Semua Semester</option>' + SemesterManager.all().map(s=>`<option value="${s.id}">${escapeHtml(s.name)} ${escapeHtml(s.academicYear||"")}</option>`).join("");
+  fsel.value = curSem || "all";
+  const filterSem = fsel.value;
+  const courses = CourseManager.all().filter(c=> filterSem==="all" || !filterSem || c.semesterId===filterSem );
+  wrap.innerHTML="";
+  if(courses.length===0){ renderEmpty(wrap, "Belum ada mata kuliah.", "Yuk tambahkan yang pertama.", false, "thinking"); return; }
+  courses.forEach(c=>{
+    const lect = LecturerManager.get(c.lecturerId);
+    const cTasks = DB.tasks.filter(t=>t.courseId===c.id);
+    const cDone = cTasks.filter(t=>t.status==="done").length;
+    const row = document.createElement("div");
+    row.className="rowcard";
+    row.innerHTML = `
+      <div class="rmain" data-act="open" style="cursor:pointer;">
+        <div class="rtitle">${escapeHtml(c.name)} ${c.code?`<span class="chip">${escapeHtml(c.code)}</span>`:""}</div>
+        <div class="rsub">${lect?("Dosen: "+escapeHtml(lect.name)):"Belum ada dosen"}${c.notes?(" • "+escapeHtml(c.notes)):""}${cTasks.length?(" • "+cDone+"/"+cTasks.length+" tugas selesai"):""}</div>
+      </div>
+      <button class="btn btn-sm" data-act="edit">Edit</button>
+      <button class="btn btn-sm btn-danger" data-act="delete">Hapus</button>
+    `;
+    row.querySelector('[data-act="open"]').addEventListener("click", ()=>openCourseDashboard(c.id));
+    row.querySelector('[data-act="edit"]').addEventListener("click", (e)=>{ e.stopPropagation(); openCourseForm(c); });
+    row.querySelector('[data-act="delete"]').addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openConfirm("Hapus mata kuliah?", `"${c.name}" akan dihapus dari daftar mata kuliah.`, [
+        {label:"Batal", cls:"btn"},
+        {label:"Hapus", cls:"btn btn-danger", action:()=>{ CourseManager.remove(c.id); toast("Mata kuliah dihapus."); renderAll(); }}
+      ]);
+    });
+    wrap.appendChild(row);
+  });
+}
+function openCourseForm(course){
+  const lecturers = LecturerManager.all();
+  const lectOptions = '<option value="">— Tanpa Dosen —</option>' + lecturers.map(l=>`<option value="${l.id}" ${course&&course.lecturerId===l.id?"selected":""}>${escapeHtml(l.name)}</option>`).join("");
+  const semOptions = SemesterManager.all().map(s=>`<option value="${s.id}" ${(course?course.semesterId:DB.activeSemesterId)===s.id?"selected":""}>${escapeHtml(s.name)} ${escapeHtml(s.academicYear||"")}</option>`).join("");
+  openPrompt(course?"Edit Mata Kuliah":"Tambah Mata Kuliah", [
+    {id:"name", label:"Nama Mata Kuliah *", value:course?course.name:""},
+    {id:"code", label:"Kode Mata Kuliah", value:course?course.code:""},
+    {id:"lecturerId", label:"Dosen", type:"select", options:lectOptions, value:course?course.lecturerId:""},
+    {id:"semesterId", label:"Semester", type:"select", options:semOptions, value:course?course.semesterId:DB.activeSemesterId},
+    {id:"notes", label:"Catatan", type:"textarea", value:course?course.notes:""},
+  ], (vals)=>{
+    if(!vals.name.trim()) return toast("Nama mata kuliah wajib diisi.");
+    if(course) CourseManager.update(course.id, vals);
+    else CourseManager.create(vals);
+    toast("Mata kuliah disimpan.");
+    renderAll();
+  });
+}
+function openCourseDashboard(courseId){
+  const c = CourseManager.get(courseId);
+  if(!c) return;
+  const lect = LecturerManager.get(c.lecturerId);
+  const tasks = DB.tasks.filter(t=>t.courseId===c.id);
+  const done = tasks.filter(t=>t.status==="done").length;
+  const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+  const sched = DB.schedules.filter(s=>s.courseId===c.id).sort((a,b)=>DOW_ORDER.indexOf(a.day)-DOW_ORDER.indexOf(b.day));
+  const schedLine = sched.map(s=>DOW_LABEL[s.day]+" "+s.startTime+"–"+s.endTime+(s.room?(" • "+escapeHtml(s.room)):"")).join(" | ");
+  document.getElementById("courseDashTitle").textContent = "📚 "+c.name;
+  document.getElementById("courseDashboardBlock").style.display="block";
+  document.getElementById("courseDashBody").innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="k">Dosen</div><div class="v">${lect?escapeHtml(lect.name):"—"}</div></div>
+      <div class="detail-item"><div class="k">Progress</div><div class="v">${done} / ${tasks.length} selesai (${pct}%)</div></div>
+    </div>
+    ${sched.length ? `<div class="hint" style="margin-bottom:10px;"><strong>Jadwal:</strong> ${schedLine}</div>` : ""}
+    <div class="task-list" id="courseDashTasks"></div>
+  `;
+  const listEl = document.getElementById("courseDashTasks");
+  listEl.innerHTML="";
+  if(tasks.length===0){ renderEmpty(listEl,"Belum ada tugas untuk mata kuliah ini.","",false); }
+  else tasks.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).forEach(t=>listEl.appendChild(renderTaskCard(t)));
+}
+
+/* ---- Lecturers page ---- */
+function renderLecturers(){
+  const wrap = document.getElementById("lecturerList");
+  const lecturers = LecturerManager.all();
+  wrap.innerHTML="";
+  if(lecturers.length===0){ renderEmpty(wrap, "Belum ada dosen tersimpan.", "Tambahkan dosen untuk memudahkan pengisian tugas.", false, "neutral"); return; }
+  lecturers.forEach(l=>{
+    const row = document.createElement("div");
+    row.className="rowcard";
+    row.innerHTML = `
+      <div class="rmain">
+        <div class="rtitle">${escapeHtml(l.name)}</div>
+        <div class="rsub">${l.notes?escapeHtml(l.notes):"Tidak ada catatan"}</div>
+      </div>
+      <button class="btn btn-sm" data-act="edit">Edit</button>
+      <button class="btn btn-sm btn-danger" data-act="delete">Hapus</button>
+    `;
+    row.querySelector('[data-act="edit"]').addEventListener("click", ()=>openLecturerForm(l));
+    row.querySelector('[data-act="delete"]').addEventListener("click", ()=>{
+      openConfirm("Hapus dosen?", `"${l.name}" akan dihapus dari daftar dosen.`, [
+        {label:"Batal", cls:"btn"},
+        {label:"Hapus", cls:"btn btn-danger", action:()=>{ LecturerManager.remove(l.id); toast("Dosen dihapus."); renderAll(); }}
+      ]);
+    });
+    wrap.appendChild(row);
+  });
+}
+function openLecturerForm(lect){
+  openPrompt(lect?"Edit Dosen":"Tambah Dosen", [
+    {id:"name", label:"Nama Dosen *", value:lect?lect.name:""},
+    {id:"notes", label:"Catatan", type:"textarea", value:lect?lect.notes:""},
+  ], (vals)=>{
+    if(!vals.name.trim()) return toast("Nama dosen wajib diisi.");
+    if(lect) LecturerManager.update(lect.id, vals);
+    else LecturerManager.create(vals);
+    toast("Dosen disimpan.");
+    renderAll();
+  });
+}
+
+/* ---- Semesters ---- */
+function renderSemesterList(){
+  const wrap = document.getElementById("semesterList");
+  if(!wrap) return;
+  const sems = SemesterManager.all();
+  wrap.innerHTML="";
+  if(sems.length===0){ renderEmpty(wrap, "Jadwal kuliah masih kosong.", "Buat semester untuk mengelompokkan mata kuliah dan jadwal.", false, "relaxed"); return; }
+  sems.forEach(s=>{
+    const courseCount = DB.courses.filter(c=>c.semesterId===s.id).length;
+    const row = document.createElement("div");
+    row.className="rowcard";
+    row.innerHTML = `
+      <div class="rmain">
+        <div class="rtitle">${s.id===DB.activeSemesterId?"✅ ":""}${escapeHtml(s.name)} ${s.academicYear?`<span class="chip">${escapeHtml(s.academicYear)}</span>`:""}</div>
+        <div class="rsub">${courseCount} mata kuliah</div>
+      </div>
+      ${s.id!==DB.activeSemesterId?'<button class="btn btn-sm" data-act="activate">Jadikan Aktif</button>':''}
+      <button class="btn btn-sm" data-act="edit">Edit</button>
+      <button class="btn btn-sm btn-danger" data-act="delete">Hapus</button>
+    `;
+    const actBtn = row.querySelector('[data-act="activate"]');
+    if(actBtn) actBtn.addEventListener("click", ()=>{ SemesterManager.setActive(s.id); toast("Semester aktif diperbarui."); renderAll(); });
+    row.querySelector('[data-act="edit"]').addEventListener("click", ()=>openSemesterForm(s));
+    row.querySelector('[data-act="delete"]').addEventListener("click", ()=>{
+      openConfirm("Hapus semester?", `"${s.name}" akan dihapus. Mata kuliah/jadwal terkait TIDAK ikut terhapus, tapi tidak lagi terkait ke semester ini.`, [
+        {label:"Batal", cls:"btn"},
+        {label:"Hapus", cls:"btn btn-danger", action:()=>{ SemesterManager.remove(s.id); toast("Semester dihapus."); renderAll(); }}
+      ]);
+    });
+    wrap.appendChild(row);
+  });
+}
+function openSemesterForm(sem){
+  openPrompt(sem?"Edit Semester":"Semester Baru", [
+    {id:"name", label:"Nama Semester *", value:sem?sem.name:"Semester "+(SemesterManager.all().length+1)},
+    {id:"academicYear", label:"Tahun Ajaran (mis. 2026/2027)", value:sem?sem.academicYear:""},
+  ], (vals)=>{
+    if(!vals.name.trim()) return toast("Nama semester wajib diisi.");
+    if(sem) SemesterManager.update(sem.id, vals);
+    else SemesterManager.create(vals);
+    toast("Semester disimpan.");
+    renderAll();
+  });
+}
+function populateSemesterSelects(){
+  document.querySelectorAll("#semesterFilterSchedule").forEach(sel=>{
+    const cur = sel.value;
+    sel.innerHTML = SemesterManager.all().map(s=>`<option value="${s.id}">${escapeHtml(s.name)} ${escapeHtml(s.academicYear||"")}</option>`).join("");
+    sel.value = cur && SemesterManager.get(cur) ? cur : (DB.activeSemesterId||"");
+  });
+}
+
+/* ---- Schedule page ---- */
+function renderScheduleWeekly(){
+  populateSemesterSelects();
+  const track = document.getElementById("scheduleWeeklyTrack");
+  const semId = document.getElementById("semesterFilterSchedule").value || DB.activeSemesterId;
+  const schedules = ScheduleManager.bySemester(semId).sort((a,b)=> a.startTime.localeCompare(b.startTime));
+  if(schedules.length===0){
+    track.innerHTML = `<div class="empty-state"><span class="emoji">📚</span><p>Belum ada jadwal kuliah untuk semester ini.</p></div>`;
+    return;
+  }
+  track.innerHTML = DOW_ORDER.map(day=>{
+    const items = schedules.filter(s=>s.day===day);
+    if(items.length===0) return "";
+    const rows = items.map(s=>{
+      const c = CourseManager.get(s.courseId);
+      const lect = c ? LecturerManager.get(c.lecturerId) : null;
+      return `<div class="weekly-item" data-sched="${s.id}" style="cursor:pointer;">
+        <span class="t">${s.startTime}–${s.endTime} · ${escapeHtml(c?c.name:"(mata kuliah dihapus)")}</span>
+        <span>${s.room?escapeHtml(s.building?s.building+" — "+s.room:s.room):""}${lect?(" • "+escapeHtml(lect.name)):""}</span>
+      </div>`;
+    }).join("");
+    return `<div class="weekly-day"><div class="weekly-daylabel">${DOW_LABEL[day]}</div><div class="weekly-items">${rows}</div></div>`;
+  }).join("");
+  track.querySelectorAll("[data-sched]").forEach(el=>{
+    el.addEventListener("click", ()=>openScheduleForm(ScheduleManager.get(el.dataset.sched)));
+  });
+}
+function openScheduleForm(sched){
+  const courses = CourseManager.all();
+  if(courses.length===0){ toast("Tambahkan mata kuliah terlebih dahulu sebelum membuat jadwal."); return; }
+  const courseOptions = courses.map(c=>`<option value="${c.id}" ${sched&&sched.courseId===c.id?"selected":""}>${escapeHtml(c.name)}</option>`).join("");
+  const dayOptions = DOW_ORDER.map(d=>`<option value="${d}" ${sched&&sched.day===d?"selected":""}>${DOW_LABEL[d]}</option>`).join("");
+  const fields = [
+    {id:"courseId", label:"Mata Kuliah *", type:"select", options:courseOptions},
+    {id:"day", label:"Hari *", type:"select", options:dayOptions},
+    {id:"startTime", label:"Jam Mulai *", type:"time", value:sched?sched.startTime:"08:00"},
+    {id:"endTime", label:"Jam Selesai *", type:"time", value:sched?sched.endTime:"09:40"},
+    {id:"building", label:"Gedung", value:sched?sched.building:""},
+    {id:"room", label:"Ruangan", value:sched?sched.room:""},
+    {id:"notes", label:"Catatan", type:"textarea", value:sched?sched.notes:""},
+  ];
+  openPrompt(sched?"Edit Jadwal":"Tambah Jadwal", fields, (vals)=>{
+    if(!vals.courseId) return toast("Pilih mata kuliah.");
+    if(!vals.startTime || !vals.endTime) return toast("Jam mulai dan selesai wajib diisi.");
+    vals.semesterId = document.getElementById("semesterFilterSchedule").value || DB.activeSemesterId;
+    if(sched) ScheduleManager.update(sched.id, vals);
+    else ScheduleManager.create(vals);
+    toast("Jadwal disimpan.");
+    renderAll();
+  });
+  if(sched){
+    // tambahkan tombol hapus di modal prompt secara dinamis
+    const foot = document.querySelector("#promptModalOverlay .modal-foot");
+    let delBtn = foot.querySelector('[data-sched-del]');
+    if(!delBtn){
+      delBtn = document.createElement("button");
+      delBtn.className="btn btn-danger";
+      delBtn.dataset.schedDel="1";
+      delBtn.textContent="Hapus Jadwal";
+      foot.prepend(delBtn);
+    }
+    delBtn.onclick = ()=>{
+      openConfirm("Hapus jadwal?", "Tindakan ini tidak dapat dibatalkan.", [
+        {label:"Batal", cls:"btn"},
+        {label:"Hapus", cls:"btn btn-danger", action:()=>{
+          ScheduleManager.remove(sched.id);
+          document.getElementById("promptModalOverlay").classList.remove("open");
+          toast("Jadwal dihapus.");
+          renderAll();
+        }}
+      ]);
+    };
+  } else {
+    const foot = document.querySelector("#promptModalOverlay .modal-foot");
+    const old = foot.querySelector('[data-sched-del]');
+    if(old) old.remove();
+  }
+}
+
+/* ---- Dashboard: greeting + Today view ---- */
+function renderGreetingAndToday(){
+  const hour = new Date().getHours();
+  const greet = hour<11 ? "Good Morning" : hour<15 ? "Good Afternoon" : hour<19 ? "Good Evening" : "Good Night";
+  const name = (DB.settings.userName||"").trim();
+  document.getElementById("greetingText").textContent = greet + (name?(", "+name):"");
+  document.getElementById("greetingDate").textContent = new Date().toLocaleDateString("id-ID", {weekday:"long", year:"numeric", month:"long", day:"numeric"});
+  const sem = SemesterManager.active();
+  const semChip = document.getElementById("activeSemesterChip");
+  if(sem){ semChip.style.display="inline-block"; semChip.textContent = sem.name + " • " + (sem.academicYear||""); }
+  else { semChip.style.display="none"; }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dow = JS_DAY_TO_DOW[new Date().getDay()];
+  const nowMinutes = new Date().getHours()*60 + new Date().getMinutes();
+  const todaysSchedule = DB.schedules.filter(s=> s.day===dow && (!DB.activeSemesterId || s.semesterId===DB.activeSemesterId))
+    .sort((a,b)=>a.startTime.localeCompare(b.startTime));
+  const nextClass = todaysSchedule.find(s=>{
+    const [h,m] = s.startTime.split(":").map(Number);
+    return (h*60+m) > nowMinutes;
+  });
+  const dueToday = DB.tasks.filter(t=> t.status!=="done" && ymd(new Date(t.deadline))===ymd(today));
+  const overdue = DB.tasks.filter(isOverdue);
+
+  let html = "";
+  html += `<div style="margin-bottom:14px;"><div style="font-size:12px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px;">Jadwal Kuliah Hari Ini</div>`;
+  if(todaysSchedule.length===0){
+    html += `<div class="hint">Tidak ada kelas hari ini.</div>`;
+  } else {
+    html += todaysSchedule.map(s=>{
+      const c = CourseManager.get(s.courseId);
+      const lect = c?LecturerManager.get(c.lecturerId):null;
+      return `<div class="rowcard" style="margin-bottom:6px;"><div class="rmain"><div class="rtitle">${s.startTime}–${s.endTime} · ${escapeHtml(c?c.name:"(dihapus)")}</div><div class="rsub">${s.room?escapeHtml(s.room):""}${lect?(" • "+escapeHtml(lect.name)):""}</div></div></div>`;
+    }).join("");
+  }
+  html += `</div>`;
+
+  if(nextClass){
+    const c = CourseManager.get(nextClass.courseId);
+    html += `<div class="chip chip-accent" style="margin-bottom:14px; display:inline-block;">NEXT · ${nextClass.startTime} — ${escapeHtml(c?c.name:"")}</div>`;
+  }
+
+  html += `<div style="margin-bottom:10px;"><div style="font-size:12px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px;">Tugas Hari Ini</div>`;
+  html += dueToday.length===0 ? `<div class="hint">Tidak ada tugas dengan deadline hari ini.</div>` :
+    `<div class="task-list">` + dueToday.map(t=>`<div class="chip chip-red" style="display:block; width:fit-content; margin-bottom:4px;">🔴 ${escapeHtml(t.title)} — Deadline ${new Date(t.deadline).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}</div>`).join("") + `</div>`;
+  html += `</div>`;
+
+  if(overdue.length>0){
+    html += `<div><div style="font-size:12px; font-weight:700; color:var(--red); text-transform:uppercase; margin-bottom:6px;">⚠️ Tugas Terlambat</div>`;
+    html += overdue.map(t=>`<div class="chip chip-red" style="display:block; width:fit-content; margin-bottom:4px;">⚠️ ${escapeHtml(t.title)}</div>`).join("");
+    html += `</div>`;
+  }
+
+  document.getElementById("todayContent").innerHTML = html;
+}
+
+/* =========================================================
+   GENERIC PROMPT MODAL (small forms: folder/course/lecturer)
+========================================================= */
+function openPrompt(title, fields, onSave){
+  document.getElementById("promptTitle").textContent = title;
+  const body = document.getElementById("promptBody");
+  body.innerHTML = fields.map(f=>{
+    if(f.type==="select"){
+      return `<div class="field"><label>${f.label}</label><select data-pf="${f.id}">${f.options}</select></div>`;
+    }
+    if(f.type==="textarea"){
+      return `<div class="field"><label>${f.label}</label><textarea data-pf="${f.id}">${escapeHtml(f.value||"")}</textarea></div>`;
+    }
+    if(f.type==="time" || f.type==="date"){
+      return `<div class="field"><label>${f.label}</label><input type="${f.type}" data-pf="${f.id}" value="${escapeHtml(f.value||"")}"></div>`;
+    }
+    return `<div class="field"><label>${f.label}</label><input type="text" data-pf="${f.id}" value="${escapeHtml(f.value||"")}"></div>`;
+  }).join("");
+  const overlay = document.getElementById("promptModalOverlay");
+  overlay.classList.add("open");
+  const saveBtn = document.getElementById("promptSaveBtn");
+  const handler = ()=>{
+    const vals = {};
+    fields.forEach(f=>{
+      const el = body.querySelector(`[data-pf="${f.id}"]`);
+      vals[f.id] = el.value;
+    });
+    onSave(vals);
+    overlay.classList.remove("open");
+    saveBtn.removeEventListener("click", handler);
+  };
+  saveBtn.addEventListener("click", handler);
+}
+
+/* =========================================================
+   CONFIRM MODAL
+========================================================= */
+function openConfirm(title, msg, actions){
+  document.getElementById("confirmTitle").textContent = title;
+  document.getElementById("confirmMsg").textContent = msg;
+  const wrap = document.getElementById("confirmActions");
+  wrap.innerHTML = "";
+  const overlay = document.getElementById("confirmModalOverlay");
+  actions.forEach(a=>{
+    const btn = document.createElement("button");
+    btn.className = a.cls || "btn";
+    btn.textContent = a.label;
+    btn.addEventListener("click", ()=>{
+      overlay.classList.remove("open");
+      if(a.action) a.action();
+    });
+    wrap.appendChild(btn);
+  });
+  overlay.classList.add("open");
+}
+
+/* =========================================================
+   TASK MODAL (add/edit)
+========================================================= */
+let editingTaskId = null;
+let memberCount = 0;
+
+function populateTaskFormSelects(){
+  const courseSel = document.getElementById("f_course");
+  courseSel.innerHTML = '<option value="">— Pilih Mata Kuliah —</option>' + CourseManager.all().map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  const lectSel = document.getElementById("f_lecturer");
+  lectSel.innerHTML = '<option value="">— Pilih Dosen —</option>' + LecturerManager.all().map(l=>`<option value="${l.id}">${escapeHtml(l.name)}</option>`).join("");
+  const folderSel = document.getElementById("f_folder");
+  folderSel.innerHTML = '<option value="">— Tanpa Folder —</option>' + FolderManager.all().map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join("");
+}
+
+document.getElementById("f_course").addEventListener("change", (e)=>{
+  const course = CourseManager.get(e.target.value);
+  if(course && course.lecturerId){
+    document.getElementById("f_lecturer").value = course.lecturerId;
+  }
+});
+
+function addMemberRow(value){
+  memberCount++;
+  const wrap = document.getElementById("membersWrap");
+  const row = document.createElement("div");
+  row.className = "member-row";
+  row.innerHTML = `<input type="text" placeholder="Nama anggota" value="${escapeHtml(value||"")}"><button type="button">✕</button>`;
+  row.querySelector("button").addEventListener("click", ()=>row.remove());
+  wrap.appendChild(row);
+}
+
+function resetTaskForm(){
+  editingTaskId = null;
+  document.getElementById("taskId").value = "";
+  document.getElementById("f_title").value = "";
+  document.getElementById("f_desc").value = "";
+  document.getElementById("f_date").value = "";
+  document.getElementById("f_time").value = "23:59";
+  document.getElementById("f_link").value = "";
+  document.getElementById("f_groupName").value = "";
+  document.getElementById("membersWrap").innerHTML = "";
+  document.getElementById("groupFields").style.display = "none";
+  setSeg("f_priority", "important");
+  setSeg("f_type", "individual");
+  populateTaskFormSelects();
+  document.getElementById("f_course").value = "";
+  document.getElementById("f_lecturer").value = "";
+  document.getElementById("f_folder").value = "";
+  clearFormErrors();
+}
+function clearFormErrors(){
+  document.querySelectorAll("#taskForm .field").forEach(f=>f.classList.remove("error"));
+}
+function setSeg(containerId, val){
+  const c = document.getElementById(containerId);
+  c.querySelectorAll("button").forEach(b=>b.classList.toggle("active", b.dataset.val===val));
+}
+function getSeg(containerId){
+  return document.getElementById(containerId).querySelector("button.active").dataset.val;
+}
+document.querySelectorAll("#f_priority button, #f_type button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const parent = btn.parentElement;
+    parent.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    if(parent.id==="f_type"){
+      document.getElementById("groupFields").style.display = btn.dataset.val==="group" ? "block":"none";
+    }
+  });
+});
+document.getElementById("addMemberBtn").addEventListener("click", ()=>addMemberRow(""));
+
+function openTaskModal(task, prefill){
+  resetTaskForm();
+  document.getElementById("taskModalTitle").textContent = task ? "Edit Tugas" : "Tambah Tugas";
+  if(task){
+    editingTaskId = task.id;
+    document.getElementById("taskId").value = task.id;
+    document.getElementById("f_title").value = task.title;
+    document.getElementById("f_desc").value = task.description||"";
+    const d = new Date(task.deadline);
+    document.getElementById("f_date").value = ymd(d);
+    document.getElementById("f_time").value = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+    document.getElementById("f_link").value = task.submissionLink||"";
+    document.getElementById("f_course").value = task.courseId||"";
+    document.getElementById("f_lecturer").value = task.lecturerId||"";
+    document.getElementById("f_folder").value = task.folderId||"";
+    setSeg("f_priority", task.priority);
+    setSeg("f_type", task.type);
+    if(task.type==="group"){
+      document.getElementById("groupFields").style.display="block";
+      document.getElementById("f_groupName").value = task.groupName||"";
+      (task.members||[]).forEach(m=>addMemberRow(m));
+    }
+  } else if(prefill){
+    if(prefill.folderId) document.getElementById("f_folder").value = prefill.folderId;
+    if(prefill.date) document.getElementById("f_date").value = prefill.date;
+  }
+  document.getElementById("taskModalOverlay").classList.add("open");
+}
+
+function validUrl(u){
+  if(!u) return true;
+  try{ const url = new URL(u); return url.protocol==="http:"||url.protocol==="https:"; }catch(e){ return false; }
+}
+
+document.getElementById("taskForm").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  clearFormErrors();
+  let valid = true;
+  const title = document.getElementById("f_title").value.trim();
+  const courseId = document.getElementById("f_course").value;
+  const date = document.getElementById("f_date").value;
+  const time = document.getElementById("f_time").value || "23:59";
+  const link = document.getElementById("f_link").value.trim();
+  const type = getSeg("f_type");
+  const members = type==="group" ? Array.from(document.querySelectorAll("#membersWrap input")).map(i=>i.value.trim()).filter(Boolean) : [];
+
+  if(!title){ document.getElementById("f-title").classList.add("error"); valid=false; }
+  if(!courseId){ document.getElementById("f-course").classList.add("error"); valid=false; }
+  if(!date){ document.getElementById("f-date").classList.add("error"); valid=false; }
+  if(link && !validUrl(link)){ document.getElementById("f-link").classList.add("error"); valid=false; }
+  if(type==="group" && members.length===0){ document.getElementById("f-members").classList.add("error"); valid=false; }
+  if(!valid) return;
+
+  const deadlineIso = new Date(`${date}T${time}:00`).toISOString();
+  const payload = {
+    title, description: document.getElementById("f_desc").value.trim(),
+    courseId, lecturerId: document.getElementById("f_lecturer").value,
+    deadline: deadlineIso,
+    priority: getSeg("f_priority"),
+    type,
+    groupName: type==="group" ? document.getElementById("f_groupName").value.trim() : "",
+    members,
+    submissionLink: link,
+    folderId: document.getElementById("f_folder").value,
+  };
+
+  if(editingTaskId){
+    TaskManager.update(editingTaskId, payload);
+    toast("Tugas diperbarui.");
+  } else {
+    TaskManager.create(payload);
+    toast("Tugas ditambahkan.");
+  }
+  document.getElementById("taskModalOverlay").classList.remove("open");
+  renderAll();
+});
+
+/* =========================================================
+   DETAIL MODAL
+========================================================= */
+let detailTaskId = null;
+function openDetail(id){
+  const t = TaskManager.get(id);
+  if(!t) return;
+  detailTaskId = id;
+  const course = CourseManager.get(t.courseId);
+  const lecturer = LecturerManager.get(t.lecturerId);
+  const folder = FolderManager.all().find(f=>f.id===t.folderId);
+  const cat = catMeta[getTaskCategory(t)];
+
+  document.getElementById("detailTitle").textContent = t.title;
+  const body = document.getElementById("detailBody");
+  body.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="k">Mata Kuliah</div><div class="v">${course?escapeHtml(course.name):"—"}</div></div>
+      <div class="detail-item"><div class="k">Dosen</div><div class="v">${lecturer?escapeHtml(lecturer.name):"—"}</div></div>
+      <div class="detail-item"><div class="k">Deadline</div><div class="v">${fmtDate(t.deadline)}</div></div>
+      <div class="detail-item"><div class="k">Countdown</div><div class="v" style="color:${isOverdue(t)?'var(--red)':'inherit'}">${countdownText(t)}</div></div>
+      <div class="detail-item"><div class="k">Prioritas</div><div class="v">${t.priority==="important"?"Penting":"Tidak Penting"} • ${isUrgent(t)?"Mendesak":"Tidak Mendesak"}</div></div>
+      <div class="detail-item"><div class="k">Jenis</div><div class="v">${t.type==="group"?"Kelompok":"Mandiri"}</div></div>
+      <div class="detail-item"><div class="k">Folder</div><div class="v">${folder?("📁 "+escapeHtml(folder.name)):"—"}</div></div>
+      <div class="detail-item"><div class="k">Kategori</div><div class="v"><span class="chip ${cat.cls}">${cat.label}</span></div></div>
+    </div>
+    ${t.description?`<div class="desc-box">${escapeHtml(t.description)}</div>`:""}
+    ${t.type==="group" ? `
+      <div class="detail-item" style="margin-top:12px;"><div class="k">Nama Kelompok</div><div class="v">${escapeHtml(t.groupName||"—")}</div></div>
+      <div class="detail-item" style="margin-top:8px;"><div class="k">Anggota</div><div class="v">${(t.members||[]).map(escapeHtml).join(", ")||"—"}</div></div>
+    ` : ""}
+    ${t.submissionLink ? `<div style="margin-top:12px;"><a class="btn btn-sm" href="${escapeHtml(t.submissionLink)}" target="_blank" rel="noopener">Buka Link Pengumpulan ↗</a></div>` : ""}
+    <div class="field" style="margin-top:16px;">
+      <label>Status</label>
+      <div class="status-seg">
+        ${["todo","doing","done"].map(s=>`<button type="button" class="btn btn-sm ${t.status===s?'btn-primary':''}" data-setstatus="${s}">${statusLabel[s]}</button>`).join("")}
+      </div>
+    </div>
+  `;
+  body.querySelectorAll("[data-setstatus]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      TaskManager.setStatus(t.id, b.dataset.setstatus);
+      toast("Status diperbarui.");
+      if(b.dataset.setstatus==="done") VerityEngine.notifyTaskCompleted(t);
+      openDetail(t.id);
+      renderAll();
+    });
+  });
+  document.getElementById("detailDoneBtn").textContent = t.status==="done" ? "Batalkan Selesai" : "Tandai Selesai";
+  document.getElementById("detailModalOverlay").classList.add("open");
+}
+document.getElementById("detailDoneBtn").addEventListener("click", ()=>{
+  const t = TaskManager.get(detailTaskId);
+  const willBeDone = t.status!=="done";
+  TaskManager.setStatus(detailTaskId, willBeDone ? "done" : "todo");
+  toast("Status diperbarui.");
+  if(willBeDone) VerityEngine.notifyTaskCompleted(t);
+  document.getElementById("detailModalOverlay").classList.remove("open");
+  renderAll();
+});
+document.getElementById("detailEditBtn").addEventListener("click", ()=>{
+  const t = TaskManager.get(detailTaskId);
+  document.getElementById("detailModalOverlay").classList.remove("open");
+  openTaskModal(t);
+});
+document.getElementById("detailDeleteBtn").addEventListener("click", ()=>{
+  openConfirm("Hapus tugas?", "Tindakan ini tidak dapat dibatalkan.", [
+    {label:"Batal", cls:"btn"},
+    {label:"Hapus", cls:"btn btn-danger", action:()=>{
+      TaskManager.remove(detailTaskId);
+      document.getElementById("detailModalOverlay").classList.remove("open");
+      toast("Tugas dihapus.");
+      renderAll();
+    }}
+  ]);
+});
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function goToPage(page){
+  currentPage = page;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
+  document.querySelectorAll(".bn-item[data-page]").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
+  document.querySelectorAll(".bn-item[data-more]").forEach(n=>n.classList.toggle("active", MOBILE_NAV.secondary.includes(page)));
+  if(page==="folders"){ currentFolderView=null; document.getElementById("folderTasksBlock").style.display="none"; }
+  if(page==="courses"){ document.getElementById("courseDashboardBlock").style.display="none"; }
+  if(page==="statistics") renderStatisticsPage();
+  if(page==="focus") renderFocusPage();
+  renderAll();
+  VerityEngine.onPageChange(page);
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("[data-page]").forEach(el=>{
+  el.addEventListener("click", ()=>goToPage(el.dataset.page));
+});
+document.querySelectorAll("[data-page-jump]").forEach(el=>{
+  el.addEventListener("click", ()=>goToPage(el.dataset.pageJump));
+});
+document.getElementById("backToFolders").addEventListener("click", ()=>{
+  currentFolderView=null;
+  document.getElementById("folderTasksBlock").style.display="none";
+});
+
+/* =========================================================
+   MOBILE NAVIGATION (configurable — safe to extend without
+   breaking layout: add new page ids to MOBILE_NAV.secondary
+   and NAV_META, the More sheet and bottom nav render themselves)
+========================================================= */
+const NAV_ICONS = {
+  dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  tasks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h11"/></svg>',
+  folders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>',
+  courses:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+  schedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  lecturers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+  statistics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>',
+  focus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9"/></svg>',
+  more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>'
+};
+const NAV_LABELS = {
+  dashboard:"Home", calendar:"Calendar", tasks:"Tasks", folders:"Folder", courses:"Mata Kuliah",
+  schedule:"Jadwal", lecturers:"Dosen", statistics:"Statistik", focus:"Focus Mode", settings:"Settings"
+};
+const MOBILE_NAV = {
+  primary:["dashboard","calendar","tasks","courses"],
+  secondary:["lecturers","folders","schedule","statistics","focus","settings"]
+};
+function renderMobileBottomNav(){
+  const nav = document.getElementById("bottomNav");
+  nav.innerHTML = MOBILE_NAV.primary.map(p=>
+    `<button class="bn-item${p===currentPage?" active":""}" data-page="${p}" aria-label="${NAV_LABELS[p]}">${NAV_ICONS[p]}${NAV_LABELS[p]}</button>`
+  ).join("") + `<button class="bn-item" data-more="1" id="bnMoreBtn" aria-label="Menu lainnya" aria-haspopup="dialog">${NAV_ICONS.more}More</button>`;
+  nav.querySelectorAll("[data-page]").forEach(el=>el.addEventListener("click", ()=>goToPage(el.dataset.page)));
+  document.getElementById("bnMoreBtn").addEventListener("click", openMoreSheet);
+}
+function renderMoreSheetList(){
+  document.getElementById("moreSheetList").innerHTML = MOBILE_NAV.secondary.map(p=>
+    `<button class="sheet-item" data-page="${p}">${NAV_ICONS[p]||NAV_ICONS.settings} ${NAV_LABELS[p]}</button>`
+  ).join("");
+  document.getElementById("moreSheetList").querySelectorAll("[data-page]").forEach(el=>{
+    el.addEventListener("click", ()=>{ closeMoreSheet(); goToPage(el.dataset.page); });
+  });
+}
+function openMoreSheet(){
+  renderMoreSheetList();
+  document.getElementById("moreSheetOverlay").classList.add("open");
+}
+function closeMoreSheet(){ document.getElementById("moreSheetOverlay").classList.remove("open"); }
+document.getElementById("moreSheetClose").addEventListener("click", closeMoreSheet);
+document.getElementById("moreSheetOverlay").addEventListener("click", (e)=>{ if(e.target.id==="moreSheetOverlay") closeMoreSheet(); });
+
+/* =========================================================
+   COMMAND ACTIONS (Ctrl+K desktop, FAB mobile)
+========================================================= */
+const CMDK_ACTIONS = [
+  {label:"Tambah Tugas", icon:NAV_ICONS.tasks, run:()=>openTaskModal()},
+  {label:"Tambah Mata Kuliah", icon:NAV_ICONS.courses, run:()=>openCourseForm(null)},
+  {label:"Tambah Dosen", icon:NAV_ICONS.lecturers, run:()=>openLecturerForm(null)},
+  {label:"Tambah Jadwal", icon:NAV_ICONS.schedule, run:()=>openScheduleForm(null)},
+  {label:"Buat Folder", icon:NAV_ICONS.folders, run:()=>document.getElementById("addFolderBtn").click()},
+];
+let cmdkSel = 0;
+function renderCmdkList(){
+  const q = document.getElementById("cmdkSearch").value.trim().toLowerCase();
+  const filtered = CMDK_ACTIONS.filter(a=>a.label.toLowerCase().includes(q));
+  cmdkSel = Math.min(cmdkSel, Math.max(0, filtered.length-1));
+  document.getElementById("cmdkList").innerHTML = filtered.map((a,i)=>
+    `<button class="cmdk-item${i===cmdkSel?" sel":""}" data-idx="${i}">${a.icon}${a.label}</button>`
+  ).join("") || `<div class="hint" style="padding:14px;">Tidak ada aksi yang cocok.</div>`;
+  document.getElementById("cmdkList").querySelectorAll("[data-idx]").forEach(el=>{
+    el.addEventListener("click", ()=>{ closeCmdk(); filtered[+el.dataset.idx].run(); });
+  });
+  return filtered;
+}
+function openCmdk(){
+  cmdkSel = 0;
+  document.getElementById("cmdkSearch").value = "";
+  document.getElementById("cmdkOverlay").classList.add("open");
+  renderCmdkList();
+  setTimeout(()=>document.getElementById("cmdkSearch").focus(), 10);
+}
+function closeCmdk(){ document.getElementById("cmdkOverlay").classList.remove("open"); }
+document.getElementById("cmdkOverlay").addEventListener("click", (e)=>{ if(e.target.id==="cmdkOverlay") closeCmdk(); });
+document.getElementById("cmdkSearch").addEventListener("input", ()=>{ cmdkSel=0; renderCmdkList(); });
+document.getElementById("cmdkSearch").addEventListener("keydown", (e)=>{
+  const filtered = CMDK_ACTIONS.filter(a=>a.label.toLowerCase().includes(document.getElementById("cmdkSearch").value.trim().toLowerCase()));
+  if(e.key==="ArrowDown"){ e.preventDefault(); cmdkSel=Math.min(cmdkSel+1, filtered.length-1); renderCmdkList(); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); cmdkSel=Math.max(cmdkSel-1, 0); renderCmdkList(); }
+  else if(e.key==="Enter"){ e.preventDefault(); if(filtered[cmdkSel]){ closeCmdk(); filtered[cmdkSel].run(); } }
+});
+document.addEventListener("keydown", (e)=>{
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); openCmdk(); }
+  if(e.key==="Escape"){
+    closeCmdk(); closeMoreSheet();
+    document.querySelectorAll(".modal-overlay.open, .sheet-overlay.open, .verity-panel-overlay.open").forEach(m=>m.classList.remove("open"));
+  }
+});
+document.getElementById("fabAdd").addEventListener("click", openCmdk);
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+["addTaskBtn","addTaskBtnCal","addTaskBtnTasks"].forEach(id=>{
+  document.getElementById(id).addEventListener("click", ()=>openTaskModal());
+});
+document.querySelectorAll("[data-close-modal]").forEach(btn=>{
+  btn.addEventListener("click", ()=>document.getElementById(btn.dataset.closeModal).classList.remove("open"));
+});
+document.querySelectorAll(".modal-overlay").forEach(ov=>{
+  ov.addEventListener("click", (e)=>{ if(e.target===ov) ov.classList.remove("open"); });
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key==="Escape"){
+    document.querySelectorAll(".modal-overlay.open").forEach(ov=>ov.classList.remove("open"));
+  }
+});
+
+/* Focus trap: keeps Tab/Shift+Tab cycling inside whichever overlay
+   (modal, sheet, command palette, Verity panel) is currently open,
+   and restores focus to the element that opened it on close. */
+const OVERLAY_SELECTOR = ".modal-overlay.open, .sheet-overlay.open, .cmdk-overlay.open, .verity-panel-overlay.open";
+let lastFocusedBeforeOverlay = null;
+function getOpenOverlay(){ return document.querySelector(OVERLAY_SELECTOR); }
+function focusablesIn(container){
+  return Array.from(container.querySelectorAll(
+    'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(el=>el.offsetParent!==null);
+}
+document.addEventListener("keydown", (e)=>{
+  if(e.key !== "Tab") return;
+  const overlay = getOpenOverlay();
+  if(!overlay) return;
+  const items = focusablesIn(overlay);
+  if(items.length===0) return;
+  const first = items[0], last = items[items.length-1];
+  if(e.shiftKey && document.activeElement===first){
+    e.preventDefault(); last.focus();
+  } else if(!e.shiftKey && document.activeElement===last){
+    e.preventDefault(); first.focus();
+  } else if(!overlay.contains(document.activeElement)){
+    e.preventDefault(); first.focus();
+  }
+});
+new MutationObserver(()=>{
+  const overlay = getOpenOverlay();
+  if(overlay && !overlay.dataset.trapped){
+    overlay.dataset.trapped = "1";
+    lastFocusedBeforeOverlay = document.activeElement;
+    const items = focusablesIn(overlay);
+    if(items.length) items[0].focus();
+  } else if(!overlay){
+    document.querySelectorAll(".modal-overlay, .sheet-overlay, .cmdk-overlay, .verity-panel-overlay").forEach(ov=>{ ov.dataset.trapped=""; });
+    if(lastFocusedBeforeOverlay && document.body.contains(lastFocusedBeforeOverlay)){
+      lastFocusedBeforeOverlay.focus();
+    }
+    lastFocusedBeforeOverlay = null;
+  }
+}).observe(document.body, {attributes:true, attributeFilter:["class"], subtree:true});
+
+document.getElementById("quickAddCourse").addEventListener("click", ()=>{
+  openPrompt("Tambah Mata Kuliah", [
+    {id:"name", label:"Nama Mata Kuliah *", value:""},
+    {id:"code", label:"Kode Mata Kuliah", value:""},
+  ], (vals)=>{
+    if(!vals.name.trim()) return toast("Nama mata kuliah wajib diisi.");
+    const c = CourseManager.create(vals);
+    populateTaskFormSelects();
+    document.getElementById("f_course").value = c.id;
+  });
+});
+document.getElementById("quickAddFolder").addEventListener("click", ()=>{
+  openPrompt("Buat Folder", [{id:"pname", label:"Nama Folder", value:""}], (vals)=>{
+    if(!vals.pname.trim()) return toast("Nama folder tidak boleh kosong.");
+    const f = FolderManager.create(vals.pname.trim());
+    populateTaskFormSelects();
+    document.getElementById("f_folder").value = f.id;
+  });
+});
+document.getElementById("addFolderBtn").addEventListener("click", ()=>{
+  openPrompt("Buat Folder", [{id:"pname", label:"Nama Folder", value:""}], (vals)=>{
+    if(!vals.pname.trim()) return toast("Nama folder tidak boleh kosong.");
+    FolderManager.create(vals.pname.trim());
+    toast("Folder dibuat.");
+    renderAll();
+  });
+});
+document.getElementById("addCourseBtn").addEventListener("click", ()=>openCourseForm(null));
+document.getElementById("addLecturerBtn").addEventListener("click", ()=>openLecturerForm(null));
+document.getElementById("semesterFilterCourses").addEventListener("change", renderCourses);
+document.getElementById("backToCourses").addEventListener("click", ()=>{
+  document.getElementById("courseDashboardBlock").style.display="none";
+});
+document.getElementById("addScheduleBtn").addEventListener("click", ()=>openScheduleForm(null));
+document.getElementById("addSemesterBtn").addEventListener("click", ()=>openSemesterForm(null));
+document.getElementById("semesterFilterSchedule").addEventListener("change", renderScheduleWeekly);
+
+document.getElementById("calPrev").addEventListener("click", ()=>{ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
+document.getElementById("calNext").addEventListener("click", ()=>{ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
+document.getElementById("calToday").addEventListener("click", ()=>{ calDate = new Date(); calSelectedDate = ymd(new Date()); renderCalendar(); });
+
+["searchInput","searchInputTasks"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", (e)=>{
+    globalSearchQuery = e.target.value;
+    document.getElementById("searchInput").value = globalSearchQuery;
+    document.getElementById("searchInputTasks").value = globalSearchQuery;
+    if(currentPage==="tasks") renderTasksPage();
+    if(currentPage==="dashboard"){
+      // dashboard doesn't show a filtered task list section directly beyond matrix/weekly, but jump to tasks if searching
+      if(globalSearchQuery.trim()) goToPage("tasks");
+    }
+  });
+});
+["filterStatus","filterPriority","filterType","filterCourse","filterFolder","sortBy"].forEach(id=>{
+  document.getElementById(id).addEventListener("change", ()=>renderTasksPage());
+});
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+function applyTheme(){
+  const mode = DB.settings.theme;
+  let effective = mode;
+  if(mode==="system"){
+    effective = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark":"light";
+  }
+  document.documentElement.setAttribute("data-theme", effective);
+  document.querySelectorAll(".theme-seg button").forEach(b=>b.classList.toggle("active", b.dataset.themeOpt===mode));
+}
+document.querySelectorAll("[data-theme-opt]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    DB.settings.theme = btn.dataset.themeOpt;
+    persist();
+    applyTheme();
+  });
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
+  if(DB.settings.theme==="system") applyTheme();
+});
+
+function renderNotifSettings(){
+  document.getElementById("notifDailyToggle").classList.toggle("on", !!DB.settings.notifDaily);
+  document.getElementById("notifTime").value = DB.settings.notifTime || "19:00";
+  NotificationManager.updatePermStatusUI();
+}
+function renderGeneralSettings(){
+  document.getElementById("settingUserName").value = DB.settings.userName || "";
+  const sel = document.getElementById("settingActiveSemester");
+  sel.innerHTML = SemesterManager.all().map(s=>`<option value="${s.id}">${escapeHtml(s.name)} ${escapeHtml(s.academicYear||"")}</option>`).join("");
+  sel.value = DB.activeSemesterId || "";
+}
+document.getElementById("settingUserName").addEventListener("input", (e)=>{
+  DB.settings.userName = e.target.value;
+  persist();
+  renderGreetingAndToday();
+});
+document.getElementById("settingActiveSemester").addEventListener("change", (e)=>{
+  SemesterManager.setActive(e.target.value);
+  toast("Semester aktif diperbarui.");
+  renderAll();
+  renderGeneralSettings();
+});
+document.getElementById("notifDailyToggle").addEventListener("click", (e)=>{
+  DB.settings.notifDaily = !DB.settings.notifDaily;
+  persist();
+  renderNotifSettings();
+  NotificationManager.scheduleDaily();
+  if(DB.settings.notifDaily && (!("Notification" in window) || Notification.permission!=="granted")){
+    toast("Aktifkan izin notifikasi browser agar pengingat harian dapat muncul.");
+  }
+});
+document.getElementById("notifTime").addEventListener("change", (e)=>{
+  DB.settings.notifTime = e.target.value;
+  persist();
+  NotificationManager.scheduleDaily();
+});
+document.getElementById("notifPermBtn").addEventListener("click", ()=>NotificationManager.requestPermission());
+
+/* Verity settings */
+function renderVeritySettings(){
+  document.getElementById("verityEnabledToggle").classList.toggle("on", !!DB.settings.verityEnabled);
+  document.querySelectorAll("#verityPersonalitySeg button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.vp===(DB.settings.verityPersonality||"balanced"));
+  });
+}
+document.getElementById("verityEnabledToggle").addEventListener("click", ()=>{
+  DB.settings.verityEnabled = !DB.settings.verityEnabled;
+  persist();
+  renderVeritySettings();
+  VerityEngine.onDataRefresh();
+});
+document.querySelectorAll("#verityPersonalitySeg button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    DB.settings.verityPersonality = b.dataset.vp;
+    persist();
+    renderVeritySettings();
+  });
+});
+
+function renderSoundSettings(){
+  document.getElementById("soundEnabledToggle").classList.toggle("on", !!DB.settings.soundEnabled);
+  document.getElementById("soundNotifToggle").classList.toggle("on", !!DB.settings.soundNotif);
+  document.getElementById("soundMasterVol").value = DB.settings.soundMasterVolume ?? 0.6;
+  document.getElementById("soundUiVol").value = DB.settings.soundUiVolume ?? 0.5;
+  document.getElementById("soundVerityVol").value = DB.settings.soundVerityVolume ?? 0.7;
+}
+document.getElementById("soundEnabledToggle").addEventListener("click", ()=>{
+  DB.settings.soundEnabled = !DB.settings.soundEnabled;
+  persist(); renderSoundSettings();
+  if(DB.settings.soundEnabled) SoundManager.play("click");
+});
+document.getElementById("soundNotifToggle").addEventListener("click", ()=>{
+  DB.settings.soundNotif = !DB.settings.soundNotif;
+  persist(); renderSoundSettings();
+  if(DB.settings.soundNotif) SoundManager.play("notification");
+});
+document.getElementById("soundMasterVol").addEventListener("input", (e)=>{
+  DB.settings.soundMasterVolume = +e.target.value; persist();
+});
+document.getElementById("soundMasterVol").addEventListener("change", ()=> SoundManager.play("click"));
+document.getElementById("soundUiVol").addEventListener("input", (e)=>{
+  DB.settings.soundUiVolume = +e.target.value; persist();
+});
+document.getElementById("soundUiVol").addEventListener("change", ()=> SoundManager.play("click"));
+document.getElementById("soundVerityVol").addEventListener("input", (e)=>{
+  DB.settings.soundVerityVolume = +e.target.value; persist();
+});
+document.getElementById("soundVerityVol").addEventListener("change", ()=> SoundManager.play("verityReact"));
+
+/* About / Changelog */
+const CHANGELOG_V4 = [
+  "🔤 Rebranded to StudyFlow — Areyhan &amp; Verity",
+  "🙂 Verity emoji companion (no images — pure Unicode)",
+  "📍 Persistent floating Verity on every page",
+  "💬 Context-aware Verity dialogue &amp; mood system",
+  "🎉 Verity reactions to task progress, deadlines &amp; overdue",
+  "🌱 Verity empty states across all pages",
+  "🔔 Verity-styled NotificationManager integration",
+  "📱 Improved mobile Verity experience",
+  "ℹ️ About &amp; Credits moved into Settings",
+  "♿ Improved accessibility (focus trap, aria-live, escape-to-close)",
+  "✅ Existing academic systems preserved — no data reset"
+];
+function renderChangelogInto(ulId){
+  document.getElementById(ulId).innerHTML = CHANGELOG_V4.map(li=>`<li>${li}</li>`).join("");
+}
+renderChangelogInto("changelogListModal");
+renderChangelogInto("changelogListSettings");
+document.getElementById("aboutVersion").textContent = APP_VERSION;
+document.getElementById("aboutVersionInline").textContent = APP_VERSION;
+document.getElementById("aboutBtnSide").addEventListener("click", ()=>{
+  document.getElementById("changelogBox").style.display = "none";
+  document.getElementById("aboutModalOverlay").classList.add("open");
+});
+document.getElementById("changelogBtn").addEventListener("click", ()=>{
+  const box = document.getElementById("changelogBox");
+  box.style.display = box.style.display==="none" ? "block" : "none";
+});
+document.getElementById("changelogBtnSettings").addEventListener("click", ()=>{
+  const box = document.getElementById("changelogBoxSettings");
+  box.style.display = box.style.display==="none" ? "block" : "none";
+});
+
+/* Export / Import / Reset */
+function doExport(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "studiflow-backup-"+ymd(new Date())+".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast("Data berhasil diexport.");
+}
+document.getElementById("exportBtn").addEventListener("click", doExport);
+document.getElementById("exportBtnSide").addEventListener("click", doExport);
+
+document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed || typeof parsed !== "object" || !Array.isArray(parsed.tasks)){
+        throw new Error("Format tidak valid");
+      }
+      openConfirm("Import data?", "Data saat ini akan digantikan oleh isi file ini. Tindakan ini tidak dapat dibatalkan.", [
+        {label:"Batal", cls:"btn"},
+        {label:"Import", cls:"btn btn-primary", action:()=>{
+          const d = StorageManager.defaultData();
+          let merged = Object.assign(d, parsed, {settings: Object.assign(d.settings, parsed.settings||{})});
+          DB = StorageManager.migrate(merged);
+          persist();
+          toast("Data berhasil diimport.");
+          applyTheme();
+          renderNotifSettings();
+          renderGeneralSettings();
+          renderVeritySettings();
+          renderAll();
+        }}
+      ]);
+    }catch(err){
+      toast("File JSON tidak valid atau rusak. Data tidak diubah.");
+    }
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  openConfirm("Reset semua data?", "Semua tugas, folder, mata kuliah, dan dosen akan dihapus permanen. Ini tidak dapat dibatalkan.", [
+    {label:"Batal", cls:"btn"},
+    {label:"Lanjutkan", cls:"btn btn-danger", action:()=>{
+      openConfirm("Konfirmasi sekali lagi", "Apakah kamu benar-benar yakin ingin menghapus SEMUA data?", [
+        {label:"Batal", cls:"btn"},
+        {label:"Ya, Reset Semua", cls:"btn btn-danger", action:()=>{
+          DB = StorageManager.defaultData();
+          persist();
+          toast("Semua data telah direset.");
+          applyTheme();
+          renderNotifSettings();
+          renderGeneralSettings();
+          renderVeritySettings();
+          renderAll();
+        }}
+      ]);
+    }}
+  ]);
+});
+
+/* =========================================================
+   RENDER ALL
+========================================================= */
+function renderAll(){
+  renderDashboard();
+  renderCalendar();
+  renderTasksPage();
+  if(currentFolderView){
+    openFolderTasks(currentFolderView);
+  } else {
+    renderFolders();
+  }
+  renderCourses();
+  renderLecturers();
+  renderScheduleWeekly();
+  renderSemesterList();
+}
+
+/* countdown live refresh every 60s */
+setInterval(()=>{
+  if(currentPage==="dashboard") renderDashboard();
+  if(currentPage==="tasks") renderTasksPage();
+  if(currentPage==="calendar" && calSelectedDate) renderCalSelected();
+}, 60000);
+
+/* =========================================================
+   INIT
+========================================================= */
+function seedIfEmpty(){
+  if(DB.courses.length===0 && DB.lecturers.length===0 && DB.tasks.length===0 && DB.folders.length===0){
+    // leave completely empty per "no dummy data that can't be changed" rule —
+    // but dummy seed data here IS fully editable/deletable by the user, so it's fine as a starting example.
+  }
+}
+seedIfEmpty();
+renderMobileBottomNav();
+VerityEngine.wire();
+FocusTimer.wire();
+renderVeritySettings();
+renderSoundSettings();
+applyTheme();
+renderNotifSettings();
+renderGeneralSettings();
+NotificationManager.scheduleDaily();
+calSelectedDate = ymd(new Date());
+renderAll();
+
+/* Soft click sound: delegated so it covers primary buttons and the task
+   checkbox without touching every individual handler. Deliberately NOT
+   attached to every clickable element (per spec §5 — avoid sound spam). */
+document.addEventListener("click", (e)=>{
+  if(e.target.closest(".task-check, .btn-primary, .fab, .switch")) SoundManager.play("click");
+});
+
+/* PWA: registers only when StudyFlow is served over http(s) from the same
+   origin as sw.js/manifest.json (won't run from a local file:// open). */
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{ /* offline support unavailable on this host */ });
+  });
+}
+
+})();
+</script>
+</body>
+</html>
