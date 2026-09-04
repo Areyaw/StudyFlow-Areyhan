@@ -7,8 +7,8 @@
 <meta name="description" content="StudyFlow — Areyhan &amp; Verity. Organize your study. Own your time.">
 <meta name="theme-color" content="#3E6259">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/favicon-32.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icon-512.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="StudyFlow">
@@ -213,11 +213,11 @@
   /* ---------- CALENDAR ---------- */
   .cal-head{display:flex; align-items:center; gap:12px; margin-bottom:16px;}
   .cal-head h2{font-size:19px; min-width:170px;}
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:1fr; gap:6px;}
   .cal-dow{text-align:center; font-size:11px; color:var(--ink-faint); font-weight:700; padding-bottom:4px; text-transform:uppercase;}
   .cal-day{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-s); min-height:88px;
-    padding:6px; font-size:12px; cursor:pointer; display:flex; flex-direction:column; gap:3px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-s); aspect-ratio:1/1; box-sizing:border-box;
+    padding:6px; font-size:12px; cursor:pointer; display:flex; flex-direction:column; gap:3px; overflow-y:auto; overflow-x:hidden;
   }
   .cal-day:hover{border-color:var(--accent);}
   .cal-day.other-month{opacity:.35;}
@@ -371,10 +371,12 @@
     .topbar-actions .btn-primary.desktop-only, .topbar .btn-icon.cal-jump{display:none;}
     .verity-dock{display:none !important;}
     .verity-fab{display:flex !important;}
+    .verity-fab-bubble{display:flex !important;}
   }
   @media (min-width:881px){
     .fab{display:none;}
     .verity-fab{display:none !important;}
+    .verity-fab-bubble{display:none !important;}
   }
 
   @media (max-width:480px){
@@ -441,20 +443,30 @@
   .switch{transition:background .15s var(--ease-standard);}
 
   /* ---------- VERITY COMPANION ---------- */
-  /* Persistent floating companion (spec: fixed, bottom-left, safe from
-     sidebar/viewport/content). On desktop it floats inside the sidebar's
-     own footprint so it can never cover main content; on mobile it's
-     replaced by .verity-fab (see responsive rules above), which sits
-     above the bottom navigation instead. */
+  /* Persistent floating companion. On desktop it floats just outside the
+     sidebar's own column (never inside/over the nav items) as a proper
+     chat bubble with a tail pointing back at the sidebar — same bubble
+     language as the mobile speech bubble below. On mobile it's replaced
+     by .verity-fab + .verity-fab-bubble, which sit above the bottom nav. */
   .verity-dock{
-    position:fixed; left:16px; bottom:16px; width:198px; z-index:56;
-    background:var(--surface-2); border-radius:var(--radius-m); padding:12px 12px 11px; display:flex; gap:9px; align-items:flex-start;
-    cursor:pointer; border:1px solid var(--border); box-shadow:var(--shadow);
+    position:fixed; left:246px; bottom:20px; z-index:56; width:208px;
+    display:flex; flex-direction:column; align-items:center; gap:0;
+    cursor:pointer; background:none; border:none; padding:0; box-shadow:none;
+    animation:verityBubbleFloat 3.2s ease-in-out infinite;
   }
-  .verity-dock:hover{border-color:var(--accent);}
+  .verity-dock-bubble{
+    position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:10px 13px 11px; box-shadow:var(--shadow); max-width:206px; margin-bottom:12px; text-align:left;
+  }
+  .verity-dock:hover .verity-dock-bubble{border-color:var(--accent);}
+  .verity-dock-bubble::after{
+    content:""; position:absolute; left:50%; bottom:-7px; width:13px; height:13px; background:var(--surface);
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:translateX(-50%) rotate(45deg); border-radius:0 0 3px 0;
+  }
+  .verity-dock.vbounce{animation:verityBubbleFloat 3.2s ease-in-out infinite, verityBounce .38s ease-out;}
   .verity-avatar{
-    width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    font-size:17px; background:var(--gradient-soft); position:relative;
+    width:38px; height:38px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:19px; background:var(--gradient-soft); position:relative; box-shadow:var(--shadow-sm);
   }
   .verity-avatar .vface{display:block; animation:verityIdle 3.2s ease-in-out infinite;}
   @keyframes verityIdle{0%,100%{transform:translateY(0);} 50%{transform:translateY(-2px);}}
@@ -462,7 +474,6 @@
      calm and brief, never a constant motion (spec §8/§24). */
   .verity-toast.vbounce .verity-avatar{animation:verityBounce .38s ease-out;}
   @keyframes verityBounce{0%{transform:scale(.7);} 55%{transform:scale(1.14);} 100%{transform:scale(1);}}
-  .verity-dock-body{flex:1; min-width:0;}
   .verity-dock-name{font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;}
   .verity-dock-msg{font-size:12.5px; color:var(--ink); line-height:1.4;}
   .verity-fab{
@@ -472,6 +483,28 @@
   }
   .verity-fab:active{transform:scale(.92);}
   .verity-fab .badge-dot{position:absolute; top:-2px; right:-2px; width:11px; height:11px; border-radius:50%; background:var(--red); border:2px solid var(--bg);}
+  /* Mobile speech bubble: the phone-sized equivalent of the desktop dock's
+     always-on message line, so Verity still feels present/"alive" when the
+     sidebar is hidden — not just the silent floating emoji. Persistent
+     (not the timed proactive .verity-toast), tap opens the same panel. */
+  .verity-fab-bubble{
+    display:none; position:fixed; left:18px; bottom:calc(136px + env(safe-area-inset-bottom,0px)); z-index:59;
+    max-width:min(72vw, 240px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:8px 12px; box-shadow:var(--shadow); align-items:center; cursor:pointer;
+    animation:verityBubbleFloat 3.2s ease-in-out infinite;
+  }
+  .verity-fab-bubble:active{transform:scale(.96);}
+  .verity-fab-bubble span{font-size:12.5px; color:var(--ink); line-height:1.35; font-weight:500;}
+  .verity-fab-bubble .vfb-tail{
+    position:absolute; left:20px; bottom:-6px; width:12px; height:12px; background:var(--surface);
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:rotate(45deg); border-radius:0 0 3px 0;
+  }
+  @keyframes verityBubbleFloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px);}}
+  /* Generic "a new line just appeared" pop — shared by every Verity bubble
+     surface (dock, mobile bubble, toast, in-game companion). */
+  .dialog-pop{animation:dialogPop .28s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes dialogPop{0%{transform:scale(.85) translateY(4px); opacity:.4;} 100%{transform:scale(1) translateY(0); opacity:1;}}
+  .verity-fab-bubble.vbounce{animation:verityBubbleFloat 3.2s ease-in-out infinite, verityBounce .38s ease-out;}
 
   .verity-panel-overlay{
     position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-end; justify-content:flex-end; z-index:115; padding:0;
@@ -510,6 +543,49 @@
   .verity-toast .vtxt{font-size:12.5px; line-height:1.4; padding-top:2px;}
   @media (max-width:880px){ .verity-toast{left:14px; bottom:150px; max-width:220px;} }
 
+  /* ---------- VERITY CELEBRATION WINDOW ---------- */
+  .verity-celebrate-overlay{
+    position:fixed; inset:0; background:rgba(20,22,18,.5); display:none; align-items:center; justify-content:center;
+    z-index:120; padding:20px;
+  }
+  .verity-celebrate-overlay.open{display:flex;}
+  .verity-celebrate-card{
+    background:var(--surface); border-radius:var(--radius-xl); max-width:360px; width:100%; padding:30px 26px 26px;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;
+    animation:vcelebratePop .32s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes vcelebratePop{0%{transform:scale(.82) translateY(10px); opacity:0;} 100%{transform:scale(1) translateY(0); opacity:1;}}
+  .vcelebrate-avatar{
+    width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px;
+    background:var(--gradient-primary); box-shadow:var(--shadow-accent-glow); margin-bottom:6px;
+    animation:verityBounce .5s ease-out;
+  }
+  .vcelebrate-name{font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.04em;}
+  .vcelebrate-text{font-size:14.5px; line-height:1.55; color:var(--ink); margin:6px 0 16px;}
+  .vcelebrate-close{width:100%; justify-content:center;}
+
+  /* ---------- REAL-TIME GUIDED TOUR ---------- */
+  .tour-overlay{
+    position:fixed; inset:0; z-index:130; display:none; pointer-events:none;
+  }
+  .tour-overlay.open{display:block;}
+  .tour-spotlight{
+    position:fixed; border-radius:12px; box-shadow:0 0 0 9999px rgba(15,17,14,.62);
+    transition:top .32s var(--ease-standard), left .32s var(--ease-standard), width .32s var(--ease-standard), height .32s var(--ease-standard);
+    pointer-events:none;
+  }
+  .tour-tooltip{
+    position:fixed; width:min(300px, calc(100vw - 32px)); background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-l); padding:16px 18px; box-shadow:0 16px 44px rgba(0,0,0,.28);
+    pointer-events:auto; transition:top .32s var(--ease-standard), left .32s var(--ease-standard);
+    animation:vcelebratePop .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tour-step-count{font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;}
+  .tour-tooltip h3{font-family:var(--font-display); font-size:16px; margin:0 0 6px;}
+  .tour-tooltip p{font-size:13px; color:var(--ink-soft); line-height:1.5; margin:0 0 14px;}
+  .tour-actions{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+  .tour-highlight-target{position:relative; z-index:131;}
+
   /* ---------- ABOUT MODAL ---------- */
   .about-credit{text-align:center; padding:6px 4px 2px;}
   .about-credit .tag{font-family:var(--font-display); font-size:14px; margin-bottom:2px;}
@@ -533,6 +609,167 @@
   .focus-wrap.running .focus-ring{animation:focusPulse 2.6s ease-in-out infinite;}
   @keyframes focusPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.015);}}
   .stat-day .lbl{font-size:10px; color:var(--ink-faint);}
+
+  /* ---------- STUDY BLOCK MINI-GAME ---------- */
+  :root{ --sb-c1:#5C8B79; --sb-c2:#D9A25C; --sb-c3:#C97B7B; --sb-c4:#6E9BC2; --sb-c5:#B389C9; }
+  [data-theme="dark"]{ --sb-c1:#7FAE9F; --sb-c2:#E0B57A; --sb-c3:#D99696; --sb-c4:#8CB6DD; --sb-c5:#C7A2DA; }
+  .sb-setup{display:none; flex-direction:column; align-items:center; gap:18px; text-align:center; padding:30px 16px 40px;}
+  .sb-setup .sb-icon{width:64px; height:64px; border-radius:20px; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center; font-size:30px; box-shadow:var(--shadow-accent-glow);}
+  .sb-dur-grid{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .sb-dur-btn{padding:12px 20px; border-radius:var(--radius-m); border:1px solid var(--border); background:var(--surface); color:var(--ink); font-weight:700; font-size:14px; min-width:84px;}
+  .sb-dur-btn:hover{border-color:var(--accent); color:var(--accent); transform:translateY(-1px);}
+  .sb-dur-btn.active{background:var(--gradient-primary); color:var(--accent-ink); border-color:transparent; box-shadow:var(--shadow-accent-glow);}
+  .sb-custom-row{display:flex; align-items:center; gap:8px;}
+  .sb-custom-row input{width:70px; padding:9px 10px; border-radius:var(--radius-s); border:1px solid var(--border); background:var(--bg); color:var(--ink); text-align:center; font-weight:700;}
+  .sb-best{font-size:12.5px; color:var(--ink-faint);}
+  .sb-game{display:none; flex-direction:column; align-items:center; gap:16px; padding:6px 10px 30px;}
+  .sb-game.active, .sb-setup.active{display:flex;}
+  /* HUD row: score, timer, Verity companion and the exit button all live on
+     one strip above the board — Verity sits right after the timer here
+     (not beside the grid) so she never eats into the gap between the tray
+     pieces and the play grid below. Same layout on mobile and desktop. */
+  .sb-hud{width:100%; max-width:460px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .sb-hud-stat{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:8px 14px; box-shadow:var(--shadow-sm); flex-shrink:0;}
+  .sb-hud-stat .k{font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); font-weight:700;}
+  .sb-hud-stat .v{font-size:17px; font-weight:800; font-family:var(--font-display);}
+  .sb-hud-stat.timer.low .v{color:var(--red);}
+  #sbExitBtn{margin-left:auto; flex-shrink:0;}
+  .sb-grid{display:grid; grid-template-columns:repeat(8,1fr); gap:4px; width:min(88vw,380px); aspect-ratio:1/1; background:var(--surface-2); border-radius:var(--radius-m); padding:8px; box-shadow:var(--shadow);}
+  .sb-board-row{display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;}
+  .sb-companion{display:flex; align-items:center; gap:8px; min-width:0; flex-shrink:1;}
+  .sb-companion-avatar{
+    width:34px; height:34px; border-radius:50%; background:var(--gradient-soft); color:var(--accent); display:flex; align-items:center; justify-content:center;
+    font-size:16px; box-shadow:var(--shadow-sm); animation:verityIdle 3.2s ease-in-out infinite; flex-shrink:0;
+  }
+  .sb-companion-bubble{
+    position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:6px 11px;
+    font-size:11.5px; line-height:1.35; text-align:left; box-shadow:var(--shadow-sm); min-height:16px; color:var(--ink);
+    max-width:170px; overflow:hidden; text-overflow:ellipsis;
+  }
+  .sb-companion-tail{display:none;}
+  .sb-cell{border-radius:5px; background:var(--surface); transition:background .12s ease, transform .12s ease;}
+  .sb-cell.filled{box-shadow:inset 0 -2px 0 rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.25);}
+  .sb-cell.preview-ok{background:var(--accent-soft); outline:2px solid var(--accent);}
+  .sb-cell.preview-bad{background:rgba(199,90,90,.22); outline:2px solid var(--red);}
+  .sb-cell.clearing{animation:sbClear .32s ease forwards;}
+  @keyframes sbClear{0%{transform:scale(1); opacity:1;} 100%{transform:scale(.4); opacity:0;}}
+  .sb-tray{width:min(88vw,380px); display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .sb-piece-slot{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); min-height:76px; display:flex; align-items:center; justify-content:center; padding:6px; touch-action:none; cursor:grab;}
+  .sb-piece-slot.empty{opacity:.25;}
+  .sb-piece-slot.dragging-source{opacity:.3;}
+  .sb-piece-mini{display:grid; gap:3px;}
+  .sb-piece-mini .pc{border-radius:3px; box-shadow:inset 0 -2px 0 rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.25);}
+  .sb-drag-ghost{position:fixed; z-index:200; pointer-events:none; display:grid; gap:4px; opacity:.92;}
+  .sb-drag-ghost .pc{border-radius:5px; box-shadow:inset 0 -2px 0 rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.25);}
+  .sb-hint{font-size:12px; color:var(--ink-faint); text-align:center; max-width:320px;}
+  /* While Study Block is open, Verity already lives in the game HUD next to
+     the timer (mobile and desktop alike) — so the separate global sidebar
+     dock and the mobile floating bubble/FAB are hidden to avoid showing her
+     twice. Restored automatically the moment the game screen closes. */
+  body.hide-global-verity .verity-dock,
+  body.hide-global-verity .verity-fab,
+  body.hide-global-verity .verity-fab-bubble{ display:none !important; }
+
+  /* ---------- NOTEBOOK (3D book page-flip) ---------- */
+  .nb-book{
+    position:relative; width:min(94vw,520px); height:min(64vh,560px); margin:18px auto 0; perspective:1600px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nb-pages-stack{
+    position:absolute; inset:6px 2px 0 2px; border-radius:0 var(--radius-m) var(--radius-m) 0;
+    background:var(--surface-2); box-shadow:0 2px 0 var(--border), 0 4px 0 var(--surface-2), 0 6px 10px rgba(32,35,31,.10);
+    transform:translateZ(-10px);
+  }
+  .nb-sheet{
+    position:relative; width:100%; height:100%; background:var(--surface); border-radius:0 var(--radius-m) var(--radius-m) 0;
+    box-shadow:var(--shadow-lg); overflow:hidden; transform-style:preserve-3d; backface-visibility:hidden;
+    border-left:6px solid var(--accent);
+  }
+  .nb-sheet-spine{
+    position:absolute; left:0; top:0; bottom:0; width:14px;
+    background:linear-gradient(90deg, rgba(0,0,0,.12), transparent);
+    pointer-events:none;
+  }
+  .nb-textarea{
+    width:100%; height:100%; border:none; outline:none; resize:none; background:transparent; color:var(--ink);
+    padding:26px 22px 20px 30px; font-family:var(--font-body); font-size:14.5px; line-height:28px;
+    background-image:repeating-linear-gradient(var(--surface) 0 27px, var(--border) 27px 28px);
+    background-attachment:local;
+  }
+  [data-theme="dark"] .nb-textarea{ background-image:repeating-linear-gradient(var(--surface) 0 27px, var(--border) 27px 28px); }
+  @keyframes nbFlipOutNext{ from{transform:rotateY(0deg); opacity:1;} to{transform:rotateY(-100deg); opacity:.35;} }
+  @keyframes nbFlipInNext{ from{transform:rotateY(100deg); opacity:.35;} to{transform:rotateY(0deg); opacity:1;} }
+  @keyframes nbFlipOutPrev{ from{transform:rotateY(0deg); opacity:1;} to{transform:rotateY(100deg); opacity:.35;} }
+  @keyframes nbFlipInPrev{ from{transform:rotateY(-100deg); opacity:.35;} to{transform:rotateY(0deg); opacity:1;} }
+  .nb-sheet.flip-out-next{ transform-origin:left center; animation:nbFlipOutNext .28s ease forwards; }
+  .nb-sheet.flip-in-next{ transform-origin:left center; animation:nbFlipInNext .28s ease forwards; }
+  .nb-sheet.flip-out-prev{ transform-origin:left center; animation:nbFlipOutPrev .28s ease forwards; }
+  .nb-sheet.flip-in-prev{ transform-origin:left center; animation:nbFlipInPrev .28s ease forwards; }
+  .nb-arrow{
+    position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:50%; z-index:5;
+    background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-sm); display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  .nb-arrow:hover{ color:var(--accent); border-color:var(--accent); }
+  .nb-arrow svg{ width:17px; height:17px; }
+  .nb-arrow-prev{ left:-14px; }
+  .nb-arrow-next{ right:-14px; }
+  @media (max-width:640px){ .nb-arrow{ display:none; } }
+  .nb-foot{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; flex-wrap:wrap; }
+  .nb-foot #nbPageIndicator{ font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--ink-soft); }
+  .sb-overlay-card{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:150; padding:16px;}
+  .sb-overlay-card.show{display:flex;}
+  .sb-overlay-inner{background:var(--surface); border-radius:var(--radius-xl); padding:28px 26px; max-width:320px; width:100%; text-align:center; box-shadow:var(--shadow-lg); animation:sbPop .25s ease;}
+  @keyframes sbPop{from{transform:scale(.9); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .sb-overlay-emoji{font-size:40px; margin-bottom:6px;}
+  .sb-overlay-inner h3{font-family:var(--font-display); font-size:19px; margin-bottom:4px;}
+  .sb-overlay-inner p{font-size:13.5px; color:var(--ink-soft); margin-bottom:16px;}
+  .sb-overlay-score{font-size:28px; font-weight:800; font-family:var(--font-display); color:var(--accent); margin-bottom:14px;}
+  @media (prefers-reduced-motion: reduce){ .sb-cell, .sb-overlay-inner{ animation:none!important; transition:none!important; } }
+
+  /* ---------- MINI GAME HUB ---------- */
+  .mg-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; max-width:640px;}
+  .mg-card{display:flex; align-items:center; gap:14px; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-l); padding:18px; box-shadow:var(--shadow-sm);}
+  .mg-card:hover{border-color:var(--accent); transform:translateY(-2px); box-shadow:var(--shadow);}
+  .mg-card-icon{width:48px; height:48px; border-radius:14px; background:var(--gradient-soft); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;}
+  .mg-card-body h3{font-family:var(--font-display); font-size:16px; margin-bottom:3px;}
+  .mg-card-body p{font-size:12px; color:var(--ink-soft); line-height:1.4;}
+  .mg-card-go{margin-left:auto; font-size:12px; font-weight:700; color:var(--accent); flex-shrink:0; white-space:nowrap;}
+  .mg-back{margin-right:10px;}
+
+  /* ---------- CHESS ---------- */
+  .cb-board{display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); width:min(92vw,420px); height:min(92vw,420px); flex:0 0 auto; border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); box-sizing:border-box;}
+  .cb-sq{position:relative; display:flex; align-items:center; justify-content:center; font-size:min(6.5vw,30px); line-height:1; cursor:pointer; user-select:none; aspect-ratio:1/1;}
+  .cb-sq.light{background:var(--sb-c2); opacity:.55;}
+  .cb-sq.dark{background:var(--sb-c1); opacity:.85;}
+  .cb-sq.light, .cb-sq.dark{opacity:1;}
+  .cb-sq.light{background:#EDE0C8;} .cb-sq.dark{background:#8A7355;}
+  [data-theme="dark"] .cb-sq.light{background:#4a4438;} [data-theme="dark"] .cb-sq.dark{background:#332e26;}
+  .cb-sq.selected{box-shadow:inset 0 0 0 3px var(--accent);}
+  .cb-sq.lastmove{box-shadow:inset 0 0 0 3px rgba(217,162,92,.6);}
+  .cb-sq.check{box-shadow:inset 0 0 0 3px var(--red);}
+  .cb-sq .cb-dot{position:absolute; width:26%; height:26%; border-radius:50%; background:rgba(0,0,0,.28); pointer-events:none;}
+  .cb-sq .cb-ring{position:absolute; inset:6%; border-radius:50%; border:3px solid rgba(0,0,0,.28); pointer-events:none;}
+  .cb-piece{line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));}
+  .cb-piece.white{color:#fdfaf2;}
+  .cb-piece.black{color:#20231f;}
+  .cb-promo-row{display:flex; gap:8px; justify-content:center;}
+  .cb-promo-row button{width:52px; height:52px; font-size:26px; border-radius:var(--radius-m); border:1px solid var(--border); background:var(--surface);}
+  .cb-promo-row button:hover{border-color:var(--accent); background:var(--accent-soft);}
+
+  /* ---------- BADGES ---------- */
+  .badge-row{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
+  .badge-chip{display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; padding:12px 8px; border-radius:var(--radius-m); border:1px solid var(--border); background:var(--surface);}
+  .badge-chip .b-icon{width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--gradient-primary); box-shadow:var(--shadow-accent-glow);}
+  .badge-chip .b-title{font-size:11px; font-weight:700;}
+  .badge-chip .b-desc{font-size:9.5px; color:var(--ink-faint); line-height:1.3;}
+  .badge-chip.locked{opacity:.4;}
+  .badge-chip.locked .b-icon{background:var(--surface-2); box-shadow:none; filter:grayscale(1);}
+  .badge-chip.unlocked{animation:dialogPop .3s ease;}
+
+  /* ---------- PROFILE PHOTO ---------- */
+  .profile-photo-row{display:flex; align-items:center; gap:14px;}
+  .profile-photo{width:56px; height:56px; border-radius:50%; object-fit:cover; background:var(--gradient-soft); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--accent); flex-shrink:0; box-shadow:var(--shadow-sm);}
+  .greet-photo{width:44px; height:44px; border-radius:50%; object-fit:cover; box-shadow:var(--shadow-sm); flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -541,7 +778,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark"><img src="icons/logo.png" alt="StudyFlow logo" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'S'}))"></div>
+      <div class="brand-mark"><img src="icon-512.png" alt="StudyFlow logo" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'S'}))"></div>
       <div class="brand-name">StudyFlow</div>
     </div>
     <nav class="nav" id="mainNav">
@@ -581,6 +818,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
         Focus Mode
       </button>
+      <button class="nav-item" data-page="minigame">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="12" rx="6"/><path d="M7 10v4M5 12h4"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg>
+        Mini Game
+      </button>
+      <button class="nav-item" data-page="notebook">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 21.5v-17z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg>
+        Notebook
+      </button>
       <button class="nav-item" data-page="settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.2a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.2a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg>
         Pengaturan
@@ -588,11 +833,11 @@
     </nav>
     <div class="sidebar-foot">
       <div class="verity-dock" id="verityDock" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Verity assistant">
-        <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
-        <div class="verity-dock-body">
+        <div class="verity-dock-bubble" id="verityDockBubble">
           <div class="verity-dock-name">Verity</div>
           <div class="verity-dock-msg" id="verityDockMsg">Menyiapkan...</div>
         </div>
+        <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
       </div>
       <button class="btn btn-ghost btn-sm" id="exportBtnSide">Export Data</button>
       <button class="btn btn-ghost btn-sm" id="aboutBtnSide">Tentang StudyFlow</button>
@@ -621,10 +866,13 @@
         </div>
       </div>
 
-      <div id="greetingBlock" style="margin-bottom:20px;">
-        <h2 style="font-size:21px; margin-bottom:2px;" id="greetingText">Selamat Datang</h2>
-        <div style="font-size:13px; color:var(--ink-soft);" id="greetingDate"></div>
-        <div class="chip chip-accent" style="margin-top:8px; display:inline-block;" id="activeSemesterChip"></div>
+      <div id="greetingBlock" style="margin-bottom:20px; display:flex; align-items:center; gap:12px;">
+        <img class="greet-photo" id="greetingPhoto" style="display:none;" alt="Foto profil">
+        <div>
+          <h2 style="font-size:21px; margin-bottom:2px;" id="greetingText">Selamat Datang</h2>
+          <div style="font-size:13px; color:var(--ink-soft);" id="greetingDate"></div>
+          <div class="chip chip-accent" style="margin-top:8px; display:inline-block;" id="activeSemesterChip"></div>
+        </div>
       </div>
 
       <section class="block" id="todayBlock">
@@ -647,6 +895,11 @@
       <section class="block">
         <div class="block-head"><h2>Tugas Minggu Ini</h2></div>
         <div class="weekly-track" id="weeklyTrack"></div>
+      </section>
+
+      <section class="block">
+        <div class="block-head"><h2>🏅 Badge Semangat</h2></div>
+        <div class="badge-row" id="badgeRow"></div>
       </section>
     </section>
 
@@ -821,12 +1074,186 @@
       </div>
     </section>
 
+    <!-- MINI GAME HUB -->
+    <section class="page" id="page-minigame">
+      <div class="topbar"><h1 class="page-title">Mini Game</h1></div>
+      <p class="sb-hint" style="text-align:left; max-width:520px; margin-bottom:18px;">Istirahat sebentar dari belajar. Pilih salah satu game di bawah.</p>
+      <div class="mg-grid">
+        <button class="mg-card" data-page="studyblock">
+          <div class="mg-card-icon">🧩</div>
+          <div class="mg-card-body">
+            <h3>Study Block</h3>
+            <p>Puzzle blok santai, main sesuai durasi yang kamu pilih.</p>
+          </div>
+          <span class="mg-card-go">Main ›</span>
+        </button>
+        <button class="mg-card" data-page="chess">
+          <div class="mg-card-icon">♟️</div>
+          <div class="mg-card-body">
+            <h3>Catur</h3>
+            <p>Single player lawan AI, atau dual player satu HP. Tanpa batas waktu.</p>
+          </div>
+          <span class="mg-card-go">Main ›</span>
+        </button>
+      </div>
+    </section>
+
     <!-- SETTINGS -->
+    <!-- STUDY BLOCK -->
+    <section class="page" id="page-studyblock">
+      <div class="topbar"><button class="link-btn mg-back" data-page="minigame">‹ Mini Game</button><h1 class="page-title">Study Block</h1></div>
+
+      <div class="sb-setup active" id="sbSetup">
+        <div class="sb-icon">🧩</div>
+        <div>
+          <h2 style="font-family:var(--font-display); font-size:20px; margin-bottom:4px;">Study Block</h2>
+          <p class="sb-hint">Puzzle blok santai buat istirahat sebentar dari belajar. Pilih durasi, lalu mulai.</p>
+        </div>
+        <div class="sb-dur-grid" id="sbDurGrid">
+          <button class="sb-dur-btn" data-min="5">5 min</button>
+          <button class="sb-dur-btn active" data-min="10">10 min</button>
+          <button class="sb-dur-btn" data-min="15">15 min</button>
+          <button class="sb-dur-btn" data-min="custom">Custom</button>
+        </div>
+        <div class="sb-custom-row" id="sbCustomRow" style="display:none;">
+          <input type="number" id="sbCustomMin" min="1" max="60" value="7"> <span>menit</span>
+        </div>
+        <button class="btn btn-primary" id="sbStartBtn">Start Game</button>
+        <div class="sb-best" id="sbBestScore"></div>
+      </div>
+
+      <div class="sb-game" id="sbGame">
+        <div class="sb-hud">
+          <div class="sb-hud-stat"><div class="k">Score</div><div class="v" id="sbScoreVal">0</div></div>
+          <div class="sb-hud-stat timer" id="sbTimerStat"><div class="k">Remaining</div><div class="v" id="sbTimerVal">10:00</div></div>
+          <div class="sb-companion">
+            <div class="sb-companion-bubble" id="sbCompanionBubble">
+              <span id="sbCompanionMsg"></span>
+              <i class="sb-companion-tail" aria-hidden="true"></i>
+            </div>
+            <div class="sb-companion-avatar"><span id="sbCompanionFace">🙂</span></div>
+          </div>
+          <button class="btn btn-icon btn-ghost" id="sbExitBtn" aria-label="Keluar Study Block">✕</button>
+        </div>
+        <div class="sb-board-row">
+          <div class="sb-grid" id="sbGrid"></div>
+        </div>
+        <div class="sb-tray" id="sbTray"></div>
+        <p class="sb-hint">Seret balok ke grid untuk melengkapi baris atau kolom.</p>
+      </div>
+    </section>
+
+    <!-- CHESS -->
+    <section class="page" id="page-chess">
+      <div class="topbar"><button class="link-btn mg-back" data-page="minigame">‹ Mini Game</button><h1 class="page-title">Catur</h1></div>
+
+      <div class="sb-setup active" id="chessSetup">
+        <div class="sb-icon">♟️</div>
+        <div>
+          <h2 style="font-family:var(--font-display); font-size:20px; margin-bottom:4px;">Catur</h2>
+          <p class="sb-hint">Pilih mode permainan. Tanpa batas waktu — main santai sampai selesai.</p>
+        </div>
+        <div class="sb-dur-grid" id="chessModeGrid">
+          <button class="sb-dur-btn active" data-mode="ai">Single Player<br><span style="font-weight:400; font-size:11px;">Lawan AI</span></button>
+          <button class="sb-dur-btn" data-mode="dual">Dual Player<br><span style="font-weight:400; font-size:11px;">1 HP, bergantian</span></button>
+        </div>
+        <button class="btn btn-primary" id="chessStartBtn">Start Game</button>
+        <div class="sb-best" id="chessStats"></div>
+      </div>
+
+      <div class="sb-game" id="chessGame">
+        <div class="sb-hud">
+          <div class="sb-hud-stat"><div class="k">Giliran</div><div class="v" id="chessTurnVal">Putih</div></div>
+          <div class="sb-hud-stat" id="chessStatusStat" style="display:none;"><div class="k">Status</div><div class="v" id="chessStatusVal">Skak!</div></div>
+          <div class="sb-companion">
+            <div class="sb-companion-bubble" id="chessCompanionBubble">
+              <span id="chessCompanionMsg"></span>
+            </div>
+            <div class="sb-companion-avatar"><span id="chessCompanionFace">🙂</span></div>
+          </div>
+          <button class="btn btn-icon btn-ghost" id="chessResignBtn" aria-label="Selesai" title="Selesai">✕</button>
+        </div>
+        <div class="sb-board-row">
+          <div class="cb-board" id="chessBoard"></div>
+        </div>
+        <p class="sb-hint" id="chessHint">Sentuh bidak untuk lihat langkah, lalu sentuh kotak tujuan.</p>
+      </div>
+    </section>
+
+    <!-- CHESS — promotion picker -->
+    <div class="sb-overlay-card" id="chessPromoOverlay">
+      <div class="sb-overlay-inner">
+        <h3>Promosi Pion</h3>
+        <p>Pilih bidak pengganti</p>
+        <div class="cb-promo-row" id="chessPromoRow">
+          <button data-p="Q">♕</button>
+          <button data-p="R">♖</button>
+          <button data-p="B">♗</button>
+          <button data-p="N">♘</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHESS — game over / reminder overlay -->
+    <div class="sb-overlay-card" id="chessEndOverlay">
+      <div class="sb-overlay-inner">
+        <div class="sb-overlay-emoji" id="chessEndEmoji">🏁</div>
+        <h3 id="chessEndTitle">Skakmat!</h3>
+        <p id="chessEndMsg">Permainan selesai.</p>
+        <p class="sb-hint" style="margin-bottom:16px;" id="chessEndReminder">Lanjut main lagi, atau balik dulu ngerjain tugas?</p>
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn" id="chessPlayAgainBtn">Main Lagi</button>
+          <button class="btn btn-primary" id="chessEndBtn">Balik ke Tugas</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="page" id="page-notebook">
+      <div class="topbar">
+        <h1 class="page-title">Notebook</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-icon btn-ghost" id="nbDeleteBtn" aria-label="Hapus halaman ini" title="Hapus halaman ini">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v13a2 2 0 01-2 2H9a2 2 0 01-2-2V7h10z"/></svg>
+          </button>
+          <button class="btn btn-primary btn-sm" id="nbAddBtn">+ Halaman</button>
+        </div>
+      </div>
+      <div class="nb-book" id="nbBook">
+        <button class="nb-arrow nb-arrow-prev" id="nbPrevBtn" aria-label="Halaman sebelumnya">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="nb-pages-stack" aria-hidden="true"></div>
+        <div class="nb-sheet" id="nbSheet">
+          <div class="nb-sheet-spine" aria-hidden="true"></div>
+          <textarea class="nb-textarea" id="nbTextarea" placeholder="Tulis catatanmu di sini..." spellcheck="false"></textarea>
+        </div>
+        <button class="nb-arrow nb-arrow-next" id="nbNextBtn" aria-label="Halaman berikutnya">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="nb-foot">
+        <span id="nbPageIndicator">1 / 1</span>
+        <span class="hint">Geser ke kiri/kanan untuk ganti halaman, seperti membuka buku.</span>
+      </div>
+    </section>
+
     <section class="page" id="page-settings">
       <div class="topbar"><h1 class="page-title">Pengaturan</h1></div>
 
       <div class="settings-block">
         <h3>Umum</h3>
+        <div class="setting-row profile-photo-row">
+          <div class="profile-photo" id="profilePhotoPreview">?</div>
+          <div style="flex:1;">
+            <div class="label">Foto Profil</div>
+            <div class="sub">Opsional — muncul di sapaan dashboard &amp; sini.</div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <label class="btn btn-sm" for="profilePhotoInput" style="cursor:pointer;">Unggah</label>
+              <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;">
+              <button class="btn btn-sm btn-ghost" id="profilePhotoRemoveBtn">Hapus</button>
+            </div>
+          </div>
+        </div>
         <div class="setting-row">
           <div><div class="label">Nama Kamu</div><div class="sub">Ditampilkan di sapaan dashboard</div></div>
           <input type="text" id="settingUserName" placeholder="Nama" style="padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--ink); max-width:180px;">
@@ -930,8 +1357,19 @@
           <ul class="changelog-list" id="changelogListSettings"></ul>
         </div>
         <div class="setting-row">
+          <div><div class="label">🧭 Tutorial Panduan</div><div class="sub">Putar ulang tur singkat keliling fitur-fitur StudyFlow</div></div>
+          <button class="btn btn-sm" id="replayTutorialBtn">Mulai Tur</button>
+        </div>
+        <div class="setting-row">
           <div><div class="label">Kolaborasi &amp; Bisnis</div><div class="sub">areyawva@gmail.com</div></div>
           <a class="btn btn-sm" href="mailto:areyawva@gmail.com">Hubungi</a>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">WhatsApp</div><div class="sub">081373199226</div></div>
+          <a class="btn btn-sm" href="https://wa.me/6281373199226" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.35 4.95L2 22l5.29-1.39a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.51 2 12.04 2zm0 18.02h-.01a8.1 8.1 0 01-4.14-1.14l-.3-.17-3.14.82.84-3.06-.19-.32a8.08 8.08 0 01-1.24-4.29c0-4.47 3.64-8.11 8.13-8.11 2.17 0 4.21.85 5.74 2.38a8.06 8.06 0 012.38 5.73c0 4.47-3.64 8.16-8.07 8.16zm4.45-6.08c-.24-.12-1.44-.71-1.66-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.78.95-.14.16-.29.18-.53.06-.24-.12-1.03-.38-1.96-1.21-.72-.65-1.21-1.44-1.36-1.68-.14-.24-.02-.37.11-.49.11-.11.24-.29.36-.43.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42-.14-.01-.31-.01-.47-.01-.16 0-.43.06-.65.31-.22.24-.86.84-.86 2.05 0 1.21.88 2.38 1 2.54.12.16 1.73 2.64 4.2 3.7.59.25 1.05.4 1.41.51.59.19 1.13.16 1.55.1.47-.07 1.44-.59 1.65-1.15.2-.57.2-1.05.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+            Chat
+          </a>
         </div>
       </div>
 
@@ -944,7 +1382,7 @@
         <div class="setting-row">
           <div><div class="label">Import Data</div><div class="sub">Pulihkan data dari file JSON</div></div>
           <button class="btn btn-sm" id="importBtn">Import</button>
-          <input type="file" id="importFile" accept="application/json" style="display:none;">
+          <input type="file" id="importFile" accept=".json,application/json,text/plain,text/json,application/octet-stream" style="display:none;">
         </div>
         <div class="setting-row">
           <div><div class="label">Reset Semua Data</div><div class="sub">Menghapus seluruh tugas, folder, mata kuliah, dan dosen</div></div>
@@ -980,6 +1418,10 @@
 </div>
 
 <!-- Verity floating avatar (mobile) -->
+<div class="verity-fab-bubble" id="verityFabBubble" role="button" tabindex="0" aria-label="Open Verity assistant">
+  <span id="verityFabBubbleMsg"></span>
+  <i class="vfb-tail" aria-hidden="true"></i>
+</div>
 <button class="verity-fab" id="verityFab" aria-label="Open Verity assistant" aria-haspopup="dialog" aria-expanded="false">
   <span id="verityFabFace">🙂</span>
   <span class="badge-dot" id="verityFabBadge" style="display:none;"></span>
@@ -1011,6 +1453,30 @@
   <div class="vtxt" id="verityToastMsg"></div>
 </div>
 
+<!-- Verity celebration window — shown after a focus session (or another big
+     win) finishes. While open, the persistent dock/fab/bubble are hidden so
+     it reads as "only one Verity" on screen at a time. -->
+<div class="verity-celebrate-overlay" id="verityCelebrateOverlay" role="dialog" aria-modal="true" aria-label="Selamat dari Verity">
+  <div class="verity-celebrate-card">
+    <div class="vcelebrate-avatar"><span id="verityCelebrateFace">🎉</span></div>
+    <div class="vcelebrate-name">Verity</div>
+    <div class="vcelebrate-text" id="verityCelebrateText"></div>
+    <button class="btn btn-primary vcelebrate-close" id="verityCelebrateClose">Makasih, Verity!</button>
+  </div>
+</div>
+
+<!-- STUDY BLOCK — time's up / game over overlay (not a .modal-overlay: no back-navigation
+     entry needed, it always resolves via its own button, never via device Back) -->
+<div class="sb-overlay-card" id="sbEndOverlay">
+  <div class="sb-overlay-inner">
+    <div class="sb-overlay-emoji" id="sbEndEmoji">😌</div>
+    <h3 id="sbEndTitle">Time's up!</h3>
+    <p id="sbEndMsg">Nice break. Ready to return to StudyFlow?</p>
+    <div class="sb-overlay-score" id="sbEndScore">0</div>
+    <button class="btn btn-primary" id="sbEndBtn">Back to StudyFlow</button>
+  </div>
+</div>
+
 <!-- ABOUT / CHANGELOG MODAL -->
 <div class="modal-overlay" id="aboutModalOverlay">
   <div class="modal" style="max-width:440px;">
@@ -1039,6 +1505,13 @@
     <div class="setting-row">
       <div><div class="label">Kolaborasi &amp; Bisnis</div><div class="sub">areyawva@gmail.com</div></div>
       <a class="btn btn-sm" href="mailto:areyawva@gmail.com">Hubungi</a>
+    </div>
+    <div class="setting-row">
+      <div><div class="label">WhatsApp</div><div class="sub">081373199226</div></div>
+      <a class="btn btn-sm" href="https://wa.me/6281373199226" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.35 4.95L2 22l5.29-1.39a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.51 2 12.04 2zm0 18.02h-.01a8.1 8.1 0 01-4.14-1.14l-.3-.17-3.14.82.84-3.06-.19-.32a8.08 8.08 0 01-1.24-4.29c0-4.47 3.64-8.11 8.13-8.11 2.17 0 4.21.85 5.74 2.38a8.06 8.06 0 012.38 5.73c0 4.47-3.64 8.16-8.07 8.16zm4.45-6.08c-.24-.12-1.44-.71-1.66-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.78.95-.14.16-.29.18-.53.06-.24-.12-1.03-.38-1.96-1.21-.72-.65-1.21-1.44-1.36-1.68-.14-.24-.02-.37.11-.49.11-.11.24-.29.36-.43.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42-.14-.01-.31-.01-.47-.01-.16 0-.43.06-.65.31-.22.24-.86.84-.86 2.05 0 1.21.88 2.38 1 2.54.12.16 1.73 2.64 4.2 3.7.59.25 1.05.4 1.41.51.59.19 1.13.16 1.55.1.47-.07 1.44-.59 1.65-1.15.2-.57.2-1.05.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        Chat
+      </a>
     </div>
     <div id="changelogBox" style="display:none; margin-top:12px;">
       <ul class="changelog-list" id="changelogListModal"></ul>
@@ -1179,19 +1652,20 @@
   <div class="onboard-card">
     <div class="onboard-screens">
       <div class="onboard-screen active" data-screen="1">
-        <div class="onboard-mark"><img src="icons/logo.png" alt="" aria-hidden="true" onerror="this.style.display='none'"></div>
+        <div class="onboard-mark"><img src="icon-512.png" alt="" aria-hidden="true" onerror="this.style.display='none'"></div>
         <h2>Welcome to StudyFlow</h2>
         <p class="onboard-tagline">Organize your study. Own your time.</p>
+        <p>StudyFlow itu aplikasi buat ngatur kuliahmu: tugas, deadline, jadwal, mata kuliah, dosen, sampe progress belajar — semuanya di satu tempat, tersimpan lokal di perangkatmu sendiri.</p>
       </div>
       <div class="onboard-screen" data-screen="2">
         <div class="onboard-emoji" aria-hidden="true">🙂</div>
         <h2>Kenalan sama Verity</h2>
-        <p>"Hai! Aku Verity. Aku bakal nemenin kamu ngatur aktivitas akademik."</p>
+        <p>"Hai! Aku Verity. Aku bakal nemenin kamu ngatur aktivitas akademik — ngingetin deadline, ikut seneng pas tugasmu beres, dan nemenin pas kamu fokus belajar."</p>
       </div>
       <div class="onboard-screen" data-screen="3">
         <div class="onboard-emoji" aria-hidden="true">🚀</div>
         <h2>Siap mulai?</h2>
-        <p>Tugas, jadwal, dosen, dan progress kamu — semuanya tersimpan lokal di perangkatmu.</p>
+        <p>Tugas, jadwal, dosen, dan progress kamu — semuanya tersimpan lokal di perangkatmu. Yuk, kita muter-muter sebentar biar kamu tau letak semua fiturnya.</p>
       </div>
     </div>
     <div class="onboard-dots" aria-hidden="true">
@@ -1204,6 +1678,25 @@
   </div>
 </div>
 
+<!-- Interactive real-time tour: spotlight overlay + tooltip that points at
+     actual UI elements, page by page (triggered after first-launch onboarding,
+     or replayed any time from Settings → About → "Mulai Tur"). -->
+<div class="tour-overlay" id="tourOverlay" role="dialog" aria-modal="true" aria-label="Tur StudyFlow">
+  <div class="tour-spotlight" id="tourSpotlight"></div>
+  <div class="tour-tooltip" id="tourTooltip">
+    <div class="tour-step-count" id="tourStepCount"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="tour-actions">
+      <button class="btn btn-ghost btn-sm" id="tourSkip">Lewati tur</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-sm" id="tourPrev">‹ Kembali</button>
+        <button class="btn btn-primary btn-sm" id="tourNext">Lanjut ›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 "use strict";
@@ -1211,8 +1704,8 @@
 /* =========================================================
    STORAGE MANAGER
 ========================================================= */
-const APP_VERSION = "4.0.0";
-const CURRENT_DATA_VERSION = 6;
+const APP_VERSION = "5.1.0";
+const CURRENT_DATA_VERSION = 10;
 const StorageManager = (function(){
   const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
   function defaultData(){
@@ -1229,10 +1722,14 @@ const StorageManager = (function(){
       recurringTasks: [],
       notifications: [],
       focusSessions: [],
+      notebookPages: [],
       settings: {
         theme:"system", notifDaily:false, notifTime:"19:00", userName:"", startOfWeek:"mon",
         verityEnabled:true, verityPersonality:"balanced", verityLastProactiveAt:null, verityLastCompletedCount:0,
-        soundEnabled:true, soundMasterVolume:0.6, soundUiVolume:0.5, soundVerityVolume:0.7, soundNotif:true
+        soundEnabled:true, soundMasterVolume:0.6, soundUiVolume:0.5, soundVerityVolume:0.7, soundNotif:true,
+        studyBlockHighScore:0,
+        chessStats:{wins:0,losses:0,draws:0},
+        profilePhoto:null
       }
     };
   }
@@ -1293,6 +1790,29 @@ const StorageManager = (function(){
       if(d.settings.soundVerityVolume===undefined) d.settings.soundVerityVolume = 0.7;
       if(d.settings.soundNotif===undefined) d.settings.soundNotif = true;
       d.version = 6;
+    }
+    if(d.version < 7){
+      // v6 -> v7: Study Block mini-game high score, tanpa menyentuh data lama.
+      d.settings = d.settings || {};
+      if(d.settings.studyBlockHighScore===undefined) d.settings.studyBlockHighScore = 0;
+      d.version = 7;
+    }
+    if(d.version < 8){
+      // v7 -> v8: fitur Notebook (buku catatan bergaya buku 3D), tanpa menyentuh data lama.
+      d.notebookPages = d.notebookPages || [];
+      d.version = 8;
+    }
+    if(d.version < 9){
+      // v8 -> v9: menu Mini Game + game Catur (single/dual player), tanpa menyentuh data lama.
+      d.settings = d.settings || {};
+      if(!d.settings.chessStats) d.settings.chessStats = {wins:0,losses:0,draws:0};
+      d.version = 9;
+    }
+    if(d.version < 10){
+      // v9 -> v10: foto profil opsional, tanpa menyentuh data lama.
+      d.settings = d.settings || {};
+      if(d.settings.profilePhoto===undefined) d.settings.profilePhoto = null;
+      d.version = 10;
     }
     return d;
   }
@@ -1383,22 +1903,65 @@ const SoundManager = (function(){
     error:      (c,v)=> { tone(c,{freq:300, endFreq:180, dur:0.18, type:"sawtooth", gain:0.12*v}); },
     focusStart: (c,v)=> { tone(c,{freq:440, endFreq:660, dur:0.35, type:"sine", gain:0.14*v}); },
     focusComplete:(c,v)=>{ tone(c,{freq:520, dur:0.1, type:"sine", gain:0.18*v}); tone(c,{freq:660, dur:0.1, type:"sine", gain:0.18*v, delay:0.1}); tone(c,{freq:880, dur:0.22, type:"sine", gain:0.18*v, delay:0.2}); },
-    verityReact:(c,v)=> { tone(c,{freq:900, endFreq:1200, dur:0.06, type:"sine", gain:0.12*v}); }
+    verityReact:(c,v)=> { tone(c,{freq:900, endFreq:1200, dur:0.06, type:"sine", gain:0.12*v}); },
+    verityBlip: (c,v,freq)=> { tone(c,{freq:freq||600, dur:0.026, type:"square", gain:0.1*v}); },
+    sbPlace:    (c,v)=> { tone(c,{freq:480, endFreq:420, dur:0.05, type:"sine", gain:0.14*v}); },
+    sbClear:    (c,v)=> { tone(c,{freq:660, dur:0.08, type:"triangle", gain:0.18*v}); tone(c,{freq:990, dur:0.14, type:"triangle", gain:0.18*v, delay:0.06}); },
+    sbTimeUp:   (c,v)=> { tone(c,{freq:520, dur:0.12, type:"sine", gain:0.16*v}); tone(c,{freq:400, dur:0.2, type:"sine", gain:0.14*v, delay:0.12}); }
   };
   const SOUND_TYPES = Object.keys(RECIPES);
-  function play(name){
+  function play(name, arg){
     if(!RECIPES[name]) return;
-    const bucket = (name==="notification") ? "notif" : (name==="verityReact" ? "verity" : "ui");
+    const bucket = (name==="notification") ? "notif" : ((name==="verityReact"||name==="verityBlip") ? "verity" : "ui");
     const v = volumeFor(bucket);
     if(v<=0) return;
     const c = ensureCtx();
     if(!c) return;
     if(c.state === "suspended"){ c.resume().catch(()=>{}); }
-    try{ RECIPES[name](c, v); }catch(e){ /* fail silently — sound is decorative */ }
+    try{ RECIPES[name](c, v, arg); }catch(e){ /* fail silently — sound is decorative */ }
   }
   return { play, SOUND_TYPES };
 })();
 function persist(){ StorageManager.save(DB); }
+
+/* =========================================================
+   VERITY DIALOG TYPEWRITER
+   Every line Verity says — dock, mobile bubble, toast, chat
+   panel, in-game companion — is revealed character-by-character
+   with a tiny Undertale-style blip, instead of just appearing.
+   Centralized here so all Verity surfaces stay consistent.
+========================================================= */
+function verityType(el, text, opts){
+  if(!el) return;
+  opts = opts || {};
+  clearInterval(el._typeTimer);
+  text = text || "";
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduced){ el.textContent = text; if(opts.onDone) opts.onDone(); return; }
+  el.textContent = "";
+  let i = 0;
+  const speed = opts.speed || 20;
+  el._typeTimer = setInterval(()=>{
+    i++;
+    el.textContent = text.slice(0, i);
+    const ch = text[i-1];
+    if(ch && /\S/.test(ch) && i%2===0){
+      SoundManager.play("verityBlip", 560 + Math.random()*160);
+    }
+    if(i>=text.length){
+      clearInterval(el._typeTimer);
+      if(opts.onDone) opts.onDone();
+    }
+  }, speed);
+}
+/* Small "a new line just appeared" pop, shared by every Verity bubble
+   surface (dock, mobile bubble, toast, in-game companion). */
+function verityPop(el){
+  if(!el) return;
+  el.classList.remove("dialog-pop"); void el.offsetWidth; el.classList.add("dialog-pop");
+  clearTimeout(el._popTimer);
+  el._popTimer = setTimeout(()=>el.classList.remove("dialog-pop"), 320);
+}
 
 function uid(prefix){ return prefix+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 
@@ -1950,7 +2513,51 @@ function renderDashboard(){
   renderMatrix();
   renderOverdue();
   renderWeekly();
+  renderProfilePhoto();
+  renderBadges();
   VerityEngine.onDataRefresh();
+}
+
+/* ---- Profile photo (optional, stored as base64 dataURL in settings) ---- */
+function renderProfilePhoto(){
+  const photo = DB.settings.profilePhoto;
+  const initial = ((DB.settings.userName||"").trim()[0]||"?").toUpperCase();
+  const greetImg = document.getElementById("greetingPhoto");
+  if(greetImg){
+    if(photo){ greetImg.src = photo; greetImg.style.display = ""; }
+    else greetImg.style.display = "none";
+  }
+  const preview = document.getElementById("profilePhotoPreview");
+  if(preview){
+    if(photo) preview.innerHTML = `<img src="${photo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    else preview.textContent = initial;
+  }
+}
+
+/* ---- Badge Semangat: motivational badges derived from real stats,
+   never persisted separately — always recomputed from existing DB data. ---- */
+const BADGE_DEFS = [
+  {id:"first-task", icon:"✅", title:"Langkah Pertama", desc:"Selesaikan 1 tugas", test:d=>d.tasks.filter(t=>t.completed).length>=1},
+  {id:"task-10", icon:"📚", title:"Kolektor Tugas", desc:"Selesaikan 10 tugas", test:d=>d.tasks.filter(t=>t.completed).length>=10},
+  {id:"task-50", icon:"🚀", title:"Mesin Produktif", desc:"Selesaikan 50 tugas", test:d=>d.tasks.filter(t=>t.completed).length>=50},
+  {id:"focus-5", icon:"🎯", title:"Fokus Terlatih", desc:"5x sesi Focus Mode", test:d=>(d.focusSessions||[]).length>=5},
+  {id:"focus-20", icon:"🧘", title:"Zen Fokus", desc:"20x sesi Focus Mode", test:d=>(d.focusSessions||[]).length>=20},
+  {id:"sb-score", icon:"🧩", title:"Jago Study Block", desc:"Skor Study Block ≥ 500", test:d=>(d.settings.studyBlockHighScore||0)>=500},
+  {id:"chess-win1", icon:"♟️", title:"Pecatur Andal", desc:"Menang 1x lawan AI Catur", test:d=>((d.settings.chessStats||{}).wins||0)>=1},
+  {id:"chess-win5", icon:"👑", title:"Grandmaster Dadakan", desc:"Menang 5x lawan AI Catur", test:d=>((d.settings.chessStats||{}).wins||0)>=5},
+  {id:"no-overdue", icon:"🛡️", title:"Bebas Telat", desc:"Tidak ada tugas terlambat saat ini", test:d=>d.tasks.filter(t=>!t.completed && new Date(t.deadline)<new Date()).length===0 && d.tasks.length>0}
+];
+function renderBadges(){
+  const row = document.getElementById("badgeRow");
+  if(!row) return;
+  row.innerHTML = BADGE_DEFS.map(b=>{
+    const unlocked = b.test(DB);
+    return `<div class="badge-chip ${unlocked?"unlocked":"locked"}" title="${escapeHtml(b.desc)}">
+      <div class="b-icon">${b.icon}</div>
+      <div class="b-title">${escapeHtml(b.title)}</div>
+      <div class="b-desc">${unlocked?escapeHtml(b.desc):"Terkunci"}</div>
+    </div>`;
+  }).join("");
 }
 
 /* =========================================================
@@ -1989,13 +2596,28 @@ const VerityEngine = (function(){
   const POOLS = {
     empty: ["Selamat, bisa santai wekekeke.", "Hari ini cukup tenang.", "Belum ada tugas. Nikmati dulu ketenangannya.", "Aman untuk sekarang 😌"],
     allDone: ["SEMUA BERES?! Aku bahkan nggak sempat ngomel. 😭✨", "Hari ini bersih. Kamu aman. 🥹", "Semuanya kelar. Keren banget."],
-    criticalOverdue: (n,u)=>[`${userName().toUpperCase()}. 😠 Ada ${n} tugas yang sudah lewat deadline dan ${u} lagi mulai mendekat. Ayo, satu dulu.`,`Kita perlu bicara serius nih. ${n} tugas terlambat, ${u} lagi menyusul.`],
+    criticalOverdue: (n,u)=>[`${userName().toUpperCase()}. 😠 Ada ${n} tugas yang sudah lewat deadline dan ${u} lagi mulai mendekat. Ayo, satu dulu.`,`Kita perlu bicara serius nih. ${n} tugas terlambat, ${u} lagi menyusul.`,`Ini udah darurat: ${n} tugas telat, plus ${u} lagi bakal nyusul. Mulai dari salah satu, sekarang.`],
     overdue: (n)=>[`Oke... kita perlu ngobrol. 😐 Ada ${n} tugas yang terlambat.`, `Ada tugas yang kelewat deadline. Coba cek dulu. 🥲`, `${n} tugas udah lewat deadline nih. Yuk ditangani.`],
-    dueToday: (n)=>[`Hmm... ada ${n} tugas yang deadline-nya hari ini. 😐`, `Waduh, ${n} tugas due hari ini. Jangan lupa cek tugasmu.`],
-    completedMany: (n)=>[`Hari ini produktif banget. ${n} tugas selesai! 👏`, `Wih, progresmu naik! ${n} tugas beres hari ini. 🤩`],
+    dueToday: (n)=>[`Hmm... ada ${n} tugas yang deadline-nya hari ini. 😐`, `Waduh, ${n} tugas due hari ini. Jangan lupa cek tugasmu.`, `${n} tugas jatuh tempo hari ini lho. Sempetin ya.`],
+    completedMany: (n)=>[`Hari ini produktif banget. ${n} tugas selesai! 👏`, `Wih, progresmu naik! ${n} tugas beres hari ini. 🤩`, `${n} tugas kelar hari ini — kamu lagi on fire. 🔥`],
     completed: ["Mantap, satu lagi beres!", "Nice! Berkurang satu.", "Selesai juga. Good job!", "Nah, gitu dong 😄", "YES! Aku bangga sama kamu."],
+    overdueWithProgress: (n)=>[`Satu beres. Tapi masih ada ${n} tugas yang perlu kamu cek. 🥲`, `Progres, tapi belum selesai — ${n} tugas masih nunggu. Yuk lanjut.`, `Oke, satu turun. Sisa ${n} tugas terlambat masih ngantre nih.`],
+    overdueTaskDone: (title,n)=>[`Satu beres — "${title}". Tapi masih ada ${n} tugas yang perlu kamu cek. 🥲`, `"${title}" kelar. Tapi ${n} tugas lain masih terlambat, jangan lengah.`, `Nice, "${title}" selesai. Cuma masih ada ${n} yang telat, ya.`],
     upcoming: (n)=>[`Hmm... kita punya ${n} deadline yang mulai mendekat.`, `Ada ${n} deadline dalam 3 hari ke depan. Yuk disiapkan.`, `Waduh, rame juga tugasnya — ${n} deadline mendekat. 😳`],
-    relaxed: ["Hari ini cukup aman. Kamu bisa bernapas dulu. 😌", "Nggak ada yang mendesak. Santai dulu.", "Kondisi aman terkendali."]
+    relaxed: ["Hari ini cukup aman. Kamu bisa bernapas dulu. 😌", "Nggak ada yang mendesak. Santai dulu.", "Kondisi aman terkendali."],
+    /* ---- big-moment celebrations (spec: "someone needs a person who trusts
+       them") — warmer and more hopeful than the everyday toast lines, used
+       for the full celebration window + as extra flavor on task completion. */
+    focusCelebrate: (min)=>[
+      `Selesai udah, ${min} menit penuh kamu bertahan. Aku tau itu nggak gampang — dan aku percaya kamu bisa terus kayak gini. 🌱`,
+      `${min} menit fokus, tuntas. Aku bangga sama kamu, beneran. Satu sesi kecil ini juga bagian dari sesuatu yang lebih besar, lho. ✨`,
+      `Kamu baru aja nyelesaiin ${min} menit fokus. Nggak semua orang bisa konsisten kayak gini — teruskan, aku di sini nungguin progresmu. 💪`
+    ],
+    taskCelebrate: (title)=>[
+      `"${title}" beres! Kamu ngelakuin ini sendiri, dan itu keren banget. Aku percaya kamu. 🌟`,
+      `Satu lagi selesai — "${title}". Terus aja gini, aku yakin kamu bisa sampai ke tujuanmu. 🤍`,
+      `"${title}" kelar. Setiap langkah kecil kayak gini nambahin harapan buat besok. Semangat terus, ya. 🌤️`
+    ]
   };
   const lastByCategory = {};
   function pick(category, arr){
@@ -2013,7 +2635,7 @@ const VerityEngine = (function(){
     let result;
     if(s.total===0){ result = {mood:"relaxed", text:pick("empty", POOLS.empty)}; }
     else if(s.overdue>=2 && s.upcoming>=3){ result = {mood:"angry", text:pick("criticalOverdue", POOLS.criticalOverdue(s.overdue, s.upcoming))}; }
-    else if(s.overdue>0){ result = {mood: s.completedToday>0 ? "sad" : "angry", text: s.completedToday>0 ? `Satu beres. Tapi masih ada ${s.overdue} tugas yang perlu kamu cek. 🥲` : pick("overdue", POOLS.overdue(s.overdue))}; }
+    else if(s.overdue>0){ result = {mood: s.completedToday>0 ? "sad" : "angry", text: s.completedToday>0 ? pick("overdueWithProgress", POOLS.overdueWithProgress(s.overdue)) : pick("overdue", POOLS.overdue(s.overdue))}; }
     else if(s.dueToday>0){ result = {mood:"concerned", text:pick("dueToday", POOLS.dueToday(s.dueToday))}; }
     else if(s.allDone){ result = {mood:"proud", text:pick("allDone", POOLS.allDone)}; }
     else if(s.completedToday>=3){ result = {mood:"excited", text:pick("completedMany", POOLS.completedMany(s.completedToday))}; }
@@ -2027,16 +2649,16 @@ const VerityEngine = (function(){
   /* ---- per-page contextual presence (spec §11) — only used when nothing
      higher-priority (overdue / due today / critical) is happening. ---- */
   const PAGE_CONTEXT = {
-    dashboard:{mood:"neutral", text:"Oke, mari lihat kondisi akademikmu."},
-    tasks:{mood:"neutral", text:"Wah, ada tugas tuh."},
-    calendar:{mood:"thinking", text:"Coba cek jadwalmu hari ini."},
-    courses:{mood:"neutral", text:"Daftar mata kuliahmu ada di sini."},
-    lecturers:{mood:"neutral", text:"Siapa dosen yang perlu kamu hubungi?"},
-    schedule:{mood:"relaxed", text:"Biar besok nggak salah jadwal."},
-    statistics:{mood:"excited", text:"Wih, progresmu mulai kelihatan!"},
-    focus:{mood:"relaxed", text:"Oke. Sekarang kita fokus."},
-    folders:{mood:"neutral", text:"Belum ada folder."},
-    settings:{mood:"thinking", text:"Mau mengatur StudyFlow?"}
+    dashboard:{mood:"neutral", texts:["Oke, mari lihat kondisi akademikmu.", "Yuk, cek dulu gambaran besarnya hari ini.", "Selamat datang lagi — ini ringkasan akademikmu."]},
+    tasks:{mood:"neutral", texts:["Wah, ada tugas tuh.", "Ini daftar tugasmu — cek yang mana dulu?", "Semua tugasmu ngumpul di sini."]},
+    calendar:{mood:"thinking", texts:["Coba cek jadwalmu hari ini.", "Yuk, lihat apa aja yang terjadwal.", "Ini kalendermu — ada yang mepet?"]},
+    courses:{mood:"neutral", texts:["Daftar mata kuliahmu ada di sini.", "Ini semua mata kuliah yang kamu ambil.", "Mau cek progress salah satu mata kuliah?"]},
+    lecturers:{mood:"neutral", texts:["Siapa dosen yang perlu kamu hubungi?", "Ini daftar dosenmu.", "Butuh kontak dosen tertentu?"]},
+    schedule:{mood:"relaxed", texts:["Biar besok nggak salah jadwal.", "Ini jadwal mingguanmu.", "Cek dulu biar nggak ada yang kelewat."]},
+    statistics:{mood:"excited", texts:["Wih, progresmu mulai kelihatan!", "Ini statistik belajarmu sejauh ini.", "Yuk lihat seberapa jauh progresmu."]},
+    focus:{mood:"relaxed", texts:["Oke. Sekarang kita fokus.", "Waktunya fokus — aku temenin.", "Siap mulai sesi fokus?"]},
+    folders:{mood:"neutral", texts:["Belum ada folder.", "Ini folder-foldermu.", "Mau rapikan tugas ke folder?"]},
+    settings:{mood:"thinking", texts:["Mau mengatur StudyFlow?", "Ini pengaturan StudyFlow-mu.", "Ada yang mau diubah di sini?"]}
   };
   let currentPageMoodOverride = null;
   function onPageChange(page){
@@ -2044,22 +2666,39 @@ const VerityEngine = (function(){
     // priority: only let the page line take over when nothing urgent is going on
     if(s.overdue>0 || s.dueToday>0){ currentPageMoodOverride = null; renderDock(); return; }
     const ctx = PAGE_CONTEXT[page];
-    currentPageMoodOverride = ctx || null;
+    currentPageMoodOverride = ctx ? {mood:ctx.mood, text:pick("page:"+page, ctx.texts)} : null;
     renderDock();
   }
+  let lastFabBubbleText = null;
+  let lastDockText = null;
   function renderDock(){
     if(!DB.settings.verityEnabled){
       document.getElementById("verityDock").style.display = "none";
       document.getElementById("verityFab").style.display = "none";
+      document.getElementById("verityFabBubble").style.display = "none";
       return;
     }
     document.getElementById("verityDock").style.display = "";
     const m = currentPageMoodOverride || computeMood();
     if(currentPageMoodOverride) verityMood = m.mood;
     document.getElementById("verityDockFace").textContent = MOODS[m.mood]||MOODS.neutral;
-    document.getElementById("verityDockMsg").textContent = m.text;
+    const dock = document.getElementById("verityDock");
+    if(m.text !== lastDockText){
+      verityType(document.getElementById("verityDockMsg"), m.text);
+      verityPop(dock);
+      lastDockText = m.text;
+    }
     document.getElementById("verityFabFace").textContent = MOODS[m.mood]||MOODS.neutral;
     document.getElementById("verityFabBadge").style.display = (m.mood==="angry"||m.mood==="sad"||m.mood==="concerned") ? "block" : "none";
+    // Mobile speech bubble mirrors the desktop dock's message — this is what
+    // keeps Verity feeling present/talking on phones, not just a silent icon.
+    const bubble = document.getElementById("verityFabBubble");
+    bubble.style.display = "";
+    if(m.text !== lastFabBubbleText){
+      verityType(document.getElementById("verityFabBubbleMsg"), m.text);
+      verityPop(bubble);
+      lastFabBubbleText = m.text;
+    }
   }
   /* ---- proactive commentary (cooldown to avoid spam) ---- */
   const PROACTIVE_COOLDOWN_MS = 60*1000; // min gap between unsolicited toasts
@@ -2070,12 +2709,18 @@ const VerityEngine = (function(){
   function showToast(text, mood){
     const el = document.getElementById("verityToast");
     document.getElementById("verityToastFace").textContent = MOODS[mood]||MOODS.neutral;
-    document.getElementById("verityToastMsg").textContent = text;
     el.classList.add("show");
     el.classList.remove("vbounce"); void el.offsetWidth; el.classList.add("vbounce");
     SoundManager.play("verityReact");
+    verityType(document.getElementById("verityToastMsg"), text);
+    // The persistent mobile bubble sits roughly where this transient toast
+    // appears — hide it for the toast's duration so they don't overlap.
+    document.getElementById("verityFabBubble").style.visibility = "hidden";
     clearTimeout(showToast._t);
-    showToast._t = setTimeout(()=>el.classList.remove("show"), 4200);
+    showToast._t = setTimeout(()=>{
+      el.classList.remove("show");
+      document.getElementById("verityFabBubble").style.visibility = "";
+    }, 4200);
     DB.settings.verityLastProactiveAt = new Date().toISOString();
     persist();
   }
@@ -2084,13 +2729,31 @@ const VerityEngine = (function(){
     if(!DB.settings.verityEnabled || !canProactive()) return;
     currentPageMoodOverride = null;
     const s = stats();
-    if(s.overdue>0){ showToast(`Satu beres — "${task.title}". Tapi masih ada ${s.overdue} tugas yang perlu kamu cek. 🥲`, "sad"); }
-    else { showToast(`${pick("completed", POOLS.completed)} (${task.title}) ✓`, "happy"); }
+    if(s.overdue>0){ showToast(pick("overdueTaskDone", POOLS.overdueTaskDone(task.title, s.overdue)), "sad"); }
+    else { showToast(pick("taskCelebrate", POOLS.taskCelebrate(task.title)), "happy"); }
   }
   function notifyFocusComplete(minutes){
     SoundManager.play("focusComplete");
-    if(!DB.settings.verityEnabled || !canProactive()) return;
-    showToast(`${minutes} menit fokus. Good job.`, "proud");
+    if(!DB.settings.verityEnabled) return;
+    // Big moment, its own window — not gated by the proactive-toast cooldown,
+    // since finishing a focus session is exactly when it should show up.
+    showCelebration(pick("focusCelebrate", POOLS.focusCelebrate(minutes)), "proud");
+  }
+  /* ---- celebration window (spec: dedicated congrats window after focus
+     mode, hides the on-page dock/fab so only this one Verity is visible) ---- */
+  function showCelebration(text, mood){
+    const overlay = document.getElementById("verityCelebrateOverlay");
+    document.getElementById("verityCelebrateFace").textContent = MOODS[mood]||MOODS.proud||MOODS.happy||"🎉";
+    document.getElementById("verityCelebrateText").textContent = text;
+    document.getElementById("verityDock").style.display = "none";
+    document.getElementById("verityFab").style.display = "none";
+    document.getElementById("verityFabBubble").style.display = "none";
+    overlay.classList.add("open");
+    SoundManager.play("verityReact");
+  }
+  function closeCelebration(){
+    document.getElementById("verityCelebrateOverlay").classList.remove("open");
+    renderDock(); // restores dock/fab/bubble visibility based on current settings+mood
   }
   /* ---- rule-based intent detection for chat ---- */
   function nearestDeadlineTask(){
@@ -2119,21 +2782,24 @@ const VerityEngine = (function(){
   }
   function progressAnswer(){
     const s = stats();
-    if(s.total===0) return "Datanya belum ada — belum ada tugas yang dicatat sama sekali.";
+    if(s.total===0) return pick("noData", ["Datanya belum ada — belum ada tugas yang dicatat sama sekali.", "Belum ada catatan tugas sama sekali nih.", "Masih kosong — kamu belum mencatat tugas apa pun."]);
     const done = DB.tasks.filter(t=>t.status==="done").length;
     const rate = Math.round((done/s.total)*100);
-    return `Progress kamu: ${done}/${s.total} tugas selesai (${rate}%). Sisa aktif: ${s.active}, terlambat: ${s.overdue}.`;
+    const opener = pick("progressOpener", ["Progress kamu:", "Ini progresmu:", "Update progres:"]);
+    return `${opener} ${done}/${s.total} tugas selesai (${rate}%). Sisa aktif: ${s.active}, terlambat: ${s.overdue}.`;
   }
   function deadlineAnswer(){
     const t = nearestDeadlineTask();
-    if(!t) return "Datanya belum ada — tidak ada tugas aktif dengan deadline saat ini.";
-    return `Deadline terdekat: "${t.title}" — ${countdownText(t)}.`;
+    if(!t) return pick("noDeadline", ["Datanya belum ada — tidak ada tugas aktif dengan deadline saat ini.", "Nggak ada deadline aktif buat sekarang.", "Belum ada tugas dengan deadline saat ini."]);
+    const opener = pick("deadlineOpener", ["Deadline terdekat:", "Yang paling dekat deadline-nya:", "Ini yang paling mendesak:"]);
+    return `${opener} "${t.title}" — ${countdownText(t)}.`;
   }
   function recommendationAnswer(){
     const t = priorityRecommendation();
-    if(!t) return "Datanya belum ada — semua tugas sudah selesai atau belum ada tugas yang dicatat. 🌱";
+    if(!t) return pick("noTasks", ["Datanya belum ada — semua tugas sudah selesai atau belum ada tugas yang dicatat. 🌱", "Semua beres atau memang belum ada tugas tercatat. 🌱", "Nggak ada yang perlu dikerjakan sekarang. 🌱"]);
     const next = priorityRecommendation2(t);
-    let msg = `Aku sarankan mulai dari "${t.title}". ${countdownText(t)}, status: ${({todo:"belum dimulai",doing:"sedang dikerjakan",done:"selesai"})[t.status]}.`;
+    const opener = pick("recommendOpener", ["Aku sarankan mulai dari", "Coba mulai dari", "Prioritaskan dulu"]);
+    let msg = `${opener} "${t.title}". ${countdownText(t)}, status: ${({todo:"belum dimulai",doing:"sedang dikerjakan",done:"selesai"})[t.status]}.`;
     if(next) msg += ` Setelah itu kita bisa lanjut ke "${next.title}".`;
     return msg;
   }
@@ -2174,8 +2840,9 @@ const VerityEngine = (function(){
   }
   function addBotMsg(text){
     const msgs = document.getElementById("verityMsgs");
-    const d = document.createElement("div"); d.className="vmsg bot"; d.textContent = text;
+    const d = document.createElement("div"); d.className="vmsg bot";
     msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+    verityType(d, text, {onDone:()=>{ msgs.scrollTop = msgs.scrollHeight; }});
   }
   function addUserMsg(text){
     const msgs = document.getElementById("verityMsgs");
@@ -2197,16 +2864,831 @@ const VerityEngine = (function(){
     document.getElementById("verityDock").addEventListener("click", openPanel);
     document.getElementById("verityDock").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") { e.preventDefault(); openPanel(); }});
     document.getElementById("verityFab").addEventListener("click", openPanel);
+    document.getElementById("verityFabBubble").addEventListener("click", openPanel);
+    document.getElementById("verityFabBubble").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") { e.preventDefault(); openPanel(); }});
     document.getElementById("verityPanelClose").addEventListener("click", closePanel);
     document.getElementById("verityPanelOverlay").addEventListener("click", (e)=>{ if(e.target.id==="verityPanelOverlay") closePanel(); });
     document.getElementById("veritySendBtn").addEventListener("click", sendChat);
     document.getElementById("verityInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") sendChat(); });
+    document.getElementById("verityCelebrateClose").addEventListener("click", closeCelebration);
+    document.getElementById("verityCelebrateOverlay").addEventListener("click", (e)=>{ if(e.target.id==="verityCelebrateOverlay") closeCelebration(); });
   }
   function onDataRefresh(){ currentPageMoodOverride = null; renderDock(); }
-  return {wire, onDataRefresh, onPageChange, notifyTaskCompleted, notifyFocusComplete, computeMood};
+  /* ---- Study Block companion reactions (spec §19-21): its own cooldown
+     lives in StudyBlockGame, not the global proactive one, since gameplay
+     needs a tighter/looser cadence than task/focus toasts. ---- */
+  function gameReact(text, mood){ showToast(text, mood); }
+  function suggestBreak(text, mood){
+    if(!DB.settings.verityEnabled || !canProactive()) return;
+    showToast(text, mood||"happy");
+  }
+  return {wire, onDataRefresh, onPageChange, notifyTaskCompleted, notifyFocusComplete, computeMood, gameReact, suggestBreak, showCelebration};
 })();
 
 /* =========================================================
+   STUDY BLOCK — grid block-placement mini-game (spec §14-24).
+   Pointer events unify mouse+touch drag; Verity comments are
+   observed-but-throttled per placement (spec §20); the session
+   timer is mandatory and always wins over gameplay continuing.
+========================================================= */
+const StudyBlockGame = (function(){
+  const GRID = 8;
+  const SHAPES = [
+    [[0,0]],
+    [[0,0],[0,1]], [[0,0],[1,0]],
+    [[0,0],[0,1],[0,2]], [[0,0],[1,0],[2,0]],
+    [[0,0],[0,1],[0,2],[0,3]], [[0,0],[1,0],[2,0],[3,0]],
+    [[0,0],[0,1],[1,0],[1,1]],
+    [[0,0],[1,0],[2,0],[2,1]], [[0,0],[0,1],[0,2],[1,0]],
+    [[0,0],[0,1],[1,1],[2,1]], [[1,0],[1,1],[1,2],[0,2]],
+    [[0,0],[0,1],[0,2],[1,1]],
+    [[1,0],[0,0],[0,1]], [[0,0],[1,0],[1,1]], [[0,0],[0,1],[1,0]], [[0,1],[1,0],[1,1]]
+  ];
+  const COLORS = ["var(--sb-c1)","var(--sb-c2)","var(--sb-c3)","var(--sb-c4)","var(--sb-c5)"];
+
+  let grid = [], tray = [], score = 0, running = false;
+  let timerRemain = 600, timerHandle = null, dragState = null;
+  let lastCommentAt = 0, placementsSinceComment = 0, crowdedWarned = false;
+
+  function emptyGrid(){ return Array.from({length:GRID}, ()=>Array(GRID).fill(null)); }
+  function pickOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function randomPiece(){ return {shape: pickOne(SHAPES), color: pickOne(COLORS)}; }
+  function refillTray(){ tray = [randomPiece(), randomPiece(), randomPiece()]; }
+  function shapeBBox(shape){ return {w:Math.max(...shape.map(p=>p[1]))+1, h:Math.max(...shape.map(p=>p[0]))+1}; }
+
+  function canPlaceAt(shape, r0, c0){
+    for(const [dr,dc] of shape){
+      const r=r0+dr, c=c0+dc;
+      if(r<0||r>=GRID||c<0||c>=GRID||grid[r][c]) return false;
+    }
+    return true;
+  }
+  function pieceHasAnyPlacement(shape){
+    for(let r=0;r<GRID;r++) for(let c=0;c<GRID;c++) if(canPlaceAt(shape,r,c)) return true;
+    return false;
+  }
+  function anyMoveLeft(){ return tray.some(p=>p && pieceHasAnyPlacement(p.shape)); }
+  function fillRatio(){
+    let filled=0; for(let r=0;r<GRID;r++) for(let c=0;c<GRID;c++) if(grid[r][c]) filled++;
+    return filled/(GRID*GRID);
+  }
+
+  /* ---- Verity watches every placement but only speaks when it clears the
+     cooldown — clears/high-score/crowded-board comments use a shorter,
+     "priority" cooldown so they still feel responsive without spamming. ---- */
+  function updateCompanion(text, mood){
+    const bubble = document.getElementById("sbCompanionBubble");
+    if(!bubble) return;
+    document.getElementById("sbCompanionFace").textContent = VERITY_EMOTIONS[mood]||VERITY_EMOTIONS.neutral;
+    verityType(document.getElementById("sbCompanionMsg"), text);
+    verityPop(bubble);
+    SoundManager.play("verityReact");
+  }
+  function maybeComment(text, mood, priority){
+    const now = Date.now();
+    const minGap = priority ? 1500 : 4000;
+    if((now-lastCommentAt) < minGap) return;
+    lastCommentAt = now;
+    updateCompanion(text, mood);
+  }
+  function reactToPlacement(cellsCount, linesCleared){
+    placementsSinceComment++;
+    if(linesCleared>=2){ maybeComment(pickOne(["Nah! Bersih!","Wuih, borongan bersih!","Double clear! Keren."]), "excited", true); placementsSinceComment=0; }
+    else if(linesCleared===1){ maybeComment(pickOne(["Wih! Bersih!","Nah! Bersih!","Satu baris kelar!"]), "excited", true); placementsSinceComment=0; }
+    else if(cellsCount>=4){ maybeComment(pickOne(["Rapi juga.","Hmm, itu bakal kepake nanti.","Lumayan, penempatan bagus."]), "happy"); placementsSinceComment=0; }
+    else if(placementsSinceComment>=4){ maybeComment(pickOne(["Nice.","Oke.","Lanjut terus."]), "neutral"); placementsSinceComment=0; }
+    const ratio = fillRatio();
+    if(ratio>0.78 && !crowdedWarned){ crowdedWarned=true; maybeComment(pickOne(["Waduh, mulai sempit.","Papannya udah penuh nih.","Hati-hati, ruang makin sempit."]), "surprised", true); }
+    else if(ratio<0.5){ crowdedWarned=false; }
+  }
+
+  /* ---- rendering ---- */
+  function renderGrid(clearingCells){
+    const el = document.getElementById("sbGrid");
+    el.innerHTML = "";
+    for(let r=0;r<GRID;r++) for(let c=0;c<GRID;c++){
+      const d = document.createElement("div");
+      d.className = "sb-cell"+(grid[r][c]?" filled":"");
+      if(grid[r][c]) d.style.background = grid[r][c];
+      if(clearingCells && clearingCells.has(r+"_"+c)) d.classList.add("clearing");
+      d.dataset.r = r; d.dataset.c = c;
+      el.appendChild(d);
+    }
+  }
+  function renderTray(){
+    const el = document.getElementById("sbTray");
+    el.innerHTML = "";
+    tray.forEach((piece, idx)=>{
+      const slot = document.createElement("div");
+      slot.className = "sb-piece-slot"+(piece?"":" empty");
+      if(piece){
+        const bbox = shapeBBox(piece.shape);
+        const cellPx = Math.max(10, Math.min(18, Math.floor(60/Math.max(bbox.w,bbox.h))));
+        const mini = document.createElement("div");
+        mini.className = "sb-piece-mini";
+        mini.style.gridTemplateColumns = `repeat(${bbox.w}, ${cellPx}px)`;
+        mini.style.gridTemplateRows = `repeat(${bbox.h}, ${cellPx}px)`;
+        for(let r=0;r<bbox.h;r++) for(let c=0;c<bbox.w;c++){
+          const has = piece.shape.some(([dr,dc])=>dr===r&&dc===c);
+          const pc = document.createElement("div");
+          pc.className = "pc"; pc.style.width = pc.style.height = cellPx+"px";
+          pc.style.background = has ? piece.color : "transparent";
+          mini.appendChild(pc);
+        }
+        slot.appendChild(mini);
+        slot.addEventListener("pointerdown", (e)=>startDrag(e, idx));
+      }
+      el.appendChild(slot);
+    });
+  }
+
+  /* ---- pointer drag: one code path drives mouse, touch and pen ---- */
+  function startDrag(e, idx){
+    if(!running || !tray[idx]) return;
+    e.preventDefault();
+    const piece = tray[idx];
+    const bbox = shapeBBox(piece.shape);
+    const cellPx = document.querySelector(".sb-cell").getBoundingClientRect().width;
+    const ghost = document.createElement("div");
+    ghost.className = "sb-drag-ghost";
+    ghost.style.gridTemplateColumns = `repeat(${bbox.w}, ${cellPx}px)`;
+    ghost.style.gridTemplateRows = `repeat(${bbox.h}, ${cellPx}px)`;
+    for(let r=0;r<bbox.h;r++) for(let c=0;c<bbox.w;c++){
+      const has = piece.shape.some(([dr,dc])=>dr===r&&dc===c);
+      const pc = document.createElement("div");
+      pc.className = "pc"; pc.style.width = pc.style.height = cellPx+"px";
+      pc.style.background = has ? piece.color : "transparent";
+      ghost.appendChild(pc);
+    }
+    document.body.appendChild(ghost);
+    document.querySelectorAll(".sb-piece-slot")[idx].classList.add("dragging-source");
+    dragState = {idx, piece, bbox, ghost, lift:46, cellPx};
+    positionGhost(e.clientX, e.clientY);
+    updatePreview(e.clientX, e.clientY);
+    window.addEventListener("pointermove", onDragMove);
+    window.addEventListener("pointerup", onDragEnd);
+  }
+  function ghostBox(){
+    const {bbox, cellPx} = dragState;
+    return {w: bbox.w*cellPx + (bbox.w-1)*4, h: bbox.h*cellPx + (bbox.h-1)*4};
+  }
+  function positionGhost(x,y){
+    const {ghost, lift} = dragState, box = ghostBox();
+    ghost.style.left = (x - box.w/2) + "px";
+    ghost.style.top = (y - box.h - lift) + "px";
+  }
+  function targetAnchor(x,y){
+    const {cellPx, lift} = dragState, box = ghostBox();
+    // sample the top-left cell's center, matching positionGhost's math exactly
+    const px = x - box.w/2 + cellPx/2;
+    const py = y - box.h - lift + cellPx/2;
+    const el = document.elementFromPoint(px, py);
+    const cellEl = el && el.closest(".sb-cell");
+    return cellEl ? {r:+cellEl.dataset.r, c:+cellEl.dataset.c} : null;
+  }
+  function clearPreview(){
+    document.querySelectorAll(".sb-cell.preview-ok,.sb-cell.preview-bad").forEach(el=>el.classList.remove("preview-ok","preview-bad"));
+  }
+  function updatePreview(x,y){
+    clearPreview();
+    const anchor = targetAnchor(x,y);
+    if(!anchor){ dragState.validAnchor = null; return; }
+    const ok = canPlaceAt(dragState.piece.shape, anchor.r, anchor.c);
+    dragState.validAnchor = ok ? anchor : null;
+    dragState.piece.shape.forEach(([dr,dc])=>{
+      const r=anchor.r+dr, c=anchor.c+dc;
+      if(r<0||r>=GRID||c<0||c>=GRID) return;
+      const cellEl = document.querySelector(`.sb-cell[data-r="${r}"][data-c="${c}"]`);
+      if(cellEl) cellEl.classList.add(ok?"preview-ok":"preview-bad");
+    });
+  }
+  function onDragMove(e){ if(dragState){ positionGhost(e.clientX,e.clientY); updatePreview(e.clientX,e.clientY); } }
+  function onDragEnd(e){
+    if(!dragState) return;
+    window.removeEventListener("pointermove", onDragMove);
+    window.removeEventListener("pointerup", onDragEnd);
+    clearPreview();
+    dragState.ghost.remove();
+    const slots = document.querySelectorAll(".sb-piece-slot");
+    if(slots[dragState.idx]) slots[dragState.idx].classList.remove("dragging-source");
+    if(dragState.validAnchor) commitPlacement(dragState.idx, dragState.piece, dragState.validAnchor);
+    dragState = null;
+  }
+
+  function commitPlacement(idx, piece, anchor){
+    piece.shape.forEach(([dr,dc])=>{ grid[anchor.r+dr][anchor.c+dc] = piece.color; });
+    SoundManager.play("sbPlace");
+    score += piece.shape.length * 10;
+    tray[idx] = null;
+    const linesCleared = clearCompletedLines();
+    if(tray.every(p=>!p)) refillTray();
+    persistHighScoreIfNeeded();
+    renderGrid(); renderTray(); updateHud();
+    reactToPlacement(piece.shape.length, linesCleared);
+    if(!anyMoveLeft()) setTimeout(()=>endGame(false), 350);
+  }
+  function clearCompletedLines(){
+    const fullRows = [], fullCols = [];
+    for(let r=0;r<GRID;r++) if(grid[r].every(v=>v)) fullRows.push(r);
+    for(let c=0;c<GRID;c++) if(grid.every(row=>row[c])) fullCols.push(c);
+    const count = fullRows.length + fullCols.length;
+    if(count>0){
+      const cleared = new Set();
+      fullRows.forEach(r=>{ for(let c=0;c<GRID;c++) cleared.add(r+"_"+c); });
+      fullCols.forEach(c=>{ for(let r=0;r<GRID;r++) cleared.add(r+"_"+c); });
+      renderGrid(cleared);
+      SoundManager.play("sbClear");
+      score += count*80 + Math.max(0,count-1)*40;
+      setTimeout(()=>{
+        fullRows.forEach(r=>{ for(let c=0;c<GRID;c++) grid[r][c]=null; });
+        fullCols.forEach(c=>{ for(let r=0;r<GRID;r++) grid[r][c]=null; });
+        renderGrid(); updateHud();
+      }, 260);
+    }
+    return count;
+  }
+  function updateHud(){ document.getElementById("sbScoreVal").textContent = score; }
+  function persistHighScoreIfNeeded(){
+    if(score > (DB.settings.studyBlockHighScore||0)){ DB.settings.studyBlockHighScore = score; persist(); }
+  }
+  function fmtTime(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); }
+  function tick(){
+    timerRemain--;
+    document.getElementById("sbTimerVal").textContent = fmtTime(Math.max(0,timerRemain));
+    document.getElementById("sbTimerStat").classList.toggle("low", timerRemain<=30);
+    if(timerRemain<=0) endGame(true);
+  }
+
+  function startGame(minutes){
+    grid = emptyGrid(); refillTray(); score = 0;
+    timerRemain = Math.max(1, Math.round(minutes))*60;
+    running = true; crowdedWarned = false; placementsSinceComment = 0; lastCommentAt = 0;
+    document.getElementById("sbSetup").classList.remove("active");
+    document.getElementById("sbGame").classList.add("active");
+    document.body.classList.add("hide-global-verity");
+    document.getElementById("sbTimerVal").textContent = fmtTime(timerRemain);
+    document.getElementById("sbTimerStat").classList.remove("low");
+    renderGrid(); renderTray(); updateHud();
+    clearInterval(timerHandle);
+    timerHandle = setInterval(tick, 1000);
+    updateCompanion(pickOne(["Oke, semangat mainnya!","Yuk, santai dulu sebentar.","Have fun — aku nemenin di sini."]), "happy");
+  }
+  function endGame(timeUp){
+    if(!running) return;
+    running = false;
+    clearInterval(timerHandle);
+    if(dragState){ dragState.ghost.remove(); dragState=null; window.removeEventListener("pointermove", onDragMove); window.removeEventListener("pointerup", onDragEnd); }
+    persistHighScoreIfNeeded();
+    SoundManager.play("sbTimeUp");
+    const isHigh = score>0 && score===DB.settings.studyBlockHighScore;
+    document.getElementById("sbEndTitle").textContent = timeUp ? "Time's up!" : "Game Over";
+    document.getElementById("sbEndMsg").textContent = timeUp ? "Nice break. Ready to return to StudyFlow?" : "Papan penuh — sudah nggak ada tempat lagi.";
+    document.getElementById("sbEndScore").textContent = score;
+    document.getElementById("sbEndEmoji").textContent = isHigh ? "🥹" : (timeUp ? "😌" : "🥲");
+    document.getElementById("sbEndOverlay").classList.add("show");
+    if(isHigh) updateCompanion(pickOne(["Wih, rekor baru!","Skor tertinggi baru! Keren.","Selamat, ini rekor barumu!"]), "proud");
+    else updateCompanion(timeUp ? pickOne(["Oke, break selesai.","Waktunya habis. Nice break.","Sesi selesai — semoga cukup segar."]) : pickOne(["Yah, hampir.","Aduh, tinggal dikit lagi.","Sayang sekali, dikit lagi penuh."]), timeUp?"relaxed":"sad");
+  }
+  function closeEndOverlay(){
+    document.getElementById("sbEndOverlay").classList.remove("show");
+    document.getElementById("sbGame").classList.remove("active");
+    document.getElementById("sbSetup").classList.add("active");
+    document.body.classList.remove("hide-global-verity");
+    renderSetup();
+  }
+  function forceExit(){
+    if(running){ running=false; clearInterval(timerHandle); }
+    if(dragState){ dragState.ghost.remove(); dragState=null; }
+    document.getElementById("sbEndOverlay").classList.remove("show");
+    document.getElementById("sbGame").classList.remove("active");
+    document.getElementById("sbSetup").classList.add("active");
+    document.body.classList.remove("hide-global-verity");
+    renderSetup();
+  }
+  function requestExit(onConfirmed){
+    if(!running){ if(onConfirmed) onConfirmed(); return; }
+    openConfirm("Leave Study Block?", "Your current session will end.", [
+      {label:"Continue Playing", cls:"btn"},
+      {label:"Exit", cls:"btn btn-danger", action:()=>{ forceExit(); if(onConfirmed) onConfirmed(); }}
+    ]);
+  }
+  function renderSetup(){
+    document.getElementById("sbBestScore").textContent = "Skor terbaik: " + (DB.settings.studyBlockHighScore||0);
+  }
+  function onEnterPage(){
+    if(!running){
+      document.getElementById("sbGame").classList.remove("active");
+      document.getElementById("sbSetup").classList.add("active");
+      document.body.classList.remove("hide-global-verity");
+      renderSetup();
+    }
+  }
+  function wire(){
+    let selectedMin = 10;
+    const durGrid = document.getElementById("sbDurGrid");
+    durGrid.querySelectorAll("[data-min]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        durGrid.querySelectorAll("[data-min]").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        const customRow = document.getElementById("sbCustomRow");
+        if(btn.dataset.min==="custom"){
+          customRow.style.display = "flex";
+          selectedMin = +document.getElementById("sbCustomMin").value || 7;
+        } else {
+          customRow.style.display = "none";
+          selectedMin = +btn.dataset.min;
+        }
+      });
+    });
+    document.getElementById("sbCustomMin").addEventListener("input", (e)=>{ selectedMin = Math.max(1, +e.target.value || 1); });
+    document.getElementById("sbStartBtn").addEventListener("click", ()=>{ SoundManager.play("click"); startGame(selectedMin); });
+    document.getElementById("sbExitBtn").addEventListener("click", ()=>{ SoundManager.play("click"); requestExit(); });
+    document.getElementById("sbEndBtn").addEventListener("click", ()=>{ SoundManager.play("click"); closeEndOverlay(); goToPage("dashboard"); });
+    // Cancel the native Back gesture while a session is running and ask first
+    // (registered here, early in the script, so it fires before NavHistory's
+    // own popstate listener further down — same-target listeners run in
+    // registration order at the AT_TARGET phase).
+    window.addEventListener("popstate", (e)=>{
+      if(running){
+        e.stopImmediatePropagation(); // this instance owns the event; NavHistory's own
+                                       // listener (registered later) must not also run
+        history.pushState({navKind:"page", page:"studyblock"}, "", location.href);
+        requestExit(()=>goToPage("dashboard"));
+      }
+    });
+  }
+  return {wire, onEnterPage, requestExit, isRunning:()=>running};
+})();
+
+/* =========================================================
+   CHESS — mini-game #2 in the Mini Game hub. Two modes: single
+   player vs a small negamax AI, or dual player on one device.
+   Untimed by design (spec: catur gak ada batasan waktu) — the
+   only reminder is the end-of-game overlay nudging back to tasks.
+========================================================= */
+const ChessGame = (function(){
+  const GLYPH = {wP:"♙",wN:"♘",wB:"♗",wR:"♖",wQ:"♕",wK:"♔",bP:"♟",bN:"♞",bB:"♝",bR:"♜",bQ:"♛",bK:"♚"};
+  const VAL = {P:100,N:320,B:330,R:500,Q:900,K:0};
+  const DIRS = {
+    B:[[-1,-1],[-1,1],[1,-1],[1,1]], R:[[-1,0],[1,0],[0,-1],[0,1]],
+    Q:[[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]],
+    N:[[-2,-1],[-2,1],[2,-1],[2,1],[-1,-2],[-1,2],[1,-2],[1,2]],
+    K:[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+  };
+  const inB=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
+  const color=p=>p?p[0]:null, type=p=>p?p[1]:null, opp=c=>c==="w"?"b":"w";
+  function initBoard(){
+    const b = Array.from({length:8},()=>Array(8).fill(null));
+    const back = ["R","N","B","Q","K","B","N","R"];
+    for(let c=0;c<8;c++){ b[0][c]="b"+back[c]; b[1][c]="bP"; b[6][c]="wP"; b[7][c]="w"+back[c]; }
+    return b;
+  }
+  function newState(){ return {board:initBoard(), turn:"w", castling:{wK:true,wQ:true,bK:true,bQ:true}, ep:null, halfmove:0, history:[]}; }
+  function cloneBoard(b){ return b.map(row=>row.slice()); }
+  function pieceMoves(board,r,c,ep){
+    const p=board[r][c]; if(!p) return [];
+    const col=color(p), t=type(p), moves=[];
+    const push=(tr,tc,flags)=>moves.push({from:[r,c],to:[tr,tc],flags:flags||{}});
+    if(t==="P"){
+      const dir = col==="w"?-1:1, startRow = col==="w"?6:1, promoRow = col==="w"?0:7;
+      if(inB(r+dir,c) && !board[r+dir][c]){
+        push(r+dir,c, r+dir===promoRow?{promo:true}:{});
+        if(r===startRow && !board[r+2*dir][c]) push(r+2*dir,c,{double:true});
+      }
+      for(const dc of [-1,1]){
+        const tr=r+dir, tc=c+dc; if(!inB(tr,tc)) continue;
+        if(board[tr][tc] && color(board[tr][tc])!==col) push(tr,tc, tr===promoRow?{promo:true,capture:true}:{capture:true});
+        else if(ep && ep[0]===tr && ep[1]===tc) push(tr,tc,{enpassant:true,capture:true});
+      }
+    } else if(t==="N"||t==="K"){
+      for(const [dr,dc] of DIRS[t]){
+        const tr=r+dr, tc=c+dc; if(!inB(tr,tc)) continue;
+        const tgt=board[tr][tc]; if(!tgt||color(tgt)!==col) push(tr,tc,{capture:!!tgt});
+      }
+    } else {
+      for(const [dr,dc] of DIRS[t]){
+        let tr=r+dr, tc=c+dc;
+        while(inB(tr,tc)){
+          const tgt=board[tr][tc];
+          if(!tgt) push(tr,tc); else { if(color(tgt)!==col) push(tr,tc,{capture:true}); break; }
+          tr+=dr; tc+=dc;
+        }
+      }
+    }
+    return moves;
+  }
+  function isSquareAttacked(board,r,c,byColor){
+    for(let rr=0;rr<8;rr++) for(let cc=0;cc<8;cc++){
+      const p=board[rr][cc]; if(!p||color(p)!==byColor) continue;
+      if(type(p)==="P"){ const dir=byColor==="w"?-1:1; if(rr+dir===r&&(cc-1===c||cc+1===c)) return true; continue; }
+      if(pieceMoves(board,rr,cc,null).some(m=>m.to[0]===r&&m.to[1]===c)) return true;
+    }
+    return false;
+  }
+  function findKing(board,col){ for(let r=0;r<8;r++) for(let c=0;c<8;c++) if(board[r][c]===col+"K") return [r,c]; return null; }
+  function inCheck(board,col){ const k=findKing(board,col); return k ? isSquareAttacked(board,k[0],k[1],opp(col)) : false; }
+  function pseudoMovesForSide(state,col){
+    const {board,castling,ep}=state; let moves=[];
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){ const p=board[r][c]; if(p&&color(p)===col) moves=moves.concat(pieceMoves(board,r,c,ep)); }
+    const row = col==="w"?7:0;
+    if(!inCheck(board,col)){
+      if(castling[col+"K"] && !board[row][5] && !board[row][6] && board[row][7]===col+"R" && board[row][4]===col+"K"
+        && !isSquareAttacked(board,row,5,opp(col)) && !isSquareAttacked(board,row,6,opp(col))) moves.push({from:[row,4],to:[row,6],flags:{castle:"K"}});
+      if(castling[col+"Q"] && !board[row][1] && !board[row][2] && !board[row][3] && board[row][0]===col+"R" && board[row][4]===col+"K"
+        && !isSquareAttacked(board,row,3,opp(col)) && !isSquareAttacked(board,row,2,opp(col))) moves.push({from:[row,4],to:[row,2],flags:{castle:"Q"}});
+    }
+    return moves;
+  }
+  function applyMove(state,move,promoType){
+    const s={board:cloneBoard(state.board), turn:opp(state.turn), castling:{...state.castling}, ep:null, halfmove:state.halfmove+1, history:state.history.concat([move])};
+    const [fr,fc]=move.from, [tr,tc]=move.to, p=s.board[fr][fc], col=color(p), t=type(p);
+    if(move.flags.capture||t==="P") s.halfmove=0;
+    s.board[fr][fc]=null;
+    if(move.flags.enpassant) s.board[fr][tc]=null;
+    s.board[tr][tc] = move.flags.promo ? col+(promoType||"Q") : p;
+    if(move.flags.castle==="K"){ s.board[fr][5]=col+"R"; s.board[fr][7]=null; }
+    if(move.flags.castle==="Q"){ s.board[fr][3]=col+"R"; s.board[fr][0]=null; }
+    if(move.flags.double) s.ep=[(fr+tr)/2, fc];
+    if(t==="K"){ s.castling[col+"K"]=false; s.castling[col+"Q"]=false; }
+    if(t==="R"){ if(fr===(col==="w"?7:0)&&fc===0) s.castling[col+"Q"]=false; if(fr===(col==="w"?7:0)&&fc===7) s.castling[col+"K"]=false; }
+    if(tr===7&&tc===0) s.castling.wQ=false; if(tr===7&&tc===7) s.castling.wK=false;
+    if(tr===0&&tc===0) s.castling.bQ=false; if(tr===0&&tc===7) s.castling.bK=false;
+    return s;
+  }
+  function legalMoves(state,col){
+    col = col||state.turn;
+    return pseudoMovesForSide(state,col).filter(m=>!inCheck(applyMove(state,m,"Q").board,col));
+  }
+  function gameStatus(state){
+    const moves = legalMoves(state,state.turn), check = inCheck(state.board,state.turn);
+    if(moves.length===0) return check ? "checkmate" : "stalemate";
+    if(state.halfmove>=100) return "draw50";
+    if(state.board.flat().filter(Boolean).length<=2) return "drawmaterial";
+    return check ? "check" : "playing";
+  }
+  function evalBoard(board,forColor){
+    let score=0;
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const p=board[r][c]; if(!p) continue;
+      let v=VAL[type(p)];
+      if(type(p)==="P") v += (color(p)==="w" ? (6-r) : (r-1))*6;
+      v += ((3.5-Math.abs(r-3.5)) + (3.5-Math.abs(c-3.5))) * (type(p)==="P"||type(p)==="N"||type(p)==="B" ? 2.2 : 0.8);
+      score += color(p)===forColor ? v : -v;
+    }
+    return score;
+  }
+  function orderMoves(moves){
+    return moves.slice().sort((a,b)=>{
+      const va=(a.flags.capture?100:0)+(a.flags.promo?80:0), vb=(b.flags.capture?100:0)+(b.flags.promo?80:0);
+      return vb-va;
+    });
+  }
+  function negamax(state,depth,alpha,beta,col){
+    const moves = orderMoves(legalMoves(state,col));
+    if(depth===0||moves.length===0){
+      if(moves.length===0) return inCheck(state.board,col) ? -99000-depth : 0;
+      return evalBoard(state.board,col);
+    }
+    let best=-Infinity;
+    for(const m of moves){
+      const score = -negamax(applyMove(state,m,"Q"), depth-1, -beta, -alpha, opp(col));
+      if(score>best) best=score;
+      if(best>alpha) alpha=best;
+      if(alpha>=beta) break;
+    }
+    return best;
+  }
+  function aiMove(state,depth){
+    const col=state.turn, moves=orderMoves(legalMoves(state,col));
+    if(moves.length===0) return null;
+    let best=null, bestScore=-Infinity, alpha=-Infinity, beta=Infinity;
+    for(const m of moves){
+      const score = -negamax(applyMove(state,m,"Q"), depth-1, -beta, -alpha, opp(col));
+      if(score>bestScore || (score===bestScore && Math.random()<0.15)){ bestScore=score; best=m; }
+      if(score>alpha) alpha=score;
+    }
+    return best;
+  }
+
+  /* ---- game/UI state ---- */
+  let state = null, mode = "ai", running = false, selected = null, legalFromSel = [], lastMove = null, thinking = false;
+
+  function sizeBoard(){
+    const el = document.getElementById("chessBoard");
+    if(!el) return;
+    el.style.height = "";
+    const w = el.getBoundingClientRect().width;
+    if(w>0) el.style.height = w + "px";
+  }
+  function squareEl(r,c){ return document.querySelector(`.cb-sq[data-r="${r}"][data-c="${c}"]`); }
+  function render(){
+    const el = document.getElementById("chessBoard");
+    el.innerHTML = "";
+    const flip = mode==="ai" ? false : false; // no board flip: keep orientation simple for shared-device play
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const d = document.createElement("div");
+      d.className = "cb-sq " + ((r+c)%2===0 ? "light" : "dark");
+      d.dataset.r=r; d.dataset.c=c;
+      const p = state.board[r][c];
+      if(p){
+        const g = document.createElement("span");
+        g.className = "cb-piece " + (color(p)==="w"?"white":"black");
+        g.textContent = GLYPH[p];
+        d.appendChild(g);
+      }
+      d.addEventListener("click", ()=>onSquareClick(r,c));
+      el.appendChild(d);
+    }
+    if(lastMove){ const a=squareEl(...lastMove.from), b=squareEl(...lastMove.to); if(a) a.classList.add("lastmove"); if(b) b.classList.add("lastmove"); }
+    if(selected){ const s=squareEl(...selected); if(s) s.classList.add("selected"); }
+    legalFromSel.forEach(m=>{
+      const sq = squareEl(...m.to); if(!sq) return;
+      const marker = document.createElement("div");
+      marker.className = state.board[m.to[0]][m.to[1]] ? "cb-ring" : "cb-dot";
+      sq.appendChild(marker);
+    });
+    if(inCheck(state.board,state.turn)){ const k=findKing(state.board,state.turn); if(k){ const sq=squareEl(...k); if(sq) sq.classList.add("check"); } }
+    document.getElementById("chessTurnVal").textContent = state.turn==="w" ? "Putih" : "Hitam";
+    const statusStat = document.getElementById("chessStatusStat");
+    if(inCheck(state.board,state.turn)){ statusStat.style.display=""; document.getElementById("chessStatusVal").textContent="Skak!"; }
+    else statusStat.style.display="none";
+    sizeBoard();
+  }
+  function say(text, mood){
+    document.getElementById("chessCompanionFace").textContent = VERITY_EMOTIONS[mood]||VERITY_EMOTIONS.neutral;
+    verityType(document.getElementById("chessCompanionMsg"), text);
+    verityPop(document.getElementById("chessCompanionBubble"));
+    SoundManager.play("verityReact");
+  }
+  function onSquareClick(r,c){
+    if(!running || thinking) return;
+    if(mode==="ai" && state.turn!=="w") return; // AI's turn, ignore taps
+    const p = state.board[r][c];
+    if(selected){
+      const mv = legalFromSel.find(m=>m.to[0]===r&&m.to[1]===c);
+      if(mv){ doMove(mv); return; }
+      if(p && color(p)===state.turn){ select(r,c); return; }
+      selected=null; legalFromSel=[]; render(); return;
+    }
+    if(p && color(p)===state.turn) select(r,c);
+  }
+  function select(r,c){ selected=[r,c]; legalFromSel = legalMoves(state,state.turn).filter(m=>m.from[0]===r&&m.from[1]===c); render(); }
+  function doMove(mv, promoType){
+    if(mv.flags.promo && !promoType){ pendingPromo = mv; openPromoPicker(); return; }
+    SoundManager.play(mv.flags.capture ? "sbClear" : "sbPlace");
+    state = applyMove(state, mv, promoType||"Q");
+    lastMove = mv; selected=null; legalFromSel=[];
+    render();
+    reactToMove(mv);
+    const status = gameStatus(state);
+    if(status==="checkmate"||status==="stalemate"||status==="draw50"||status==="drawmaterial"){ setTimeout(()=>endGame(status),350); return; }
+    if(mode==="ai" && state.turn==="b") setTimeout(aiTurn, 450);
+  }
+  let pendingPromo = null;
+  function openPromoPicker(){ document.getElementById("chessPromoOverlay").classList.add("show"); }
+  function closePromoPicker(){ document.getElementById("chessPromoOverlay").classList.remove("show"); }
+  function aiTurn(){
+    thinking = true;
+    say(pickPhrase(["Bentar, mikir dulu...","Hmm...","Nyari langkah bagus..."]), "neutral");
+    setTimeout(()=>{
+      const mv = aiMove(state, 4);
+      thinking = false;
+      if(!mv){ return; }
+      SoundManager.play(mv.flags.capture ? "sbClear" : "sbPlace");
+      state = applyMove(state, mv, "Q");
+      lastMove = mv; render();
+      reactToMove(mv, true);
+      const status = gameStatus(state);
+      if(status==="checkmate"||status==="stalemate"||status==="draw50"||status==="drawmaterial") setTimeout(()=>endGame(status),350);
+    }, 30);
+  }
+  function pickPhrase(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function reactToMove(mv, byAi){
+    if(byAi) return;
+    if(inCheck(state.board,state.turn)) say(pickPhrase(["Skak!","Waduh, raja kena skak.","Hati-hati, itu skak."]),"surprised");
+    else if(mv.flags.capture) say(pickPhrase(["Makan bidak, mantap.","Nice, dapet bidak."]),"happy");
+  }
+  function endGame(status){
+    if(!running) return;
+    running = false;
+    SoundManager.play("sbTimeUp");
+    const winnerColor = status==="checkmate" ? opp(state.turn) : null; // side to move is the one mated
+    let emoji="🏁", title="Selesai", msg="Permainan selesai.", mood="relaxed";
+    const stats = DB.settings.chessStats || {wins:0,losses:0,draws:0};
+    if(status==="checkmate"){
+      if(mode==="ai"){
+        const playerWon = winnerColor==="w";
+        title = playerWon ? "Skakmat — Kamu Menang!" : "Skakmat — AI Menang";
+        msg = playerWon ? "Mantap, AI berhasil dikalahkan." : "AI menang kali ini. Coba lagi?";
+        emoji = playerWon ? "🏆" : "🤖";
+        mood = playerWon ? "proud" : "sad";
+        if(playerWon) stats.wins++; else stats.losses++;
+      } else {
+        title = "Skakmat!";
+        msg = (winnerColor==="w"?"Putih":"Hitam") + " menang.";
+        emoji="🏆"; mood="proud";
+      }
+    } else if(status==="stalemate"){ title="Stalemate"; msg="Seri — pihak yang jalan tidak punya langkah legal."; emoji="🤝"; mood="neutral"; stats.draws++; }
+    else { title="Seri"; msg="Permainan berakhir seri."; emoji="🤝"; mood="neutral"; stats.draws++; }
+    DB.settings.chessStats = stats; persist();
+    document.getElementById("chessEndEmoji").textContent = emoji;
+    document.getElementById("chessEndTitle").textContent = title;
+    document.getElementById("chessEndMsg").textContent = msg;
+    document.getElementById("chessEndReminder").textContent = "Lanjut main lagi, atau balik dulu ngerjain tugas?";
+    document.getElementById("chessEndOverlay").classList.add("show");
+    say(msg, mood);
+  }
+  function startGame(selectedMode){
+    mode = selectedMode; state = newState(); running = true; selected=null; legalFromSel=[]; lastMove=null; thinking=false;
+    document.getElementById("chessSetup").classList.remove("active");
+    document.getElementById("chessGame").classList.add("active");
+    document.body.classList.add("hide-global-verity");
+    render();
+    say(mode==="ai" ? pickPhrase(["Oke, kamu putih duluan.","Ayo mulai, giliranmu."]) : pickPhrase(["Oke, gantian ya tiap giliran.","Siap, dual player!"]), "happy");
+  }
+  function closeEndOverlay(){
+    document.getElementById("chessEndOverlay").classList.remove("show");
+    document.getElementById("chessGame").classList.remove("active");
+    document.getElementById("chessSetup").classList.add("active");
+    document.body.classList.remove("hide-global-verity");
+    renderSetup();
+  }
+  function forceExit(){
+    if(running) running=false;
+    document.getElementById("chessEndOverlay").classList.remove("show");
+    document.getElementById("chessPromoOverlay").classList.remove("show");
+    document.getElementById("chessGame").classList.remove("active");
+    document.getElementById("chessSetup").classList.add("active");
+    document.body.classList.remove("hide-global-verity");
+    renderSetup();
+  }
+  function requestExit(onConfirmed){
+    if(!running){ if(onConfirmed) onConfirmed(); return; }
+    openConfirm("Keluar dari Catur?", "Permainan yang sedang berjalan akan dihentikan.", [
+      {label:"Lanjut Main", cls:"btn"},
+      {label:"Keluar", cls:"btn btn-danger", action:()=>{ forceExit(); if(onConfirmed) onConfirmed(); }}
+    ]);
+  }
+  function renderSetup(){
+    const s = DB.settings.chessStats || {wins:0,losses:0,draws:0};
+    document.getElementById("chessStats").textContent = `Menang ${s.wins} · Kalah ${s.losses} · Seri ${s.draws}`;
+  }
+  function onEnterPage(){
+    if(!running){
+      document.getElementById("chessGame").classList.remove("active");
+      document.getElementById("chessSetup").classList.add("active");
+      document.body.classList.remove("hide-global-verity");
+      renderSetup();
+    }
+  }
+  function wire(){
+    let selectedMode = "ai";
+    const modeGrid = document.getElementById("chessModeGrid");
+    modeGrid.querySelectorAll("[data-mode]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        modeGrid.querySelectorAll("[data-mode]").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedMode = btn.dataset.mode;
+      });
+    });
+    document.getElementById("chessStartBtn").addEventListener("click", ()=>{ SoundManager.play("click"); startGame(selectedMode); });
+    document.getElementById("chessResignBtn").addEventListener("click", ()=>{ SoundManager.play("click"); requestExit(); });
+    document.getElementById("chessPlayAgainBtn").addEventListener("click", ()=>{ SoundManager.play("click"); document.getElementById("chessEndOverlay").classList.remove("show"); startGame(mode); });
+    document.getElementById("chessEndBtn").addEventListener("click", ()=>{ SoundManager.play("click"); closeEndOverlay(); goToPage("dashboard"); });
+    document.getElementById("chessPromoRow").querySelectorAll("[data-p]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        closePromoPicker();
+        const mv = pendingPromo; pendingPromo=null;
+        if(mv) doMove(mv, btn.dataset.p);
+      });
+    });
+    window.addEventListener("resize", ()=>{ if(document.getElementById("page-chess").classList.contains("active")) sizeBoard(); });
+    window.addEventListener("popstate", (e)=>{
+      if(running){
+        e.stopImmediatePropagation();
+        history.pushState({navKind:"page", page:"chess"}, "", location.href);
+        requestExit(()=>goToPage("dashboard"));
+      }
+    });
+  }
+  return {wire, onEnterPage, requestExit, isRunning:()=>running};
+})();
+
+/* =========================================================
+   NOTEBOOK — 3D-book style note pages. Each page is plain text
+   stored in DB.notebookPages; navigating plays a short page-flip
+   animation (rotateY) and swipe gestures move next/prev like
+   turning a physical book, per spec.
+========================================================= */
+const NotebookManager = (function(){
+  let idx = 0;
+  let saveTimer = null;
+  let touchStartX = null, touchStartY = null;
+
+  function pages(){
+    if(!DB.notebookPages || DB.notebookPages.length===0){
+      DB.notebookPages = [{id:uid("nb"), text:""}];
+      persist();
+    }
+    return DB.notebookPages;
+  }
+  function clampIdx(){
+    const p = pages();
+    if(idx < 0) idx = 0;
+    if(idx > p.length-1) idx = p.length-1;
+  }
+  function renderIndicator(){
+    document.getElementById("nbPageIndicator").textContent = (idx+1) + " / " + pages().length;
+    document.getElementById("nbDeleteBtn").style.visibility = pages().length>1 ? "" : "hidden";
+  }
+  function renderSheetContent(){
+    clampIdx();
+    document.getElementById("nbTextarea").value = pages()[idx].text || "";
+    renderIndicator();
+  }
+  function render(){ renderSheetContent(); }
+
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      const p = pages();
+      if(p[idx]){ p[idx].text = document.getElementById("nbTextarea").value; persist(); }
+    }, 350);
+  }
+
+  function flip(direction){
+    // direction: 1 = next page, -1 = previous page
+    const p = pages();
+    if(direction>0 && idx>=p.length-1){
+      // Swiping/clicking past the last page reveals a fresh blank sheet —
+      // "buku"-nya nambah lembar baru sendiri, seperti membalik ke halaman kosong.
+      p.push({id:uid("nb"), text:""});
+      persist();
+    }
+    if(direction<0 && idx<=0) return; // already at the very first page
+    const sheet = document.getElementById("nbSheet");
+    // commit any pending edits on the page we're leaving before flipping away
+    if(p[idx]) p[idx].text = document.getElementById("nbTextarea").value;
+    persist();
+    sheet.classList.remove("flip-out-next","flip-out-prev","flip-in-next","flip-in-prev");
+    void sheet.offsetWidth;
+    sheet.classList.add(direction>0 ? "flip-out-next" : "flip-out-prev");
+    SoundManager.play("click");
+    setTimeout(()=>{
+      idx += direction;
+      renderSheetContent();
+      sheet.classList.remove("flip-out-next","flip-out-prev");
+      sheet.classList.add(direction>0 ? "flip-in-next" : "flip-in-prev");
+      setTimeout(()=>sheet.classList.remove("flip-in-next","flip-in-prev"), 280);
+    }, 260);
+  }
+
+  function addPage(){
+    const p = pages();
+    p.splice(idx+1, 0, {id:uid("nb"), text:""});
+    persist();
+    flip(1);
+  }
+  function deletePage(){
+    const p = pages();
+    if(p.length<=1) return;
+    openConfirm("Hapus halaman ini?", "Isi catatan di halaman ini akan hilang.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        p.splice(idx,1);
+        if(idx > p.length-1) idx = p.length-1;
+        persist();
+        renderSheetContent();
+      }}
+    ]);
+  }
+  function onEnterPage(){ clampIdx(); render(); }
+
+  function wire(){
+    const book = document.getElementById("nbBook");
+    document.getElementById("nbTextarea").addEventListener("input", scheduleSave);
+    document.getElementById("nbAddBtn").addEventListener("click", ()=>{ SoundManager.play("click"); addPage(); });
+    document.getElementById("nbDeleteBtn").addEventListener("click", deletePage);
+    document.getElementById("nbNextBtn").addEventListener("click", ()=>flip(1));
+    document.getElementById("nbPrevBtn").addEventListener("click", ()=>flip(-1));
+    book.addEventListener("touchstart", (e)=>{
+      touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+    }, {passive:true});
+    book.addEventListener("touchend", (e)=>{
+      if(touchStartX===null) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      touchStartX = null;
+      if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)*1.4){
+        if(dx < 0) flip(1); else flip(-1);
+      }
+    }, {passive:true});
+  }
+  return {wire, onEnterPage, render};
+})();
+
+/* =========================================================
+
    STATISTICS
 ========================================================= */
 function renderStatisticsPage(){
@@ -2375,6 +3857,17 @@ function renderTasksPage(forceCategory){
 }
 
 /* ---- Calendar ---- */
+function sizeCalGrid(){
+  const grid = document.getElementById("calGrid");
+  if(!grid) return;
+  const cols = grid.querySelectorAll(".cal-dow, .cal-day");
+  if(!cols.length) return;
+  const w = grid.getBoundingClientRect().width;
+  const colCount = 7, gap = 6;
+  const cellW = (w - gap*(colCount-1)) / colCount;
+  if(cellW>0) grid.querySelectorAll(".cal-day").forEach(d=>{ d.style.height = cellW + "px"; });
+}
+window.addEventListener("resize", ()=>{ if(currentPage==="calendar") sizeCalGrid(); });
 function renderCalendar(){
   const label = document.getElementById("calMonthLabel");
   const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -2427,6 +3920,7 @@ function renderCalendar(){
     grid.appendChild(cell);
   }
   if(calSelectedDate) renderCalSelected(); else document.getElementById("calSelectedBlock").style.display="none";
+  sizeCalGrid();
 }
 
 function renderCalSelected(){
@@ -3087,8 +4581,18 @@ document.getElementById("detailDeleteBtn").addEventListener("click", ()=>{
 /* =========================================================
    NAVIGATION
 ========================================================= */
-function goToPage(page){
+function goToPage(page, opts){
+  opts = opts || {};
+  if(!opts.confirmedExit && currentPage==="studyblock" && page!=="studyblock" && StudyBlockGame.isRunning()){
+    StudyBlockGame.requestExit(()=>goToPage(page, {confirmedExit:true}));
+    return;
+  }
+  if(!opts.confirmedExit && currentPage==="chess" && page!=="chess" && ChessGame.isRunning()){
+    ChessGame.requestExit(()=>goToPage(page, {confirmedExit:true}));
+    return;
+  }
   currentPage = page;
+  if(!(opts && opts.skipHistory) && window.NavHistory) NavHistory.pushPage(page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   const pageEl = document.getElementById("page-"+page);
   pageEl.classList.add("active");
@@ -3104,6 +4608,9 @@ function goToPage(page){
   if(page==="courses"){ document.getElementById("courseDashboardBlock").style.display="none"; }
   if(page==="statistics") renderStatisticsPage();
   if(page==="focus") renderFocusPage();
+  if(page==="studyblock") StudyBlockGame.onEnterPage();
+  if(page==="chess") ChessGame.onEnterPage();
+  if(page==="notebook") NotebookManager.onEnterPage();
   renderAll();
   VerityEngine.onPageChange(page);
   window.scrollTo(0,0);
@@ -3134,16 +4641,18 @@ const NAV_ICONS = {
   lecturers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
   statistics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>',
   focus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>',
+  minigame:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="12" rx="6"/><path d="M7 10v4M5 12h4"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg>',
+  notebook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 21.5v-17z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg>',
   settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>'
 };
 const NAV_LABELS = {
   dashboard:"Home", calendar:"Calendar", tasks:"Tasks", folders:"Folder", courses:"Mata Kuliah",
-  schedule:"Jadwal", lecturers:"Dosen", statistics:"Statistik", focus:"Focus Mode", settings:"Settings"
+  schedule:"Jadwal", lecturers:"Dosen", statistics:"Statistik", focus:"Focus Mode", settings:"Settings", minigame:"Mini Game", notebook:"Notebook"
 };
 const MOBILE_NAV = {
   primary:["dashboard","calendar","tasks","courses"],
-  secondary:["lecturers","folders","schedule","statistics","focus","settings"]
+  secondary:["lecturers","folders","schedule","statistics","focus","minigame","notebook","settings"]
 };
 function renderMobileBottomNav(){
   const nav = document.getElementById("bottomNav");
@@ -3212,7 +4721,8 @@ document.addEventListener("keydown", (e)=>{
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); openCmdk(); }
   if(e.key==="Escape"){
     closeCmdk(); closeMoreSheet();
-    document.querySelectorAll(".modal-overlay.open, .sheet-overlay.open, .verity-panel-overlay.open").forEach(m=>m.classList.remove("open"));
+    document.querySelectorAll(".modal-overlay.open, .sheet-overlay.open, .verity-panel-overlay.open, .verity-celebrate-overlay.open, .tour-overlay.open").forEach(m=>m.classList.remove("open"));
+    if(window.TourGuide) TourGuide.stop();
   }
 });
 document.getElementById("fabAdd").addEventListener("click", openCmdk);
@@ -3238,7 +4748,7 @@ document.addEventListener("keydown", (e)=>{
 /* Focus trap: keeps Tab/Shift+Tab cycling inside whichever overlay
    (modal, sheet, command palette, Verity panel) is currently open,
    and restores focus to the element that opened it on close. */
-const OVERLAY_SELECTOR = ".modal-overlay.open, .sheet-overlay.open, .cmdk-overlay.open, .verity-panel-overlay.open";
+const OVERLAY_SELECTOR = ".modal-overlay.open, .sheet-overlay.open, .cmdk-overlay.open, .verity-panel-overlay.open, .verity-celebrate-overlay.open, .tour-overlay.open";
 let lastFocusedBeforeOverlay = null;
 function getOpenOverlay(){ return document.querySelector(OVERLAY_SELECTOR); }
 function focusablesIn(container){
@@ -3269,7 +4779,7 @@ new MutationObserver(()=>{
     const items = focusablesIn(overlay);
     if(items.length) items[0].focus();
   } else if(!overlay){
-    document.querySelectorAll(".modal-overlay, .sheet-overlay, .cmdk-overlay, .verity-panel-overlay").forEach(ov=>{ ov.dataset.trapped=""; });
+    document.querySelectorAll(".modal-overlay, .sheet-overlay, .cmdk-overlay, .verity-panel-overlay, .verity-celebrate-overlay, .tour-overlay").forEach(ov=>{ ov.dataset.trapped=""; });
     if(lastFocusedBeforeOverlay && document.body.contains(lastFocusedBeforeOverlay)){
       lastFocusedBeforeOverlay.focus();
     }
@@ -3367,7 +4877,27 @@ function renderGeneralSettings(){
   const sel = document.getElementById("settingActiveSemester");
   sel.innerHTML = SemesterManager.all().map(s=>`<option value="${s.id}">${escapeHtml(s.name)} ${escapeHtml(s.academicYear||"")}</option>`).join("");
   sel.value = DB.activeSemesterId || "";
+  renderProfilePhoto();
 }
+document.getElementById("profilePhotoInput").addEventListener("change", (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith("image/")){ toast("File harus berupa gambar."); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    DB.settings.profilePhoto = reader.result;
+    persist();
+    renderProfilePhoto();
+    toast("Foto profil diperbarui. 😄");
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+});
+document.getElementById("profilePhotoRemoveBtn").addEventListener("click", ()=>{
+  DB.settings.profilePhoto = null;
+  persist();
+  renderProfilePhoto();
+});
 document.getElementById("settingUserName").addEventListener("input", (e)=>{
   DB.settings.userName = e.target.value;
   persist();
@@ -3448,6 +4978,9 @@ document.getElementById("soundVerityVol").addEventListener("change", ()=> SoundM
 
 /* About / Changelog */
 const CHANGELOG_V4 = [
+  "🎮 Menu Mini Game baru — pusat semua game santai (Study Block + Catur)",
+  "♟️ Game Catur: Single Player lawan AI &amp; Dual Player satu HP, tanpa batas waktu",
+  "💬 Pengingat balik ke tugas otomatis muncul begitu game Catur selesai",
   "🔤 Rebranded to StudyFlow — Areyhan &amp; Verity",
   "🙂 Verity emoji companion (no images — pure Unicode)",
   "📍 Persistent floating Verity on every page",
@@ -3482,11 +5015,22 @@ document.getElementById("changelogBtnSettings").addEventListener("click", ()=>{
 
 /* Export / Import / Reset */
 function doExport(){
-  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:"application/json"});
+  // Versioned, platform-independent envelope (spec §29). Only plain
+  // JSON-serializable application data goes in here — no File/Blob
+  // references, object URLs, or filesystem paths — so the exact same
+  // file opens identically on PC or Android.
+  const envelope = {
+    app: "StudyFlow",
+    version: APP_VERSION,
+    exportVersion: 1,
+    exportedAt: new Date().toISOString(),
+    data: DB
+  };
+  const blob = new Blob([JSON.stringify(envelope, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "studiflow-backup-"+ymd(new Date())+".json";
+  a.download = "studyflow-backup-"+ymd(new Date())+".json";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -3499,35 +5043,88 @@ document.getElementById("exportBtnSide").addEventListener("click", doExport);
 document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importFile").click());
 document.getElementById("importFile").addEventListener("change", (e)=>{
   const file = e.target.files[0];
-  if(!file) return;
+  if(!file){ e.target.value=""; return; }
+
+  // Mobile file providers (e.g. a file downloaded from WhatsApp on Android)
+  // frequently report an empty or generic MIME type (or none at all) even
+  // for a perfectly valid .json file. Never gate on file.type — only the
+  // filename extension is used as a soft hint, and even that never blocks
+  // the read. The actual source of truth is whether the content parses.
+  const looksLikeJson = /\.json$/i.test(file.name || "");
+
+  if(file.size === 0){
+    toast("File kosong — nggak ada yang bisa diimport.");
+    e.target.value = "";
+    return;
+  }
+
   const reader = new FileReader();
+  reader.onerror = ()=>{
+    toast("File-nya gagal dibaca. Coba export ulang dari perangkat asal.");
+    e.target.value = "";
+  };
   reader.onload = (ev)=>{
+    e.target.value = "";
+    let raw = String(ev.target.result || "");
+    // Strip a UTF-8 BOM if present — some mobile share sheets add one.
+    if(raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
+    raw = raw.trim();
+
+    let parsed;
     try{
-      const parsed = JSON.parse(ev.target.result);
-      if(!parsed || typeof parsed !== "object" || !Array.isArray(parsed.tasks)){
-        throw new Error("Format tidak valid");
-      }
-      openConfirm("Import data?", "Data saat ini akan digantikan oleh isi file ini. Tindakan ini tidak dapat dibatalkan.", [
-        {label:"Batal", cls:"btn"},
-        {label:"Import", cls:"btn btn-primary", action:()=>{
+      parsed = JSON.parse(raw);
+    }catch(err){
+      toast(looksLikeJson
+        ? "File-nya kayaknya bukan backup StudyFlow yang valid (JSON rusak/terpotong)."
+        : "File yang dipilih bukan file JSON yang valid.");
+      return;
+    }
+
+    // Accept either the raw DB shape (legacy exports) or the versioned
+    // { app, version, data:{...} } envelope, and validate the minimum
+    // shape we actually need before touching anything on disk.
+    const candidate = (parsed && typeof parsed === "object" && parsed.data && typeof parsed.data === "object")
+      ? parsed.data
+      : parsed;
+
+    if(!candidate || typeof candidate !== "object" || !Array.isArray(candidate.tasks)){
+      toast("File-nya kayaknya bukan backup StudyFlow yang valid.");
+      return;
+    }
+
+    const counts = {
+      tasks: Array.isArray(candidate.tasks) ? candidate.tasks.length : 0,
+      courses: Array.isArray(candidate.courses) ? candidate.courses.length : 0,
+      lecturers: Array.isArray(candidate.lecturers) ? candidate.lecturers.length : 0,
+      folders: Array.isArray(candidate.folders) ? candidate.folders.length : 0,
+      schedules: Array.isArray(candidate.schedules) ? candidate.schedules.length : 0,
+    };
+    const summary = `${counts.tasks} tugas, ${counts.courses} mata kuliah, ${counts.lecturers} dosen, `
+      + `${counts.folders} folder, ${counts.schedules} jadwal ditemukan di file ini.`;
+
+    openConfirm("Import data?", summary + " Data saat ini akan digantikan. Tindakan ini tidak dapat dibatalkan.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Import", cls:"btn btn-primary", action:()=>{
+        try{
+          // Safety net: keep a copy of current data in case migrate/merge throws.
+          const previousDB = JSON.parse(JSON.stringify(DB));
           const d = StorageManager.defaultData();
-          let merged = Object.assign(d, parsed, {settings: Object.assign(d.settings, parsed.settings||{})});
+          let merged = Object.assign(d, candidate, {settings: Object.assign(d.settings, candidate.settings||{})});
           DB = StorageManager.migrate(merged);
           persist();
-          toast("Data berhasil diimport.");
+          toast("Data backup berhasil masuk.");
           applyTheme();
           renderNotifSettings();
           renderGeneralSettings();
           renderVeritySettings();
           renderAll();
-        }}
-      ]);
-    }catch(err){
-      toast("File JSON tidak valid atau rusak. Data tidak diubah.");
-    }
-    e.target.value = "";
+        }catch(err){
+          toast("Import gagal di tengah jalan — data lama tetap aman, nggak ada yang berubah.");
+        }
+      }}
+    ]);
   };
-  reader.readAsText(file);
+  reader.readAsText(file, "UTF-8");
 });
 
 document.getElementById("resetBtn").addEventListener("click", ()=>{
@@ -3588,6 +5185,9 @@ function seedIfEmpty(){
 seedIfEmpty();
 renderMobileBottomNav();
 VerityEngine.wire();
+StudyBlockGame.wire();
+ChessGame.wire();
+NotebookManager.wire();
 FocusTimer.wire();
 renderVeritySettings();
 renderSoundSettings();
@@ -3597,6 +5197,113 @@ renderGeneralSettings();
 NotificationManager.scheduleDaily();
 calSelectedDate = ymd(new Date());
 renderAll();
+
+/* Real-time guided tour: spotlights an actual on-screen element per step,
+   navigating pages as needed. Started once after first-launch onboarding,
+   and replayable any time from Settings → About → "Mulai Tur". */
+const TourGuide = (function(){
+  const overlay = document.getElementById("tourOverlay");
+  const spotlight = document.getElementById("tourSpotlight");
+  const tooltip = document.getElementById("tourTooltip");
+  let steps = [];
+  let idx = 0;
+  let active = false;
+
+  function buildSteps(){
+    // Prefer the desktop sidebar selector; fall back to the mobile bottom-nav
+    // equivalent when the sidebar is hidden (narrow viewport).
+    function navSel(page){
+      const desktop = document.querySelector(`.nav-item[data-page="${page}"]`);
+      if(desktop && desktop.offsetParent) return `.nav-item[data-page="${page}"]`;
+      return `.bn-item[data-page="${page}"]`;
+    }
+    return [
+      { page:"dashboard", selector:()=>navSel("dashboard"), title:"Dashboard", text:"Ini ringkasan akademikmu: tugas aktif, deadline mendekat, dan progress hari ini — semuanya kelihatan sekilas di sini." },
+      { page:"dashboard", selector:()=>document.getElementById("addTaskBtn") ? "#addTaskBtn" : navSel("tasks"), title:"Tambah Tugas", text:"Tugas baru ditambahin dari sini. Cukup isi judul, mata kuliah, dan deadline-nya." },
+      { page:"tasks", selector:()=>navSel("tasks"), title:"Daftar Tugas", text:"Semua tugasmu ngumpul di halaman ini, dikelompokkin pakai matrix urgent/penting biar gampang milih mana yang dikerjain duluan." },
+      { page:"calendar", selector:()=>navSel("calendar"), title:"Kalender", text:"Lihat jadwal dan deadline dalam tampilan kalender, biar nggak ada yang kelewat." },
+      { page:"focus", selector:()=>navSel("focus"), title:"Fokus Mode", text:"Timer buat sesi belajar fokus. Selesai satu sesi, Verity bakal kasih semangat lewat window selamat." },
+      { page:"focus", selector:()=>document.getElementById("verityDock").offsetParent ? "#verityDock" : "#verityFab", title:"Kenalan Verity", text:"Ini Verity, temen belajarmu. Dia komentarin progresmu, ngingetin deadline, dan bisa diajak ngobrol — tap aja avatarnya." },
+      { page:"settings", selector:()=>navSel("settings"), title:"Pengaturan", text:"Atur tema, notifikasi, kepribadian Verity, dan lain-lain di sini. Tur ini juga bisa diputar ulang kapan pun dari sini." }
+    ];
+  }
+
+  function positionFor(el){
+    const r = el.getBoundingClientRect();
+    const pad = 8;
+    spotlight.style.top = (r.top - pad) + "px";
+    spotlight.style.left = (r.left - pad) + "px";
+    spotlight.style.width = (r.width + pad*2) + "px";
+    spotlight.style.height = (r.height + pad*2) + "px";
+
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const ttRect = tooltip.getBoundingClientRect();
+    const ttW = ttRect.width || 300, ttH = ttRect.height || 140;
+    let top, left;
+    const spaceBelow = vh - r.bottom, spaceAbove = r.top;
+    if(spaceBelow > ttH + 24 || spaceBelow > spaceAbove){
+      top = Math.min(r.bottom + 16, vh - ttH - 16);
+    } else {
+      top = Math.max(r.top - ttH - 16, 16);
+    }
+    left = r.left + r.width/2 - ttW/2;
+    left = Math.max(16, Math.min(left, vw - ttW - 16));
+    tooltip.style.top = top + "px";
+    tooltip.style.left = left + "px";
+  }
+
+  function renderStep(){
+    const step = steps[idx];
+    if(!step) return finish();
+    if(currentPage !== step.page) goToPage(step.page, {skipHistory:true});
+    // Wait a frame for the page swap / render to land before measuring.
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        const sel = typeof step.selector==="function" ? step.selector() : step.selector;
+        const el = typeof sel==="string" ? document.querySelector(sel) : sel;
+        if(!el){ idx++; renderStep(); return; }
+        el.scrollIntoView({block:"center", behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
+        document.getElementById("tourStepCount").textContent = `Langkah ${idx+1} dari ${steps.length}`;
+        document.getElementById("tourTitle").textContent = step.title;
+        document.getElementById("tourText").textContent = step.text;
+        document.getElementById("tourPrev").style.visibility = idx===0 ? "hidden" : "visible";
+        document.getElementById("tourNext").textContent = idx===steps.length-1 ? "Selesai" : "Lanjut ›";
+        positionFor(el);
+      });
+    });
+  }
+
+  function reposition(){
+    if(!active) return;
+    const step = steps[idx];
+    if(!step) return;
+    const sel = typeof step.selector==="function" ? step.selector() : step.selector;
+    const el = typeof sel==="string" ? document.querySelector(sel) : sel;
+    if(el) positionFor(el);
+  }
+  window.addEventListener("resize", reposition);
+  window.addEventListener("scroll", reposition, true);
+
+  function start(){
+    steps = buildSteps();
+    idx = 0;
+    active = true;
+    overlay.classList.add("open");
+    renderStep();
+  }
+  function next(){ if(idx<steps.length-1){ idx++; renderStep(); } else { finish(); } }
+  function prev(){ if(idx>0){ idx--; renderStep(); } }
+  function finish(){
+    active = false;
+    overlay.classList.remove("open");
+  }
+  document.getElementById("tourNext").addEventListener("click", ()=>{ SoundManager.play("click"); next(); });
+  document.getElementById("tourPrev").addEventListener("click", ()=>{ SoundManager.play("click"); prev(); });
+  document.getElementById("tourSkip").addEventListener("click", ()=>{ SoundManager.play("click"); finish(); });
+
+  return { start, stop: finish };
+})();
+window.TourGuide = TourGuide;
 
 /* First-launch onboarding — max 3 screens, shown once. Stored outside the
    main DB (UI-only flag) so it never interacts with data migration. */
@@ -3608,21 +5315,24 @@ renderAll();
   function render(){
     document.querySelectorAll(".onboard-screen").forEach(s=>s.classList.toggle("active", +s.dataset.screen===screen));
     document.querySelectorAll(".onboard-dots .dot").forEach(d=>d.classList.toggle("active", +d.dataset.dot===screen));
-    document.getElementById("onboardNext").textContent = screen===TOTAL ? "Get Started" : "Lanjut";
+    document.getElementById("onboardNext").textContent = screen===TOTAL ? "Mulai Tur" : "Lanjut";
   }
-  function finish(){
+  function finish(startTour){
     try{ localStorage.setItem(ONBOARD_KEY, "1"); }catch(e){}
     overlay.classList.remove("open");
+    if(startTour) TourGuide.start();
   }
   document.getElementById("onboardNext").addEventListener("click", ()=>{
     SoundManager.play("click");
-    if(screen===TOTAL){ finish(); return; }
+    if(screen===TOTAL){ finish(true); return; }
     screen++; render();
   });
-  document.getElementById("onboardSkip").addEventListener("click", finish);
+  document.getElementById("onboardSkip").addEventListener("click", ()=>finish(false));
   let seen = false;
   try{ seen = localStorage.getItem(ONBOARD_KEY)==="1"; }catch(e){}
   if(!seen){ overlay.classList.add("open"); render(); }
+  const replayBtn = document.getElementById("replayTutorialBtn");
+  if(replayBtn) replayBtn.addEventListener("click", ()=>{ SoundManager.play("click"); TourGuide.start(); });
 })();
 
 /* Soft click sound: delegated so it covers primary buttons and the task
@@ -3641,6 +5351,101 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 }
 
 })();
+/* =========================================================
+   NATIVE BACK BUTTON / HISTORY HANDLING (spec §1)
+   Any overlay (modal / sheet / cmdk / verity panel / onboarding)
+   pushes a history entry when it opens, via MutationObserver so
+   every existing open-call is covered without touching each one.
+   Page navigation (goToPage) pushes its own entries. On popstate:
+     1) close the most recently opened overlay, if any
+     2) else go to the previous page in the in-app stack
+     3) else (nothing left) let the OS/browser handle Back — this
+        is the only case where the app is genuinely allowed to exit.
+========================================================= */
+const NavHistory = (function(){
+  const overlaySelector = ".modal-overlay, .sheet-overlay, .cmdk-overlay, .verity-panel-overlay, .verity-celebrate-overlay, .tour-overlay, .onboard-overlay";
+  let pageStack = [currentPage || "dashboard"];
+  let openOverlays = [];
+  let syncingFromPopstate = false;
+  // Incremented right before we call history.back() ourselves to consume a
+  // stray entry (see below) — the popstate that call fires back should be
+  // swallowed here rather than treated as a user Back press.
+  let ignorePopstate = 0;
+
+  function isOverlayOpen(el){ return el.classList.contains("open"); }
+
+  const observer = new MutationObserver((mutations)=>{
+    if(syncingFromPopstate) return;
+    mutations.forEach(m=>{
+      if(m.type !== "attributes" || m.attributeName !== "class") return;
+      const el = m.target;
+      if(!(el instanceof Element) || !el.matches(overlaySelector)) return;
+      const open = isOverlayOpen(el);
+      const tracked = openOverlays.includes(el);
+      if(open && !tracked){
+        openOverlays.push(el);
+        history.pushState({navKind:"overlay"}, "", location.href);
+      } else if(!open && tracked){
+        openOverlays = openOverlays.filter(o=>o!==el);
+        // This overlay was closed some other way than the physical Back
+        // button — an X/close button, tapping the backdrop, Escape, a
+        // Save/Cancel action, etc. The history entry we pushed when it
+        // opened is now stale; if we leave it there, the *next* physical
+        // Back press will land on that leftover entry instead of doing
+        // anything visible, effectively "eating" one Back press and making
+        // the one after it jump back an extra page. Consume it now instead.
+        ignorePopstate++;
+        history.back();
+      }
+    });
+  });
+  document.querySelectorAll(overlaySelector).forEach(el=>{
+    observer.observe(el, {attributes:true, attributeFilter:["class"]});
+  });
+  // Cover overlays that get created dynamically later.
+  new MutationObserver((mutations)=>{
+    mutations.forEach(m=>{
+      m.addedNodes && m.addedNodes.forEach(node=>{
+        if(!(node instanceof Element)) return;
+        if(node.matches && node.matches(overlaySelector)) observer.observe(node, {attributes:true, attributeFilter:["class"]});
+        node.querySelectorAll && node.querySelectorAll(overlaySelector).forEach(el=>observer.observe(el, {attributes:true, attributeFilter:["class"]}));
+      });
+    });
+  }).observe(document.body, {childList:true, subtree:true});
+
+  function pushPage(page){
+    if(pageStack[pageStack.length-1] === page) return;
+    pageStack.push(page);
+    history.pushState({navKind:"page", page}, "", location.href);
+  }
+
+  function closeTopOverlay(){
+    const el = openOverlays.pop() || Array.from(document.querySelectorAll(overlaySelector)).reverse().find(isOverlayOpen);
+    if(!el) return false;
+    syncingFromPopstate = true;
+    el.classList.remove("open");
+    syncingFromPopstate = false;
+    return true;
+  }
+
+  window.addEventListener("popstate", ()=>{
+    if(ignorePopstate > 0){ ignorePopstate--; return; }
+    if(closeTopOverlay()) return;
+    if(pageStack.length > 1){
+      pageStack.pop();
+      const prevPage = pageStack[pageStack.length-1];
+      goToPage(prevPage, {skipHistory:true});
+      return;
+    }
+    // No overlay, no previous in-app page: allow the native Back
+    // gesture to exit, per spec — there is genuinely nowhere to go.
+  });
+
+  history.replaceState({navKind:"page", page:pageStack[0]}, "", location.href);
+
+  return { pushPage };
+})();
+window.NavHistory = NavHistory;
 </script>
 </body>
 </html>
