@@ -205,6 +205,23 @@
   .task-deadline{font-size:11.5px; color:var(--ink-faint); white-space:nowrap; text-align:right; padding-left:6px;}
   .task-deadline.urgent{color:var(--red); font-weight:700;}
   .task-deadline.overdue{color:var(--red); font-weight:700;}
+  .task-card-wrap{display:flex; flex-direction:column;}
+  .task-card-wrap .task-card{border-radius:var(--radius-m) var(--radius-m) 0 0; border-bottom:none;}
+  .task-plan-bubble{
+    position:relative; display:flex; align-items:center; gap:6px; cursor:pointer;
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); border-top:none;
+    border-radius:0 0 var(--radius-m) var(--radius-m); padding:7px 15px 8px 33px; font-size:11.5px; font-weight:600;
+  }
+  .task-plan-bubble-icon{position:absolute; left:13px; top:50%; transform:translateY(-50%); font-size:12px;}
+  .task-plan-bubble::before{
+    content:""; position:absolute; top:-6px; left:24px; width:12px; height:12px;
+    background:var(--accent-soft); border-left:1px solid var(--border); border-top:1px solid var(--border);
+    transform:rotate(45deg); border-radius:2px 0 0 0;
+  }
+  .task-plan-bubble:hover{filter:brightness(0.97);}
+  .task-plan-bubble.overdue{background:var(--red-soft); color:var(--red);}
+  .task-plan-bubble.overdue::before{background:var(--red-soft);}
+  .task-plan-bubble-cd{opacity:.85; font-weight:700;}
 
   .empty-state{text-align:center; padding:50px 20px; color:var(--ink-soft);}
   .empty-state .emoji{font-size:38px; display:block; margin-bottom:10px;}
@@ -770,6 +787,97 @@
   .profile-photo-row{display:flex; align-items:center; gap:14px;}
   .profile-photo{width:56px; height:56px; border-radius:50%; object-fit:cover; background:var(--gradient-soft); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--accent); flex-shrink:0; box-shadow:var(--shadow-sm);}
   .greet-photo{width:44px; height:44px; border-radius:50%; object-fit:cover; box-shadow:var(--shadow-sm); flex-shrink:0;}
+
+  /* =========================================================
+     v6.0 — TASK PLANNING & AGENDA
+  ========================================================= */
+  /* Agenda Hari Ini timeline */
+  .agenda-row{display:flex; align-items:flex-start; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:11px 13px; margin-bottom:8px;}
+  .agenda-row.done{opacity:.55;}
+  .agenda-time{flex:0 0 auto; min-width:50px; font-weight:700; font-size:12.5px; color:var(--accent); padding-top:1px;}
+  .agenda-main{flex:1; min-width:0;}
+  .agenda-title{font-weight:600; font-size:13.5px;}
+  .agenda-sub{font-size:11.5px; color:var(--ink-soft); margin-top:2px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+  .agenda-kind{flex:0 0 auto; width:8px; height:8px; border-radius:50%; margin-top:6px;}
+  .agenda-kind.k-class{background:var(--ink-faint);}
+  .agenda-kind.k-session{background:var(--accent);}
+  .agenda-kind.k-meeting{background:var(--amber);}
+  .agenda-actions{flex:0 0 auto; display:flex; gap:6px;}
+
+  /* Tugas yang Perlu Dikerjakan */
+  .unplanned-row{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px dashed var(--border); border-radius:var(--radius-m); padding:11px 13px; margin-bottom:8px;}
+  .unplanned-main{flex:1; min-width:0;}
+  .unplanned-title{font-weight:600; font-size:13.5px;}
+  .unplanned-sub{font-size:11.5px; color:var(--amber); margin-top:2px;}
+
+  /* Unplanned indicator on task cards (noticeable but not alarming) */
+  .chip-unplanned{background:transparent; color:var(--amber); border:1px solid var(--amber); }
+  .chip-planned{background:transparent; color:var(--accent); border:1px solid var(--accent);}
+
+  /* Planning blocks inside task detail */
+  .planning-section{margin-top:18px; padding-top:14px; border-top:1px solid var(--border);}
+  .planning-section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:8px; flex-wrap:wrap;}
+  .planning-section-head h3{font-size:14.5px; font-family:var(--font-body); font-weight:700;}
+  .planning-section-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .session-row, .meeting-row, .subtask-row{display:flex; align-items:flex-start; gap:10px; background:var(--surface-2); border-radius:var(--radius-s); padding:10px 12px; margin-bottom:7px;}
+  .subtask-countdown{font-size:11px; font-weight:700; color:var(--accent); margin-top:2px;}
+  .subtask-countdown.overdue{color:var(--red);}
+  .session-row.completed, .meeting-row.completed, .subtask-row.done{opacity:.6;}
+  .session-when{flex:0 0 auto; min-width:78px; font-size:12px; font-weight:700; color:var(--accent);}
+  .session-body, .meeting-body, .subtask-body{flex:1; min-width:0;}
+  .session-body .stitle, .meeting-body .mtitle, .subtask-body .sktitle{font-weight:600; font-size:13px;}
+  .session-body .ssub, .meeting-body .msub, .subtask-body .sksub{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .session-actions, .meeting-actions, .subtask-actions{flex:0 0 auto; display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
+  .subtask-check{width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex:0 0 auto; display:flex; align-items:center; justify-content:center; margin-top:1px; cursor:pointer; background:var(--surface);}
+  .subtask-check.checked{background:var(--gradient-primary); border-color:transparent; color:var(--accent-ink);}
+  .subtask-check svg{width:12px; height:12px;}
+  .subtask-title.done{text-decoration:line-through; color:var(--ink-faint);}
+  .planning-empty{font-size:12.5px; color:var(--ink-soft); background:var(--surface-2); border-radius:var(--radius-s); padding:12px; text-align:center;}
+  .planning-progress-wrap{margin:6px 0 14px;}
+  .progress-bar-track{height:7px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
+  .progress-bar-fill{height:100%; border-radius:999px; background:var(--gradient-primary); transition:width .25s var(--ease-standard);}
+  .progress-bar-label{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+  .estimate-compare{font-size:12.5px; color:var(--ink-soft); background:var(--surface-2); border-radius:var(--radius-s); padding:9px 12px; margin:8px 0 4px;}
+
+  /* Simple-mode planning toggle inside the task create/edit modal */
+  .plan-mode-seg{display:flex; gap:8px; margin-bottom:10px;}
+  .plan-simple-fields{display:none; background:var(--surface-2); border-radius:var(--radius-s); padding:12px; margin-top:6px;}
+  .plan-simple-fields.open{display:block;}
+  details.plan-collapsible{border:1px solid var(--border); border-radius:var(--radius-m); padding:10px 13px; margin-bottom:14px;}
+  details.plan-collapsible > summary{cursor:pointer; font-weight:700; font-size:13.5px; list-style:none; display:flex; align-items:center; gap:8px;}
+  details.plan-collapsible > summary::-webkit-details-marker{display:none;}
+  details.plan-collapsible > summary::before{content:"▸"; display:inline-block; transition:transform .15s var(--ease-standard); color:var(--accent);}
+  details.plan-collapsible[open] > summary::before{transform:rotate(90deg);}
+  details.plan-collapsible > summary + *{margin-top:10px;}
+
+  /* Checkbox groups (used for meeting participants) */
+  .checkbox-group{display:flex; flex-direction:column; gap:6px; max-height:180px; overflow:auto;}
+  .checkbox-row{display:flex; align-items:center; gap:8px; font-size:13px; min-height:28px;}
+  .checkbox-row input{width:17px; height:17px;}
+
+  /* Calendar: sessions & meetings distinct from deadline pills */
+  .cal-session-pill{background:var(--accent-soft); color:var(--accent); border-radius:5px; padding:1px 5px; font-size:9.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-left:2px solid var(--accent);}
+  .cal-meeting-pill{background:var(--amber-soft); color:var(--amber); border-radius:5px; padding:1px 5px; font-size:9.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-left:2px solid var(--amber);}
+
+  /* Schedule conflict warning */
+  .conflict-warning{display:flex; gap:8px; align-items:flex-start; background:var(--orange-soft); color:var(--orange); border-radius:var(--radius-s); padding:9px 12px; font-size:12.5px; margin-top:8px;}
+
+  /* Bright, obvious primary CTA (spec §24) — brighter + slightly larger than
+     ordinary .btn-primary, reserved for the single "next step" action on a
+     screen (onboarding Lanjut, Focus Mode start/resume). */
+  .btn-cta{
+    padding:11px 22px; font-size:14.5px; border-radius:999px; min-height:44px;
+    box-shadow:0 4px 16px rgba(62,98,89,.28), var(--shadow-accent-glow);
+  }
+  [data-theme="dark"] .btn-cta{box-shadow:0 4px 18px rgba(0,0,0,.45), var(--shadow-accent-glow);}
+  .btn-cta:hover{box-shadow:0 6px 22px rgba(62,98,89,.34), var(--shadow-lg);}
+  .btn-cta:active{transform:translateY(0) scale(.97);}
+
+  /* Ensure comfortable touch targets for new planning controls on mobile */
+  @media (max-width:680px){
+    .session-actions .btn, .meeting-actions .btn, .subtask-actions .btn, .agenda-actions .btn{min-height:40px;}
+    .subtask-check{width:24px; height:24px;}
+  }
 </style>
 </head>
 <body>
@@ -794,21 +902,22 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h11"/></svg>
         Tugas
       </button>
-      <button class="nav-item" data-page="folders">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-        Folder
-      </button>
-      <button class="nav-item" data-page="courses">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        Mata Kuliah
-      </button>
       <button class="nav-item" data-page="schedule">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
         Jadwal
       </button>
+      <div class="nav-divider" aria-hidden="true" style="height:1px; background:var(--border); margin:4px 6px;"></div>
+      <button class="nav-item" data-page="courses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Mata Kuliah
+      </button>
       <button class="nav-item" data-page="lecturers">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
         Dosen
+      </button>
+      <button class="nav-item" data-page="folders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        Folder
       </button>
       <button class="nav-item" data-page="statistics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
@@ -839,8 +948,6 @@
         </div>
         <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
       </div>
-      <button class="btn btn-ghost btn-sm" id="exportBtnSide">Export Data</button>
-      <button class="btn btn-ghost btn-sm" id="aboutBtnSide">Tentang StudyFlow</button>
     </div>
   </aside>
 
@@ -876,8 +983,13 @@
       </div>
 
       <section class="block" id="todayBlock">
-        <div class="block-head"><h2>📅 Hari Ini</h2></div>
+        <div class="block-head"><h2>🗓️ Agenda Hari Ini</h2></div>
         <div id="todayContent"></div>
+      </section>
+
+      <section class="block" id="unplannedBlock">
+        <div class="block-head"><h2>🎯 Tugas yang Perlu Dikerjakan</h2></div>
+        <div id="unplannedContent"></div>
       </section>
 
       <div class="summary-row" id="summaryRow"></div>
@@ -956,7 +1068,14 @@
         </select>
         <select id="filterCourse"><option value="all">Semua Mata Kuliah</option></select>
         <select id="filterFolder"><option value="all">Semua Folder</option></select>
+        <select id="filterPlanning">
+          <option value="all">Semua Rencana</option>
+          <option value="has">Ada Rencana</option>
+          <option value="none">Belum Direncanakan</option>
+          <option value="today">Ada Sesi Hari Ini</option>
+        </select>
         <select id="sortBy">
+          <option value="planning-asc">Rencana Terdekat</option>
           <option value="deadline-asc">Deadline Terdekat</option>
           <option value="deadline-desc">Deadline Terjauh</option>
           <option value="created-desc">Terbaru Dibuat</option>
@@ -1066,7 +1185,7 @@
           <button type="button" data-min="50">50m</button>
         </div>
         <div style="display:flex; gap:10px;">
-          <button class="btn btn-primary" id="focusStartBtn">Mulai</button>
+          <button class="btn btn-primary btn-cta" id="focusStartBtn">Mulai</button>
           <button class="btn" id="focusPauseBtn" style="display:none;">Jeda</button>
           <button class="btn btn-ghost" id="focusResetBtn">Reset</button>
         </div>
@@ -1478,47 +1597,6 @@
 </div>
 
 <!-- ABOUT / CHANGELOG MODAL -->
-<div class="modal-overlay" id="aboutModalOverlay">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-head">
-      <h2>Tentang</h2>
-      <button class="btn btn-icon btn-ghost" data-close-modal="aboutModalOverlay" aria-label="Tutup">✕</button>
-    </div>
-    <div class="about-credit">
-      <div class="tag">StudyFlow — Areyhan &amp; Verity</div>
-      <div class="sub">Organize your study. Own your time.<br>Version <span id="aboutVersion"></span></div>
-    </div>
-    <div class="desc-box" style="margin-top:14px;">
-      StudyFlow adalah academic productivity app yang dibuat untuk membantu mahasiswa mengatur tugas, jadwal, deadline, kalender akademik, progress, dan fokus belajar dalam satu tempat.<br><br>
-      <em>Built for students, with students in mind.</em>
-    </div>
-    <div class="about-credit" style="margin-top:16px; text-align:left;">
-      <div class="detail-grid" style="margin:0;">
-        <div class="detail-item"><div class="k">Designed &amp; Developed by</div><div class="v">Areyhan<br><span style="font-weight:500;">Ahmad Roudhotun Ihsan</span></div></div>
-        <div class="detail-item"><div class="k">Institusi</div><div class="v">Universitas Lampung<br><span style="font-weight:500;">Pendidikan Bahasa Lampung</span></div></div>
-      </div>
-    </div>
-    <div class="setting-row" style="border-top:1px solid var(--border); margin-top:14px;">
-      <div><div class="label">What's New</div><div class="sub">Lihat perubahan di versi ini</div></div>
-      <button class="btn btn-sm" id="changelogBtn">Lihat</button>
-    </div>
-    <div class="setting-row">
-      <div><div class="label">Kolaborasi &amp; Bisnis</div><div class="sub">areyawva@gmail.com</div></div>
-      <a class="btn btn-sm" href="mailto:areyawva@gmail.com">Hubungi</a>
-    </div>
-    <div class="setting-row">
-      <div><div class="label">WhatsApp</div><div class="sub">081373199226</div></div>
-      <a class="btn btn-sm" href="https://wa.me/6281373199226" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px;">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.35 4.95L2 22l5.29-1.39a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.51 2 12.04 2zm0 18.02h-.01a8.1 8.1 0 01-4.14-1.14l-.3-.17-3.14.82.84-3.06-.19-.32a8.08 8.08 0 01-1.24-4.29c0-4.47 3.64-8.11 8.13-8.11 2.17 0 4.21.85 5.74 2.38a8.06 8.06 0 012.38 5.73c0 4.47-3.64 8.16-8.07 8.16zm4.45-6.08c-.24-.12-1.44-.71-1.66-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.78.95-.14.16-.29.18-.53.06-.24-.12-1.03-.38-1.96-1.21-.72-.65-1.21-1.44-1.36-1.68-.14-.24-.02-.37.11-.49.11-.11.24-.29.36-.43.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42-.14-.01-.31-.01-.47-.01-.16 0-.43.06-.65.31-.22.24-.86.84-.86 2.05 0 1.21.88 2.38 1 2.54.12.16 1.73 2.64 4.2 3.7.59.25 1.05.4 1.41.51.59.19 1.13.16 1.55.1.47-.07 1.44-.59 1.65-1.15.2-.57.2-1.05.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
-        Chat
-      </a>
-    </div>
-    <div id="changelogBox" style="display:none; margin-top:12px;">
-      <ul class="changelog-list" id="changelogListModal"></ul>
-    </div>
-  </div>
-</div>
-
 <!-- TASK MODAL -->
 <div class="modal-overlay" id="taskModalOverlay">
   <div class="modal">
@@ -1535,15 +1613,14 @@
       </div>
       <div class="field-row">
         <div class="field" id="f-course">
-          <label>Mata Kuliah *</label>
+          <label>Mata Kuliah (opsional)</label>
           <div class="inline-add">
             <select id="f_course"></select>
             <button type="button" class="btn btn-sm" id="quickAddCourse">+ Baru</button>
           </div>
-          <div class="err-text">Mata kuliah wajib diisi.</div>
         </div>
         <div class="field">
-          <label>Dosen</label>
+          <label>Dosen (opsional)</label>
           <select id="f_lecturer"><option value="">— Pilih Dosen —</option></select>
         </div>
       </div>
@@ -1600,6 +1677,41 @@
           <button type="button" class="btn btn-sm" id="quickAddFolder">+ Baru</button>
         </div>
       </div>
+      <div class="field">
+        <label>Estimasi Pengerjaan (menit, opsional)</label>
+        <input type="number" inputmode="numeric" min="0" id="f_estimatedMinutes" placeholder="misal 120">
+      </div>
+      <details class="plan-collapsible">
+        <summary>Rencana Pengerjaan</summary>
+        <div class="field">
+          <div class="seg plan-mode-seg" id="f_planMode">
+            <button type="button" data-val="later" class="active">Rencanakan nanti</button>
+            <button type="button" data-val="now">Atur sekarang</button>
+          </div>
+        </div>
+        <div class="plan-simple-fields" id="planSimpleFields" style="display:none;">
+          <div class="field-row">
+            <div class="field">
+              <label>Tanggal Sesi</label>
+              <input type="date" id="f_plan_date">
+            </div>
+            <div class="field">
+              <label>Mulai</label>
+              <input type="time" id="f_plan_start">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Durasi (menit)</label>
+              <input type="number" inputmode="numeric" min="0" id="f_plan_duration" placeholder="misal 60">
+            </div>
+            <div class="field">
+              <label>Aktivitas</label>
+              <input type="text" id="f_plan_activity" placeholder="misal Riset & outline">
+            </div>
+          </div>
+        </div>
+      </details>
       <div class="modal-foot">
         <button type="button" class="btn" data-close-modal="taskModalOverlay">Batal</button>
         <button type="submit" class="btn btn-primary">Simpan Tugas</button>
@@ -1673,7 +1785,7 @@
     </div>
     <div class="onboard-actions">
       <button class="btn btn-ghost btn-sm" id="onboardSkip">Lewati</button>
-      <button class="btn btn-primary" id="onboardNext">Lanjut</button>
+      <button class="btn btn-primary btn-cta" id="onboardNext">Lanjut</button>
     </div>
   </div>
 </div>
@@ -1704,8 +1816,8 @@
 /* =========================================================
    STORAGE MANAGER
 ========================================================= */
-const APP_VERSION = "5.1.0";
-const CURRENT_DATA_VERSION = 10;
+const APP_VERSION = "6.0.0";
+const CURRENT_DATA_VERSION = 11;
 const StorageManager = (function(){
   const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
   function defaultData(){
@@ -1813,6 +1925,20 @@ const StorageManager = (function(){
       d.settings = d.settings || {};
       if(d.settings.profilePhoto===undefined) d.settings.profilePhoto = null;
       d.version = 10;
+    }
+    if(d.version < 11){
+      // v10 -> v11 (StudyFlow 6.0): task planning system — "Rencana Pengerjaan"
+      // (work sessions), "Subtugas", and "Rencana Kelompok" (group meetings).
+      // Purely additive: every existing task keeps every field it already had;
+      // we only ever add planning/meetings/estimatedMinutes when missing.
+      (d.tasks||[]).forEach(t=>{
+        t.planning = t.planning || {sessions:[], subtasks:[]};
+        if(!Array.isArray(t.planning.sessions)) t.planning.sessions = [];
+        if(!Array.isArray(t.planning.subtasks)) t.planning.subtasks = [];
+        if(!Array.isArray(t.meetings)) t.meetings = [];
+        if(t.estimatedMinutes===undefined) t.estimatedMinutes = null;
+      });
+      d.version = 11;
     }
     return d;
   }
@@ -1985,6 +2111,9 @@ const TaskManager = (function(){
     task.id = uid("task");
     task.createdAt = new Date().toISOString();
     if(!task.status) task.status = "todo";
+    if(!task.planning) task.planning = {sessions:[], subtasks:[]};
+    if(!Array.isArray(task.meetings)) task.meetings = [];
+    if(task.estimatedMinutes===undefined) task.estimatedMinutes = null;
     DB.tasks.push(task);
     persist();
     return task;
@@ -2009,6 +2138,233 @@ const TaskManager = (function(){
   }
   return {create, update, remove, get, all, setStatus};
 })();
+
+/* =========================================================
+   PLANNING MANAGER (v6.0) — "Rencana Pengerjaan" work sessions,
+   "Subtugas", and "Rencana Kelompok" group meetings.
+   Everything here lives INSIDE the owning task object
+   (task.planning.sessions / task.planning.subtasks / task.meetings)
+   and is referenced only by the task's own id — no separate
+   database, no duplicated task data (spec §33).
+========================================================= */
+const PlanningManager = (function(){
+  function ensure(t){
+    if(!t.planning) t.planning = {sessions:[], subtasks:[]};
+    if(!Array.isArray(t.planning.sessions)) t.planning.sessions = [];
+    if(!Array.isArray(t.planning.subtasks)) t.planning.subtasks = [];
+    if(!Array.isArray(t.meetings)) t.meetings = [];
+    return t;
+  }
+  // ---- Work sessions ----
+  function addSession(taskId, session){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const s = Object.assign({
+      id: uid("session"), notes:"", status:"planned", participants:[]
+    }, session);
+    t.planning.sessions.push(s);
+    persist();
+    return s;
+  }
+  function updateSession(taskId, sessionId, patch){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const s = t.planning.sessions.find(x=>x.id===sessionId);
+    if(!s) return null;
+    Object.assign(s, patch);
+    persist();
+    return s;
+  }
+  function removeSession(taskId, sessionId){
+    const t = TaskManager.get(taskId); if(!t) return;
+    ensure(t);
+    t.planning.sessions = t.planning.sessions.filter(x=>x.id!==sessionId);
+    persist();
+  }
+  function setSessionStatus(taskId, sessionId, status){
+    return updateSession(taskId, sessionId, {status});
+  }
+  // ---- Subtasks ----
+  function addSubtask(taskId, subtask){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const sk = Object.assign({
+      id: uid("subtask"), done:false, notes:"", assignee:""
+    }, subtask);
+    t.planning.subtasks.push(sk);
+    persist();
+    return sk;
+  }
+  function updateSubtask(taskId, subId, patch){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const sk = t.planning.subtasks.find(x=>x.id===subId);
+    if(!sk) return null;
+    Object.assign(sk, patch);
+    persist();
+    return sk;
+  }
+  function toggleSubtask(taskId, subId){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const sk = t.planning.subtasks.find(x=>x.id===subId);
+    if(!sk) return null;
+    sk.done = !sk.done;
+    persist();
+    return sk;
+  }
+  function removeSubtask(taskId, subId){
+    const t = TaskManager.get(taskId); if(!t) return;
+    ensure(t);
+    t.planning.subtasks = t.planning.subtasks.filter(x=>x.id!==subId);
+    persist();
+  }
+  function reorderSubtask(taskId, subId, dir){
+    const t = TaskManager.get(taskId); if(!t) return;
+    ensure(t);
+    const arr = t.planning.subtasks;
+    const i = arr.findIndex(x=>x.id===subId);
+    if(i<0) return;
+    const j = dir==="up" ? i-1 : i+1;
+    if(j<0 || j>=arr.length) return;
+    const tmp = arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+    persist();
+  }
+  // ---- Group meetings ("Rencana Kelompok" / "Janjian") ----
+  function addMeeting(taskId, meeting){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const m = Object.assign({
+      id: uid("meeting"), location:"", link:"", notes:"", participants:[], status:"planned"
+    }, meeting);
+    t.meetings.push(m);
+    persist();
+    return m;
+  }
+  function updateMeeting(taskId, meetingId, patch){
+    const t = TaskManager.get(taskId); if(!t) return null;
+    ensure(t);
+    const m = t.meetings.find(x=>x.id===meetingId);
+    if(!m) return null;
+    Object.assign(m, patch);
+    persist();
+    return m;
+  }
+  function removeMeeting(taskId, meetingId){
+    const t = TaskManager.get(taskId); if(!t) return;
+    ensure(t);
+    t.meetings = t.meetings.filter(x=>x.id!==meetingId);
+    persist();
+  }
+  function setMeetingStatus(taskId, meetingId, status){
+    return updateMeeting(taskId, meetingId, {status});
+  }
+  // ---- Derived / read helpers (never stored — always computed live) ----
+  function allSessionsFlat(){
+    const out = [];
+    DB.tasks.forEach(t=>{
+      ensure(t);
+      t.planning.sessions.forEach(s=>out.push(Object.assign({taskId:t.id}, s)));
+    });
+    return out;
+  }
+  function allMeetingsFlat(){
+    const out = [];
+    DB.tasks.forEach(t=>{
+      ensure(t);
+      t.meetings.forEach(m=>out.push(Object.assign({taskId:t.id}, m)));
+    });
+    return out;
+  }
+  function sessionsOn(dateKey){
+    return allSessionsFlat().filter(s=>s.date===dateKey);
+  }
+  function meetingsOn(dateKey){
+    return allMeetingsFlat().filter(m=>m.date===dateKey);
+  }
+  // Earliest planned/in-progress session today-or-later for a task — used
+  // by task cards ("Berikutnya: ...") and the "belum dijadwalkan" flag.
+  function nextSession(task){
+    ensure(task);
+    const now = new Date();
+    const upcoming = task.planning.sessions
+      .filter(s=> s.status!=="completed" && s.status!=="skipped")
+      .filter(s=>{
+        const dt = new Date(`${s.date}T${(s.startTime||"00:00")}:00`);
+        return dt >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      })
+      .sort((a,b)=> (a.date+  (a.startTime||"")).localeCompare(b.date+(b.startTime||"")));
+    return upcoming[0] || null;
+  }
+  function hasPlanning(task){
+    ensure(task);
+    return task.planning.sessions.length>0 || task.meetings.length>0;
+  }
+  function progress(task){
+    ensure(task);
+    const total = task.planning.sessions.length;
+    const done = task.planning.sessions.filter(s=>s.status==="completed").length;
+    return {total, done};
+  }
+  function estimateCompare(task){
+    ensure(task);
+    const totalMin = task.planning.sessions.reduce((sum,s)=> sum + (s.durationMinutes||0), 0);
+    return {estimated: task.estimatedMinutes||0, scheduled: totalMin};
+  }
+  // Earliest upcoming planned work item for a task — a session OR a
+  // subtask that has its own date set — whichever comes first. Used for
+  // the "kapan pengerjaannya" bubble on task cards and for sorting the
+  // task list by nearest planned work.
+  function nextPlannedItem(task){
+    ensure(task);
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const candidates = [];
+    task.planning.sessions
+      .filter(s=> s.status!=="completed" && s.status!=="skipped")
+      .forEach(s=>{
+        const dt = new Date(`${s.date}T${(s.startTime||"00:00")}:00`);
+        if(dt >= todayStart) candidates.push({kind:"session", date:s.date, time:s.startTime||"", title:s.title||"Sesi pengerjaan", ref:s, dt});
+      });
+    task.planning.subtasks
+      .filter(sk=> !sk.done && sk.date)
+      .forEach(sk=>{
+        const dt = new Date(`${sk.date}T${(sk.time||"00:00")}:00`);
+        if(dt >= todayStart) candidates.push({kind:"subtask", date:sk.date, time:sk.time||"", title:sk.title, ref:sk, dt});
+      });
+    candidates.sort((a,b)=>a.dt-b.dt);
+    return candidates[0] || null;
+  }
+  return {
+    ensure, addSession, updateSession, removeSession, setSessionStatus,
+    addSubtask, updateSubtask, toggleSubtask, removeSubtask, reorderSubtask,
+    addMeeting, updateMeeting, removeMeeting, setMeetingStatus,
+    allSessionsFlat, allMeetingsFlat, sessionsOn, meetingsOn,
+    nextSession, hasPlanning, progress, estimateCompare, nextPlannedItem
+  };
+})();
+function fmtMinutes(min){
+  if(!min && min!==0) return "—";
+  const h = Math.floor(min/60), m = min%60;
+  if(h>0 && m>0) return `${h} jam ${m} menit`;
+  if(h>0) return `${h} jam`;
+  return `${m} menit`;
+}
+function fmtSessionWhen(s){
+  const d = new Date(s.date+"T00:00:00");
+  const days=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const dayLabel = days[d.getDay()];
+  const dm = d.getDate()+"/"+(d.getMonth()+1);
+  const time = s.startTime ? (s.startTime + (s.endTime?`–${s.endTime}`:"")) : "";
+  return `${dayLabel}, ${dm}${time?" • "+time:""}`;
+}
+function fmtWhen(dateStr, timeStr){
+  const d = new Date(dateStr+"T00:00:00");
+  const days=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const dayLabel = days[d.getDay()];
+  const dm = d.getDate()+"/"+(d.getMonth()+1);
+  return `${dayLabel}, ${dm}${timeStr?" • "+timeStr:""}`;
+}
 
 /* Eisenhower category — always computed live, never stored permanently */
 function isUrgent(task){
@@ -2036,6 +2392,25 @@ function countdownText(task){
   const now = new Date();
   let diff = deadline - now;
   if(task.status === "done") return "Selesai";
+  if(diff < 0){
+    const days = Math.floor(-diff/(1000*60*60*24));
+    const hours = Math.floor((-diff%(1000*60*60*24))/(1000*60*60));
+    if(days>0) return `Terlambat ${days} hari`;
+    return `Terlambat ${hours} jam`;
+  }
+  const days = Math.floor(diff/(1000*60*60*24));
+  const hours = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  if(days === 0) return `Hari ini — ${hours} jam lagi`;
+  return `${days} hari ${hours} jam lagi`;
+}
+/* Generic countdown for any date(+time), used by subtasks/sessions which
+   don't have a full task-shaped object. Mirrors countdownText's wording. */
+function countdownFor(dateStr, timeStr, doneFlag){
+  if(!dateStr) return "";
+  if(doneFlag) return "Selesai";
+  const target = new Date(`${dateStr}T${(timeStr||"23:59")}:00`);
+  const now = new Date();
+  const diff = target - now;
   if(diff < 0){
     const days = Math.floor(-diff/(1000*60*60*24));
     const hours = Math.floor((-diff%(1000*60*60*24))/(1000*60*60));
@@ -2288,12 +2663,29 @@ function applyFilters(list, f){
     if(f.type && f.type!=="all" && t.type!==f.type) return false;
     if(f.course && f.course!=="all" && t.courseId!==f.course) return false;
     if(f.folder && f.folder!=="all" && (t.folderId||"")!==f.folder) return false;
+    if(f.planning && f.planning!=="all"){
+      const todayKey = ymd(new Date());
+      if(f.planning==="has" && !PlanningManager.hasPlanning(t)) return false;
+      if(f.planning==="none" && PlanningManager.hasPlanning(t)) return false;
+      if(f.planning==="today" && !PlanningManager.sessionsOn(todayKey).some(s=>s.taskId===t.id)) return false;
+    }
     return true;
   });
 }
 function sortTasks(list, mode){
   const arr = list.slice();
-  if(mode==="deadline-asc") arr.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+  if(mode==="planning-asc"){
+    const FAR = 8640000000000000; // no planned item sorts last
+    arr.sort((a,b)=>{
+      const pa = PlanningManager.nextPlannedItem(a);
+      const pb = PlanningManager.nextPlannedItem(b);
+      const ta = pa ? pa.dt.getTime() : FAR;
+      const tb = pb ? pb.dt.getTime() : FAR;
+      if(ta!==tb) return ta-tb;
+      return new Date(a.deadline)-new Date(b.deadline);
+    });
+  }
+  else if(mode==="deadline-asc") arr.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
   else if(mode==="deadline-desc") arr.sort((a,b)=>new Date(b.deadline)-new Date(a.deadline));
   else if(mode==="created-desc") arr.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
   else if(mode==="az") arr.sort((a,b)=>a.title.localeCompare(b.title));
@@ -2322,6 +2714,8 @@ function renderTaskCard(task){
   const cat = catMeta[getTaskCategory(task)];
   const done = task.status === "done";
   const overdue = isOverdue(task);
+  const wrap = document.createElement("div");
+  wrap.className = "task-card-wrap";
   const div = document.createElement("div");
   div.className = "task-card"+(done?" done":"");
   div.innerHTML = `
@@ -2334,9 +2728,25 @@ function renderTaskCard(task){
         <span class="chip">${task.type==="group"?"Kelompok":"Mandiri"}</span>
         <span class="chip">${statusLabel[task.status]}</span>
       </div>
+      ${done ? "" : (PlanningManager.hasPlanning(task) ? "" : `<div class="chip-unplanned">⚠ Belum dijadwalkan</div>`)}
     </div>
     <div class="task-deadline ${overdue?'overdue':(isUrgent(task)?'urgent':'')}">${overdue?'⚠ ':''}${countdownText(task)}</div>
   `;
+  wrap.appendChild(div);
+  if(!done){
+    const plan = PlanningManager.nextPlannedItem(task);
+    if(plan){
+      const bubble = document.createElement("div");
+      const cd = countdownFor(plan.date, plan.time, false);
+      const late = cd.startsWith("Terlambat");
+      bubble.className = "task-plan-bubble" + (late?" overdue":"");
+      const icon = plan.kind==="subtask" ? "✅" : "📌";
+      const label = plan.kind==="subtask" ? "Subtugas" : "Sesi";
+      bubble.innerHTML = `<span class="task-plan-bubble-icon">${icon}</span><span>${label}: ${escapeHtml(plan.title)} — ${fmtWhen(plan.date, plan.time)}${cd?` <span class="task-plan-bubble-cd">(${cd})</span>`:""}</span>`;
+      bubble.addEventListener("click", (e)=>{ e.stopPropagation(); openDetail(task.id); });
+      wrap.appendChild(bubble);
+    }
+  }
   div.addEventListener("click", (e)=>{
     if(e.target.closest("[data-quickcheck]")) return;
     if(div.dataset.swiped==="1"){ div.dataset.swiped=""; return; }
@@ -2350,7 +2760,7 @@ function renderTaskCard(task){
     renderAll();
   });
   wireTaskSwipe(div, task, done);
-  return div;
+  return wrap;
 }
 
 /* Optional swipe gestures (mobile only, touch pointers only): swipe right
@@ -2509,6 +2919,7 @@ function renderWeekly(){
 
 function renderDashboard(){
   renderGreetingAndToday();
+  renderUnplannedTasks();
   renderSummary();
   renderMatrix();
   renderOverdue();
@@ -2589,7 +3000,28 @@ const VerityEngine = (function(){
     const todayKey = ymd(new Date());
     const completedToday = tasks.filter(t=>t.status==="done" && t.completedAt && ymd(new Date(t.completedAt))===todayKey).length;
     const allDone = tasks.length>0 && active===0;
-    return {overdue, dueToday, upcoming, active, completedToday, allDone, total: tasks.length};
+    const todayKey2 = ymd(new Date());
+    const sessionsToday = PlanningManager.sessionsOn(todayKey2).length;
+    const meetingsToday = PlanningManager.meetingsOn(todayKey2).length;
+    const now = new Date();
+    const nowMin = now.getHours()*60+now.getMinutes();
+    const withinHour = (list)=> list.some(x=>{
+      if(!x.startTime) return false;
+      const [h,m] = x.startTime.split(":").map(Number);
+      const diff = (h*60+m) - nowMin;
+      return diff>=0 && diff<=60;
+    });
+    const meetingStartingSoon = withinHour(PlanningManager.meetingsOn(todayKey2));
+    const sessionStartingSoon = withinHour(PlanningManager.sessionsOn(todayKey2));
+    const overloadedDay = (sessionsToday + meetingsToday) >= 4;
+    const unplannedNearDeadline = tasks.some(t=>{
+      if(t.status==="done") return false;
+      if(isOverdue(t)) return false;
+      if(!isUrgent(t)) return false;
+      return !PlanningManager.hasPlanning(t) && !PlanningManager.nextSession(t);
+    });
+    return {overdue, dueToday, upcoming, active, completedToday, allDone, total: tasks.length,
+      sessionsToday, meetingsToday, meetingStartingSoon, sessionStartingSoon, overloadedDay, unplannedNearDeadline};
   }
   /* ---- response pools (spec §8): randomize only when context changes,
      never spam the same line back to back. ---- */
@@ -2605,6 +3037,10 @@ const VerityEngine = (function(){
     overdueTaskDone: (title,n)=>[`Satu beres — "${title}". Tapi masih ada ${n} tugas yang perlu kamu cek. 🥲`, `"${title}" kelar. Tapi ${n} tugas lain masih terlambat, jangan lengah.`, `Nice, "${title}" selesai. Cuma masih ada ${n} yang telat, ya.`],
     upcoming: (n)=>[`Hmm... kita punya ${n} deadline yang mulai mendekat.`, `Ada ${n} deadline dalam 3 hari ke depan. Yuk disiapkan.`, `Waduh, rame juga tugasnya — ${n} deadline mendekat. 😳`],
     relaxed: ["Hari ini cukup aman. Kamu bisa bernapas dulu. 😌", "Nggak ada yang mendesak. Santai dulu.", "Kondisi aman terkendali."],
+    meetingSoon: ["Janjian kelompokmu mulai sebentar lagi — siap-siap ya. 🤝", "Ada pertemuan kelompok dalam sejam ini. Jangan sampai lupa!", "Sebentar lagi ada janjian kelompok. Yuk bersiap."],
+    sessionSoon: ["Sesi pengerjaanmu mulai sebentar lagi. Siap-siap fokus ya. ⏳", "Dalam sejam ini ada sesi pengerjaan terjadwal. Bersiap!", "Waktunya hampir tiba buat sesi belajarmu."],
+    overloadedDay: (n)=>[`Hari ini padat — ${n} sesi/janjian terjadwal. Atur napas ya. 😮‍💨`, `Wih, jadwalmu hari ini penuh (${n} item). Jangan lupa istirahat sebentar.`, `${n} sesi/janjian hari ini. Semoga lancar semua!`],
+    unplannedNearDeadline: ["Ada tugas yang deadline-nya mepet tapi belum kamu rencanakan. Yuk jadwalkan dulu. 🧭", "Deadline udah dekat tapi belum ada rencana pengerjaan. Ayo diatur.", "Kayaknya ada tugas mendesak yang belum terjadwal nih."],
     /* ---- big-moment celebrations (spec: "someone needs a person who trusts
        them") — warmer and more hopeful than the everyday toast lines, used
        for the full celebration window + as extra flavor on task completion. */
@@ -2637,6 +3073,10 @@ const VerityEngine = (function(){
     else if(s.overdue>=2 && s.upcoming>=3){ result = {mood:"angry", text:pick("criticalOverdue", POOLS.criticalOverdue(s.overdue, s.upcoming))}; }
     else if(s.overdue>0){ result = {mood: s.completedToday>0 ? "sad" : "angry", text: s.completedToday>0 ? pick("overdueWithProgress", POOLS.overdueWithProgress(s.overdue)) : pick("overdue", POOLS.overdue(s.overdue))}; }
     else if(s.dueToday>0){ result = {mood:"concerned", text:pick("dueToday", POOLS.dueToday(s.dueToday))}; }
+    else if(s.meetingStartingSoon){ result = {mood:"surprised", text:pick("meetingSoon", POOLS.meetingSoon)}; }
+    else if(s.sessionStartingSoon){ result = {mood:"thinking", text:pick("sessionSoon", POOLS.sessionSoon)}; }
+    else if(s.overloadedDay){ result = {mood:"concerned", text:pick("overloadedDay", POOLS.overloadedDay(s.sessionsToday+s.meetingsToday))}; }
+    else if(s.unplannedNearDeadline){ result = {mood:"thinking", text:pick("unplannedNearDeadline", POOLS.unplannedNearDeadline)}; }
     else if(s.allDone){ result = {mood:"proud", text:pick("allDone", POOLS.allDone)}; }
     else if(s.completedToday>=3){ result = {mood:"excited", text:pick("completedMany", POOLS.completedMany(s.completedToday))}; }
     else if(s.completedToday>0){ result = {mood:"happy", text:pick("completed", POOLS.completed)}; }
@@ -3839,6 +4279,7 @@ function renderTasksPage(forceCategory){
     type: document.getElementById("filterType").value,
     course: document.getElementById("filterCourse").value,
     folder: document.getElementById("filterFolder").value,
+    planning: document.getElementById("filterPlanning").value,
   };
   list = applyFilters(list, f);
   if(forceCategory){
@@ -3895,6 +4336,16 @@ function renderCalendar(){
     if(!tasksByDate[key]) tasksByDate[key]=[];
     tasksByDate[key].push(t);
   });
+  const sessionsByDate = {};
+  PlanningManager.allSessionsFlat().forEach(s=>{
+    if(!sessionsByDate[s.date]) sessionsByDate[s.date]=[];
+    sessionsByDate[s.date].push(s);
+  });
+  const meetingsByDate = {};
+  PlanningManager.allMeetingsFlat().forEach(m=>{
+    if(!meetingsByDate[m.date]) meetingsByDate[m.date]=[];
+    meetingsByDate[m.date].push(m);
+  });
 
   const totalCells = Math.ceil((startOffset+daysInMonth)/7)*7;
   for(let i=0;i<totalCells;i++){
@@ -3915,6 +4366,16 @@ function renderCalendar(){
     const dayTasks = tasksByDate[key]||[];
     let pillsHtml = dayTasks.slice(0,2).map(t=>`<div class="cal-task-pill">${escapeHtml(t.title)}</div>`).join("");
     if(dayTasks.length>2) pillsHtml += `<div class="cal-more">+${dayTasks.length-2} lagi</div>`;
+    const daySessions = sessionsByDate[key]||[];
+    const dayMeetings = meetingsByDate[key]||[];
+    pillsHtml += daySessions.slice(0,2).map(s=>{
+      const t = TaskManager.get(s.taskId);
+      return `<div class="cal-session-pill">${escapeHtml(t?t.title:"")}</div>`;
+    }).join("");
+    pillsHtml += dayMeetings.slice(0,2).map(m=>{
+      const t = TaskManager.get(m.taskId);
+      return `<div class="cal-meeting-pill">${escapeHtml(t?t.title:"")}</div>`;
+    }).join("");
     cell.innerHTML = `<div class="cal-daynum">${dayNum}</div>${pillsHtml}`;
     cell.addEventListener("click", ()=>{ calSelectedDate = key; renderCalSelected(); });
     grid.appendChild(cell);
@@ -3933,8 +4394,26 @@ function renderCalSelected(){
   const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   label.textContent = `Tugas pada ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   const tasks = DB.tasks.filter(t=>ymd(new Date(t.deadline))===calSelectedDate);
+  const sessions = PlanningManager.sessionsOn(calSelectedDate);
+  const meetings = PlanningManager.meetingsOn(calSelectedDate);
   list.innerHTML="";
-  if(tasks.length===0){ renderEmpty(list, "Tidak ada event atau deadline untuk tanggal ini.", "", false, "relaxed"); return; }
+  if(tasks.length===0 && sessions.length===0 && meetings.length===0){
+    renderEmpty(list, "Tidak ada event atau deadline untuk tanggal ini.", "", false, "relaxed"); return;
+  }
+  if(sessions.length>0 || meetings.length>0){
+    const extra = document.createElement("div");
+    extra.style.marginBottom = "10px";
+    extra.innerHTML =
+      sessions.map(s=>{
+        const t = TaskManager.get(s.taskId);
+        return `<div class="session-row"><span class="agenda-kind k-session"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">Sesi pengerjaan • ${fmtSessionWhen(s)}</div></div></div>`;
+      }).join("") +
+      meetings.map(m=>{
+        const t = TaskManager.get(m.taskId);
+        return `<div class="meeting-row"><span class="agenda-kind k-meeting"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">Janjian kelompok${m.startTime?" • "+m.startTime:""}${m.location?" • "+escapeHtml(m.location):""}</div></div></div>`;
+      }).join("");
+    list.appendChild(extra);
+  }
   tasks.forEach(t=>list.appendChild(renderTaskCard(t)));
 }
 
@@ -4263,16 +4742,40 @@ function renderGreetingAndToday(){
   const dueToday = DB.tasks.filter(t=> t.status!=="done" && ymd(new Date(t.deadline))===ymd(today));
   const overdue = DB.tasks.filter(isOverdue);
 
+  const todayKey = ymd(today);
+  const todaySessions = PlanningManager.sessionsOn(todayKey);
+  const todayMeetings = PlanningManager.meetingsOn(todayKey);
+  const agendaItems = [];
+  todaysSchedule.forEach(s=>{
+    const c = CourseManager.get(s.courseId);
+    const lect = c?LecturerManager.get(c.lecturerId):null;
+    agendaItems.push({
+      time: s.startTime, kind:"class",
+      html:`<div class="agenda-row"><span class="agenda-time">${s.startTime}–${s.endTime}</span><span class="agenda-kind k-class"></span><div class="rmain"><div class="rtitle">${escapeHtml(c?c.name:"(dihapus)")}</div><div class="rsub">${s.room?escapeHtml(s.room):""}${lect?(" • "+escapeHtml(lect.name)):""}</div></div></div>`
+    });
+  });
+  todaySessions.forEach(s=>{
+    const t = TaskManager.get(s.taskId);
+    agendaItems.push({
+      time: s.startTime||"", kind:"session",
+      html:`<div class="agenda-row"><span class="agenda-time">${s.startTime||"—"}${s.endTime?"–"+s.endTime:""}</span><span class="agenda-kind k-session"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">${escapeHtml(s.activity||"Sesi pengerjaan")}</div></div></div>`
+    });
+  });
+  todayMeetings.forEach(m=>{
+    const t = TaskManager.get(m.taskId);
+    agendaItems.push({
+      time: m.startTime||"", kind:"meeting",
+      html:`<div class="agenda-row"><span class="agenda-time">${m.startTime||"—"}${m.endTime?"–"+m.endTime:""}</span><span class="agenda-kind k-meeting"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">Janjian kelompok${m.location?" • "+escapeHtml(m.location):""}</div></div></div>`
+    });
+  });
+  agendaItems.sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+
   let html = "";
-  html += `<div style="margin-bottom:14px;"><div style="font-size:12px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px;">Jadwal Kuliah Hari Ini</div>`;
-  if(todaysSchedule.length===0){
-    html += `<div class="hint">Tidak ada kelas hari ini.</div>`;
+  html += `<div style="margin-bottom:14px;"><div style="font-size:12px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px;">Jadwal &amp; Rencana Hari Ini</div>`;
+  if(agendaItems.length===0){
+    html += `<div class="hint">Tidak ada kelas, sesi, atau janjian hari ini.</div>`;
   } else {
-    html += todaysSchedule.map(s=>{
-      const c = CourseManager.get(s.courseId);
-      const lect = c?LecturerManager.get(c.lecturerId):null;
-      return `<div class="rowcard" style="margin-bottom:6px;"><div class="rmain"><div class="rtitle">${s.startTime}–${s.endTime} · ${escapeHtml(c?c.name:"(dihapus)")}</div><div class="rsub">${s.room?escapeHtml(s.room):""}${lect?(" • "+escapeHtml(lect.name)):""}</div></div></div>`;
-    }).join("");
+    html += agendaItems.map(i=>i.html).join("");
   }
   html += `</div>`;
 
@@ -4295,6 +4798,46 @@ function renderGreetingAndToday(){
   document.getElementById("todayContent").innerHTML = html;
 }
 
+function renderUnplannedTasks(){
+  const container = document.getElementById("unplannedContent");
+  const block = document.getElementById("unplannedBlock");
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayKey = ymd(today);
+  const limit = new Date(today); limit.setDate(limit.getDate()+7);
+  const candidates = DB.tasks.filter(t=>{
+    if(t.status==="done") return false;
+    const dl = new Date(t.deadline);
+    if(!(dl < limit)) return false; // overdue or within 7 days
+    const hasSessionToday = PlanningManager.sessionsOn(todayKey).some(s=>s.taskId===t.id);
+    return !hasSessionToday;
+  }).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+
+  if(candidates.length===0){
+    block.style.display="none";
+    return;
+  }
+  block.style.display="block";
+  container.innerHTML = candidates.map(t=>{
+    const overdue = isOverdue(t);
+    return `<div class="unplanned-row" data-task="${t.id}">
+      <div class="rmain"><div class="rtitle">${escapeHtml(t.title)}</div><div class="rsub ${overdue?'overdue':''}">${overdue?'⚠ Terlambat':countdownText(t)}</div></div>
+      <button class="btn btn-secondary" data-unplanned-schedule="${t.id}">Jadwalkan</button>
+    </div>`;
+  }).join("");
+  container.querySelectorAll("[data-unplanned-schedule]").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openSessionPrompt(btn.dataset.unplannedSchedule);
+    });
+  });
+  container.querySelectorAll("[data-task]").forEach(row=>{
+    row.addEventListener("click", (e)=>{
+      if(e.target.closest("[data-unplanned-schedule]")) return;
+      openDetail(row.dataset.task);
+    });
+  });
+}
+
 /* =========================================================
    GENERIC PROMPT MODAL (small forms: folder/course/lecturer)
 ========================================================= */
@@ -4306,27 +4849,180 @@ function openPrompt(title, fields, onSave){
       return `<div class="field"><label>${f.label}</label><select data-pf="${f.id}">${f.options}</select></div>`;
     }
     if(f.type==="textarea"){
-      return `<div class="field"><label>${f.label}</label><textarea data-pf="${f.id}">${escapeHtml(f.value||"")}</textarea></div>`;
+      return `<div class="field"><label>${f.label}</label><textarea data-pf="${f.id}" placeholder="${escapeHtml(f.placeholder||"")}">${escapeHtml(f.value||"")}</textarea></div>`;
     }
-    if(f.type==="time" || f.type==="date"){
-      return `<div class="field"><label>${f.label}</label><input type="${f.type}" data-pf="${f.id}" value="${escapeHtml(f.value||"")}"></div>`;
+    if(f.type==="checkboxgroup"){
+      const opts = f.options||[];
+      if(opts.length===0){
+        return `<div class="field"><label>${f.label}</label><div class="hint">${escapeHtml(f.emptyHint||"Tidak ada opsi.")}</div></div>`;
+      }
+      return `<div class="field"><label>${f.label}</label><div class="checkbox-group" data-pf-group="${f.id}">${opts.map(o=>
+        `<label class="checkbox-row"><input type="checkbox" value="${escapeHtml(o.value)}" ${(f.checked||[]).includes(o.value)?"checked":""}> ${escapeHtml(o.label)}</label>`
+      ).join("")}</div></div>`;
     }
-    return `<div class="field"><label>${f.label}</label><input type="text" data-pf="${f.id}" value="${escapeHtml(f.value||"")}"></div>`;
+    if(f.type==="number"){
+      return `<div class="field"><label>${f.label}</label><input type="number" inputmode="numeric" data-pf="${f.id}" value="${escapeHtml(f.value!=null?f.value:"")}" placeholder="${escapeHtml(f.placeholder||"")}" ${f.min!=null?`min="${f.min}"`:""}></div>`;
+    }
+    if(f.type==="time" || f.type==="date" || f.type==="url"){
+      return `<div class="field"><label>${f.label}</label><input type="${f.type}" data-pf="${f.id}" value="${escapeHtml(f.value||"")}" placeholder="${escapeHtml(f.placeholder||"")}"></div>`;
+    }
+    return `<div class="field"><label>${f.label}</label><input type="text" data-pf="${f.id}" value="${escapeHtml(f.value||"")}" placeholder="${escapeHtml(f.placeholder||"")}"></div>`;
   }).join("");
   const overlay = document.getElementById("promptModalOverlay");
   overlay.classList.add("open");
   const saveBtn = document.getElementById("promptSaveBtn");
+  const extraValidate = fields.validate; // optional validator attached to the fields array
   const handler = ()=>{
     const vals = {};
     fields.forEach(f=>{
-      const el = body.querySelector(`[data-pf="${f.id}"]`);
-      vals[f.id] = el.value;
+      if(f.type==="checkboxgroup"){
+        const group = body.querySelector(`[data-pf-group="${f.id}"]`);
+        vals[f.id] = group ? Array.from(group.querySelectorAll("input:checked")).map(i=>i.value) : [];
+      } else {
+        const el = body.querySelector(`[data-pf="${f.id}"]`);
+        vals[f.id] = el ? el.value : "";
+      }
     });
+    if(extraValidate && !extraValidate(vals)) return;
     onSave(vals);
     overlay.classList.remove("open");
     saveBtn.removeEventListener("click", handler);
   };
   saveBtn.addEventListener("click", handler);
+}
+
+/* =========================================================
+   TASK PLANNING — quick forms (spec §9, §10, §12, §13, §29)
+   Reuse the generic prompt modal so these get focus-trap,
+   Escape-to-close and native-Back handling for free.
+========================================================= */
+/* Warn (never block, spec §15/§38) if a session/meeting time overlaps
+   the student's own class schedule for that weekday. */
+function scheduleConflictFor(dateStr, startTime, endTime){
+  if(!dateStr || !startTime) return null;
+  const dow = JS_DAY_TO_DOW[new Date(dateStr+"T00:00:00").getDay()];
+  const toMin = (hm)=>{ const [h,m]=(hm||"00:00").split(":").map(Number); return h*60+m; };
+  const s1 = toMin(startTime), e1 = toMin(endTime||startTime);
+  const hit = DB.schedules.find(sc=>{
+    if(sc.day!==dow) return false;
+    if(DB.activeSemesterId && sc.semesterId && sc.semesterId!==DB.activeSemesterId) return false;
+    const s2 = toMin(sc.startTime), e2 = toMin(sc.endTime);
+    return s1 < e2 && e1 > s2;
+  });
+  if(!hit) return null;
+  const c = CourseManager.get(hit.courseId);
+  return c ? c.name : "jadwal kuliah";
+}
+
+function openSessionPrompt(taskId, session){
+  const t = TaskManager.get(taskId);
+  if(!t) return;
+  const fields = [
+    {id:"title", label:"Yang dikerjakan", value: session?session.title:"", placeholder:"Riset sumber"},
+    {id:"date", type:"date", label:"Tanggal", value: session?session.date:ymd(new Date())},
+    {id:"start", type:"time", label:"Mulai", value: session?session.startTime:"19:00"},
+    {id:"duration", type:"number", label:"Durasi (menit)", value: session?(session.durationMinutes||60):60, min:5},
+    {id:"notes", type:"textarea", label:"Catatan (opsional)", value: session?session.notes:""},
+  ];
+  openPrompt(session ? "Ubah Sesi Pengerjaan" : "Jadwalkan Pengerjaan", fields, (vals)=>{
+    const dur = Math.max(5, parseInt(vals.duration,10) || 60);
+    const start = vals.start || "19:00";
+    const [sh,sm] = start.split(":").map(Number);
+    const endTotal = sh*60+sm+dur;
+    const endTime = String(Math.floor(endTotal/60)%24).padStart(2,"0")+":"+String(endTotal%60).padStart(2,"0");
+    const payload = {
+      title: vals.title.trim() || "Sesi pengerjaan",
+      date: vals.date || ymd(new Date()),
+      startTime: start, endTime, durationMinutes: dur,
+      notes: vals.notes.trim()
+    };
+    if(session){
+      PlanningManager.updateSession(taskId, session.id, payload);
+      toast("Sesi pengerjaan diperbarui.");
+    } else {
+      PlanningManager.addSession(taskId, payload);
+      toast("Sesi pengerjaan ditambahkan.");
+    }
+    const conflict = scheduleConflictFor(payload.date, payload.startTime, payload.endTime);
+    if(conflict) toast(`Waktu ini bentrok dengan jadwal ${conflict}.`);
+    renderAll();
+    if(document.getElementById("detailModalOverlay").classList.contains("open")) openDetail(taskId);
+  });
+}
+
+function openSubtaskPrompt(taskId, subtask){
+  const t = TaskManager.get(taskId);
+  if(!t) return;
+  const fields = [
+    {id:"title", label:"Judul subtugas", value: subtask?subtask.title:"", placeholder:"Cari 5 sumber"},
+    {id:"date", type:"date", label:"Tanggal (opsional)", value: subtask?(subtask.date||""):""},
+    {id:"time", type:"time", label:"Jam (opsional)", value: subtask?(subtask.time||""):""},
+    {id:"duration", type:"number", label:"Estimasi durasi — menit (opsional)", value: subtask?(subtask.durationMinutes||""):"", min:5},
+  ];
+  if(t.type==="group"){
+    fields.push({id:"assignee", type:"select", label:"Ditugaskan ke",
+      options: `<option value="">— Tidak ditentukan —</option><option value="Semua"${subtask&&subtask.assignee==="Semua"?" selected":""}>Semua</option>`
+        + (t.members||[]).map(m=>`<option value="${escapeHtml(m)}" ${subtask&&subtask.assignee===m?"selected":""}>${escapeHtml(m)}</option>`).join("")
+    });
+  }
+  openPrompt(subtask ? "Ubah Subtugas" : "Tambah Subtugas", fields, (vals)=>{
+    if(!vals.title.trim()) return toast("Judul subtugas wajib diisi.");
+    const payload = {
+      title: vals.title.trim(),
+      date: vals.date || "",
+      time: vals.time || "",
+      durationMinutes: vals.duration ? Math.max(5, parseInt(vals.duration,10)) : null,
+      assignee: vals.assignee || ""
+    };
+    if(subtask){
+      PlanningManager.updateSubtask(taskId, subtask.id, payload);
+      toast("Subtugas diperbarui.");
+    } else {
+      PlanningManager.addSubtask(taskId, payload);
+      toast("Subtugas ditambahkan.");
+    }
+    renderAll();
+    if(document.getElementById("detailModalOverlay").classList.contains("open")) openDetail(taskId);
+  });
+}
+
+function openMeetingPrompt(taskId, meeting){
+  const t = TaskManager.get(taskId);
+  if(!t) return;
+  const fields = [
+    {id:"title", label:"Judul Pertemuan", value: meeting?meeting.title:"", placeholder:"Membagi bagian makalah"},
+    {id:"date", type:"date", label:"Tanggal", value: meeting?meeting.date:ymd(new Date())},
+    {id:"start", type:"time", label:"Jam Mulai", value: meeting?meeting.startTime:"19:00"},
+    {id:"end", type:"time", label:"Jam Selesai", value: meeting?meeting.endTime:"20:00"},
+    {id:"location", label:"Tempat (opsional)", value: meeting?meeting.location:"", placeholder:"Perpustakaan"},
+    {id:"link", type:"url", label:"Link Meeting (opsional)", value: meeting?meeting.link:"", placeholder:"https://meet.google.com/..."},
+    {id:"participants", type:"checkboxgroup", label:"Peserta",
+      options:(t.members||[]).map(m=>({value:m,label:m})),
+      checked: meeting?(meeting.participants||[]):(t.members||[]),
+      emptyHint:"Belum ada anggota kelompok di tugas ini."},
+    {id:"notes", type:"textarea", label:"Agenda (opsional)", value: meeting?meeting.notes:""},
+  ];
+  openPrompt(meeting ? "Ubah Janjian" : "Buat Janjian", fields, (vals)=>{
+    if(!vals.title.trim()) return toast("Judul pertemuan wajib diisi.");
+    if(vals.link && !validUrl(vals.link)) return toast("Link meeting harus berupa URL yang valid.");
+    const payload = {
+      title: vals.title.trim(), date: vals.date || ymd(new Date()),
+      startTime: vals.start || "19:00", endTime: vals.end || "",
+      location: vals.location.trim(), link: vals.link.trim(),
+      participants: vals.participants, notes: vals.notes.trim()
+    };
+    if(meeting){
+      PlanningManager.updateMeeting(taskId, meeting.id, payload);
+      toast("Janjian diperbarui.");
+    } else {
+      PlanningManager.addMeeting(taskId, payload);
+      toast("Janjian dibuat.");
+    }
+    const conflict = scheduleConflictFor(payload.date, payload.startTime, payload.endTime);
+    if(conflict) toast(`Waktu ini bentrok dengan jadwal ${conflict}.`);
+    renderAll();
+    if(document.getElementById("detailModalOverlay").classList.contains("open")) openDetail(taskId);
+  });
 }
 
 /* =========================================================
@@ -4359,7 +5055,7 @@ let memberCount = 0;
 
 function populateTaskFormSelects(){
   const courseSel = document.getElementById("f_course");
-  courseSel.innerHTML = '<option value="">— Pilih Mata Kuliah —</option>' + CourseManager.all().map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  courseSel.innerHTML = '<option value="">— Tanpa Mata Kuliah (Kegiatan Umum) —</option>' + CourseManager.all().map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
   const lectSel = document.getElementById("f_lecturer");
   lectSel.innerHTML = '<option value="">— Pilih Dosen —</option>' + LecturerManager.all().map(l=>`<option value="${l.id}">${escapeHtml(l.name)}</option>`).join("");
   const folderSel = document.getElementById("f_folder");
@@ -4396,6 +5092,14 @@ function resetTaskForm(){
   document.getElementById("groupFields").style.display = "none";
   setSeg("f_priority", "important");
   setSeg("f_type", "individual");
+  setSeg("f_planMode", "later");
+  document.getElementById("planSimpleFields").style.display = "none";
+  document.querySelector("#taskForm .plan-collapsible").style.display = "";
+  document.getElementById("f_estimatedMinutes").value = "";
+  document.getElementById("f_plan_date").value = "";
+  document.getElementById("f_plan_start").value = "";
+  document.getElementById("f_plan_duration").value = "";
+  document.getElementById("f_plan_activity").value = "";
   populateTaskFormSelects();
   document.getElementById("f_course").value = "";
   document.getElementById("f_lecturer").value = "";
@@ -4412,13 +5116,16 @@ function setSeg(containerId, val){
 function getSeg(containerId){
   return document.getElementById(containerId).querySelector("button.active").dataset.val;
 }
-document.querySelectorAll("#f_priority button, #f_type button").forEach(btn=>{
+document.querySelectorAll("#f_priority button, #f_type button, #f_planMode button").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const parent = btn.parentElement;
     parent.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     if(parent.id==="f_type"){
       document.getElementById("groupFields").style.display = btn.dataset.val==="group" ? "block":"none";
+    }
+    if(parent.id==="f_planMode"){
+      document.getElementById("planSimpleFields").style.display = btn.dataset.val==="now" ? "block":"none";
     }
   });
 });
@@ -4441,11 +5148,15 @@ function openTaskModal(task, prefill){
     document.getElementById("f_folder").value = task.folderId||"";
     setSeg("f_priority", task.priority);
     setSeg("f_type", task.type);
+    document.getElementById("f_estimatedMinutes").value = task.estimatedMinutes!=null ? task.estimatedMinutes : "";
     if(task.type==="group"){
       document.getElementById("groupFields").style.display="block";
       document.getElementById("f_groupName").value = task.groupName||"";
       (task.members||[]).forEach(m=>addMemberRow(m));
     }
+    // Editing an existing task manages sessions in the detail modal —
+    // hide the create-time quick-plan section to avoid duplicate paths.
+    document.querySelector("#taskForm .plan-collapsible").style.display = "none";
   } else if(prefill){
     if(prefill.folderId) document.getElementById("f_folder").value = prefill.folderId;
     if(prefill.date) document.getElementById("f_date").value = prefill.date;
@@ -4471,7 +5182,6 @@ document.getElementById("taskForm").addEventListener("submit", (e)=>{
   const members = type==="group" ? Array.from(document.querySelectorAll("#membersWrap input")).map(i=>i.value.trim()).filter(Boolean) : [];
 
   if(!title){ document.getElementById("f-title").classList.add("error"); valid=false; }
-  if(!courseId){ document.getElementById("f-course").classList.add("error"); valid=false; }
   if(!date){ document.getElementById("f-date").classList.add("error"); valid=false; }
   if(link && !validUrl(link)){ document.getElementById("f-link").classList.add("error"); valid=false; }
   if(type==="group" && members.length===0){ document.getElementById("f-members").classList.add("error"); valid=false; }
@@ -4488,14 +5198,35 @@ document.getElementById("taskForm").addEventListener("submit", (e)=>{
     members,
     submissionLink: link,
     folderId: document.getElementById("f_folder").value,
+    estimatedMinutes: (()=>{
+      const v = document.getElementById("f_estimatedMinutes").value;
+      return v!=="" ? Math.max(0, parseInt(v,10)||0) : null;
+    })(),
   };
 
   if(editingTaskId){
     TaskManager.update(editingTaskId, payload);
     toast("Tugas diperbarui.");
   } else {
-    TaskManager.create(payload);
+    const newTask = TaskManager.create(payload);
     toast("Tugas ditambahkan.");
+    if(newTask && getSeg("f_planMode")==="now"){
+      const pDate = document.getElementById("f_plan_date").value;
+      const pStart = document.getElementById("f_plan_start").value;
+      const pDur = parseInt(document.getElementById("f_plan_duration").value,10);
+      const pActivity = document.getElementById("f_plan_activity").value.trim();
+      if(pDate){
+        const dur = pDur>0 ? pDur : 60;
+        const start = pStart || "19:00";
+        const [sh,sm] = start.split(":").map(Number);
+        const endTotal = sh*60+sm+dur;
+        const endTime = String(Math.floor(endTotal/60)%24).padStart(2,"0")+":"+String(endTotal%60).padStart(2,"0");
+        PlanningManager.addSession(newTask.id, {
+          title: pActivity || "Sesi pengerjaan",
+          date: pDate, startTime: start, endTime, durationMinutes: dur, notes: ""
+        });
+      }
+    }
   }
   document.getElementById("taskModalOverlay").classList.remove("open");
   renderAll();
@@ -4508,6 +5239,7 @@ let detailTaskId = null;
 function openDetail(id){
   const t = TaskManager.get(id);
   if(!t) return;
+  PlanningManager.ensure(t);
   detailTaskId = id;
   const course = CourseManager.get(t.courseId);
   const lecturer = LecturerManager.get(t.lecturerId);
@@ -4539,6 +5271,89 @@ function openDetail(id){
         ${["todo","doing","done"].map(s=>`<button type="button" class="btn btn-sm ${t.status===s?'btn-primary':''}" data-setstatus="${s}">${statusLabel[s]}</button>`).join("")}
       </div>
     </div>
+    ${t.estimatedMinutes ? (()=>{
+      const cmp = PlanningManager.estimateCompare(t);
+      return `<div class="planning-section">
+        <div class="block-head" style="margin-bottom:6px;"><h3>Estimasi Pengerjaan</h3></div>
+        <div class="detail-item"><div class="k">Estimasi vs Terjadwal</div><div class="v">${fmtMinutes(cmp.estimated)} estimasi • ${fmtMinutes(cmp.scheduled)} terjadwal</div></div>
+      </div>`;
+    })() : ""}
+    <div class="planning-section">
+      <div class="block-head" style="margin-bottom:6px;"><h3>Rencana Pengerjaan</h3></div>
+      ${(()=>{
+        const prog = PlanningManager.progress(t);
+        return prog.total>0 ? `<div class="progress-bar-track"><div class="progress-bar-fill" style="width:${Math.round(prog.done/prog.total*100)}%;"></div></div>` : "";
+      })()}
+      ${t.planning.sessions.length===0 ? `
+        <div class="empty-state">
+          <span class="emoji">${(DB.settings.verityEnabled!==false)?(VERITY_EMOTIONS.relaxed||"🎉"):"🗓️"}</span>
+          <p>Belum ada sesi pengerjaan terjadwal untuk tugas ini.</p>
+          <button class="btn btn-primary" data-add-session="${t.id}">+ Jadwalkan Pengerjaan</button>
+        </div>` : `
+        <div class="session-list">
+          ${t.planning.sessions.slice().sort((a,b)=>(a.date+(a.startTime||"")).localeCompare(b.date+(b.startTime||""))).map(s=>`
+            <div class="session-row">
+              <div class="rmain"><div class="rtitle">${escapeHtml(s.title||"Sesi pengerjaan")}</div><div class="rsub">${fmtSessionWhen(s)} — ${s.status==="completed"?"Selesai":s.status==="skipped"?"Dilewati":"Direncanakan"}</div></div>
+              <div class="row-actions">
+                ${s.status!=="completed" ? `<button type="button" class="btn btn-sm" data-session-done="${s.id}">Tandai selesai</button>` : ""}
+                <button type="button" class="btn btn-sm" data-session-edit="${s.id}">Ubah</button>
+                <button type="button" class="btn btn-sm btn-danger" data-session-del="${s.id}">Hapus</button>
+              </div>
+            </div>`).join("")}
+        </div>
+        <button class="btn btn-sm" style="margin-top:8px;" data-add-session="${t.id}">+ Jadwalkan Pengerjaan</button>`}
+    </div>
+    <div class="planning-section">
+      <div class="block-head" style="margin-bottom:6px;"><h3>Subtugas</h3></div>
+      ${t.planning.subtasks.length===0 ? `<div class="hint">Belum ada subtugas.</div>` : `
+        <div class="subtask-list">
+          ${t.planning.subtasks.map((sk,idx)=>`
+            <div class="subtask-row">
+              <div class="subtask-check ${sk.done?'checked':''}" data-subtask-toggle="${sk.id}"></div>
+              <div class="rmain">
+                <div class="rtitle" style="${sk.done?'text-decoration:line-through;opacity:.6;':''}">${escapeHtml(sk.title)}</div>
+                <div class="rsub">${sk.date?fmtWhen(sk.date, sk.time):"Belum dijadwalkan"}${sk.assignee?` • 👤 ${escapeHtml(sk.assignee)}`:""}</div>
+                ${sk.date && !sk.done ? (()=>{
+                  const cd = countdownFor(sk.date, sk.time, sk.done);
+                  const late = cd.startsWith("Terlambat");
+                  return `<div class="subtask-countdown ${late?'overdue':''}">${late?'⚠ ':'⏳ '}${cd}</div>`;
+                })() : ""}
+              </div>
+              <div class="row-actions">
+                <button type="button" class="btn btn-sm" data-subtask-up="${sk.id}" ${idx===0?"disabled":""}>↑</button>
+                <button type="button" class="btn btn-sm" data-subtask-down="${sk.id}" ${idx===t.planning.subtasks.length-1?"disabled":""}>↓</button>
+                <button type="button" class="btn btn-sm" data-subtask-edit="${sk.id}">Ubah</button>
+                <button type="button" class="btn btn-sm btn-danger" data-subtask-del="${sk.id}">Hapus</button>
+              </div>
+            </div>`).join("")}
+        </div>`}
+      <button class="btn btn-sm" style="margin-top:8px;" data-add-subtask="${t.id}">+ Tambah Subtugas</button>
+    </div>
+    ${t.type==="group" ? `
+    <div class="planning-section">
+      <div class="block-head" style="margin-bottom:6px;"><h3>Rencana Kelompok</h3></div>
+      ${(t.meetings||[]).length===0 ? `
+        <div class="empty-state">
+          <span class="emoji">${(DB.settings.verityEnabled!==false)?(VERITY_EMOTIONS.relaxed||"🎉"):"🤝"}</span>
+          <p>Belum ada janjian kelompok untuk tugas ini.</p>
+          <button class="btn btn-primary" data-add-meeting="${t.id}">+ Buat Janjian</button>
+        </div>` : `
+        <div class="meeting-list">
+          ${t.meetings.slice().sort((a,b)=>(a.date+(a.startTime||"")).localeCompare(b.date+(b.startTime||""))).map(m=>`
+            <div class="meeting-row">
+              <div class="rmain">
+                <div class="rtitle">${escapeHtml(m.title||"Janjian")}</div>
+                <div class="rsub">${fmtSessionWhen(m)}${m.location?" • "+escapeHtml(m.location):""}${m.link?` • <a href="${escapeHtml(m.link)}" target="_blank" rel="noopener">Link</a>`:""} • ${(m.participants||[]).length} peserta</div>
+                ${m.notes?`<div class="rsub">${escapeHtml(m.notes)}</div>`:""}
+              </div>
+              <div class="row-actions">
+                <button type="button" class="btn btn-sm" data-meeting-edit="${m.id}">Ubah</button>
+                <button type="button" class="btn btn-sm btn-danger" data-meeting-del="${m.id}">Hapus</button>
+              </div>
+            </div>`).join("")}
+        </div>
+        <button class="btn btn-sm" style="margin-top:8px;" data-add-meeting="${t.id}">+ Buat Janjian</button>`}
+    </div>` : ""}
   `;
   body.querySelectorAll("[data-setstatus]").forEach(b=>{
     b.addEventListener("click", ()=>{
@@ -4549,6 +5364,68 @@ function openDetail(id){
       renderAll();
     });
   });
+  body.querySelectorAll("[data-add-session]").forEach(b=>b.addEventListener("click", ()=>openSessionPrompt(t.id)));
+  body.querySelectorAll("[data-session-edit]").forEach(b=>b.addEventListener("click", ()=>{
+    const s = t.planning.sessions.find(x=>x.id===b.dataset.sessionEdit);
+    openSessionPrompt(t.id, s);
+  }));
+  body.querySelectorAll("[data-session-done]").forEach(b=>b.addEventListener("click", ()=>{
+    PlanningManager.setSessionStatus(t.id, b.dataset.sessionDone, "completed");
+    toast("Sesi ditandai selesai.");
+    openDetail(t.id); renderAll();
+  }));
+  body.querySelectorAll("[data-session-del]").forEach(b=>b.addEventListener("click", ()=>{
+    openConfirm("Hapus sesi pengerjaan?", "Tindakan ini tidak dapat dibatalkan.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        PlanningManager.removeSession(t.id, b.dataset.sessionDel);
+        toast("Sesi dihapus.");
+        openDetail(t.id); renderAll();
+      }}
+    ]);
+  }));
+  body.querySelectorAll("[data-add-subtask]").forEach(b=>b.addEventListener("click", ()=>openSubtaskPrompt(t.id)));
+  body.querySelectorAll("[data-subtask-toggle]").forEach(b=>b.addEventListener("click", ()=>{
+    PlanningManager.toggleSubtask(t.id, b.dataset.subtaskToggle);
+    openDetail(t.id); renderAll();
+  }));
+  body.querySelectorAll("[data-subtask-edit]").forEach(b=>b.addEventListener("click", ()=>{
+    const sk = t.planning.subtasks.find(x=>x.id===b.dataset.subtaskEdit);
+    openSubtaskPrompt(t.id, sk);
+  }));
+  body.querySelectorAll("[data-subtask-up]").forEach(b=>b.addEventListener("click", ()=>{
+    PlanningManager.reorderSubtask(t.id, b.dataset.subtaskUp, "up");
+    openDetail(t.id); renderAll();
+  }));
+  body.querySelectorAll("[data-subtask-down]").forEach(b=>b.addEventListener("click", ()=>{
+    PlanningManager.reorderSubtask(t.id, b.dataset.subtaskDown, "down");
+    openDetail(t.id); renderAll();
+  }));
+  body.querySelectorAll("[data-subtask-del]").forEach(b=>b.addEventListener("click", ()=>{
+    openConfirm("Hapus subtugas?", "Tindakan ini tidak dapat dibatalkan.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        PlanningManager.removeSubtask(t.id, b.dataset.subtaskDel);
+        toast("Subtugas dihapus.");
+        openDetail(t.id); renderAll();
+      }}
+    ]);
+  }));
+  body.querySelectorAll("[data-add-meeting]").forEach(b=>b.addEventListener("click", ()=>openMeetingPrompt(t.id)));
+  body.querySelectorAll("[data-meeting-edit]").forEach(b=>b.addEventListener("click", ()=>{
+    const m = (t.meetings||[]).find(x=>x.id===b.dataset.meetingEdit);
+    openMeetingPrompt(t.id, m);
+  }));
+  body.querySelectorAll("[data-meeting-del]").forEach(b=>b.addEventListener("click", ()=>{
+    openConfirm("Hapus janjian?", "Tindakan ini tidak dapat dibatalkan.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        PlanningManager.removeMeeting(t.id, b.dataset.meetingDel);
+        toast("Janjian dihapus.");
+        openDetail(t.id); renderAll();
+      }}
+    ]);
+  }));
   document.getElementById("detailDoneBtn").textContent = t.status==="done" ? "Batalkan Selesai" : "Tandai Selesai";
   document.getElementById("detailModalOverlay").classList.add("open");
 }
@@ -4651,8 +5528,8 @@ const NAV_LABELS = {
   schedule:"Jadwal", lecturers:"Dosen", statistics:"Statistik", focus:"Focus Mode", settings:"Settings", minigame:"Mini Game", notebook:"Notebook"
 };
 const MOBILE_NAV = {
-  primary:["dashboard","calendar","tasks","courses"],
-  secondary:["lecturers","folders","schedule","statistics","focus","minigame","notebook","settings"]
+  primary:["dashboard","calendar","tasks","schedule"],
+  secondary:["courses","lecturers","folders","statistics","focus","minigame","notebook","settings"]
 };
 function renderMobileBottomNav(){
   const nav = document.getElementById("bottomNav");
@@ -4840,7 +5717,7 @@ document.getElementById("calToday").addEventListener("click", ()=>{ calDate = ne
     }
   });
 });
-["filterStatus","filterPriority","filterType","filterCourse","filterFolder","sortBy"].forEach(id=>{
+["filterStatus","filterPriority","filterType","filterCourse","filterFolder","filterPlanning","sortBy"].forEach(id=>{
   document.getElementById(id).addEventListener("change", ()=>renderTasksPage());
 });
 
@@ -4977,6 +5854,19 @@ document.getElementById("soundVerityVol").addEventListener("input", (e)=>{
 document.getElementById("soundVerityVol").addEventListener("change", ()=> SoundManager.play("verityReact"));
 
 /* About / Changelog */
+const CHANGELOG_V6 = [
+  "🗓️ Sistem perencanaan tugas baru: sesi pengerjaan, subtugas, dan janjian kelompok",
+  "🎯 Agenda Hari Ini di dashboard — gabungan jadwal kuliah, sesi, dan janjian dalam satu linimasa",
+  "🧭 Blok baru \"Tugas yang Perlu Dikerjakan\" untuk tugas mendesak yang belum direncanakan",
+  "⏱️ Estimasi pengerjaan per tugas &amp; perbandingan dengan waktu yang sudah dijadwalkan",
+  "✅ Subtugas dengan checklist, urutan, dan progress bar",
+  "🤝 Rencana Kelompok: buat janjian dengan lokasi, link, dan peserta",
+  "🔎 Filter tugas baru berdasarkan status rencana pengerjaan",
+  "📅 Kalender menampilkan sesi &amp; janjian di samping deadline",
+  "🧭 Navigasi utama dirapikan: Dashboard, Kalender, Tugas, Jadwal di depan",
+  "💬 Verity kini merespons sesi/janjian yang segera dimulai dan hari yang padat",
+  "✅ Semua data &amp; fitur StudyFlow sebelumnya tetap utuh — migrasi otomatis"
+];
 const CHANGELOG_V4 = [
   "🎮 Menu Mini Game baru — pusat semua game santai (Study Block + Catur)",
   "♟️ Game Catur: Single Player lawan AI &amp; Dual Player satu HP, tanpa batas waktu",
@@ -4994,20 +5884,10 @@ const CHANGELOG_V4 = [
   "✅ Existing academic systems preserved — no data reset"
 ];
 function renderChangelogInto(ulId){
-  document.getElementById(ulId).innerHTML = CHANGELOG_V4.map(li=>`<li>${li}</li>`).join("");
+  document.getElementById(ulId).innerHTML = CHANGELOG_V6.concat(CHANGELOG_V4).map(li=>`<li>${li}</li>`).join("");
 }
-renderChangelogInto("changelogListModal");
 renderChangelogInto("changelogListSettings");
-document.getElementById("aboutVersion").textContent = APP_VERSION;
 document.getElementById("aboutVersionInline").textContent = APP_VERSION;
-document.getElementById("aboutBtnSide").addEventListener("click", ()=>{
-  document.getElementById("changelogBox").style.display = "none";
-  document.getElementById("aboutModalOverlay").classList.add("open");
-});
-document.getElementById("changelogBtn").addEventListener("click", ()=>{
-  const box = document.getElementById("changelogBox");
-  box.style.display = box.style.display==="none" ? "block" : "none";
-});
 document.getElementById("changelogBtnSettings").addEventListener("click", ()=>{
   const box = document.getElementById("changelogBoxSettings");
   box.style.display = box.style.display==="none" ? "block" : "none";
@@ -5038,7 +5918,6 @@ function doExport(){
   toast("Data berhasil diexport.");
 }
 document.getElementById("exportBtn").addEventListener("click", doExport);
-document.getElementById("exportBtnSide").addEventListener("click", doExport);
 
 document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importFile").click());
 document.getElementById("importFile").addEventListener("change", (e)=>{
