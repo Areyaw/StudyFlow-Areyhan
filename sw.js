@@ -1,11 +1,12 @@
 /* Academic OS — minimal offline service worker.
    Caches the app shell so it opens even without a connection.
    Data itself always lives in localStorage, not in this cache. */
-const CACHE_NAME = "academic-os-v3";
+const CACHE_NAME = "academic-os-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
