@@ -178,6 +178,7 @@
   section.block{margin-bottom:30px;}
   .block-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
   .block-head h2{font-size:17px;}
+  .notif-dot{display:inline-flex; align-items:center; justify-content:center; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:var(--red); color:#fff; font-size:11px; font-weight:800; margin-left:6px; vertical-align:middle;}
   .link-btn{background:none; border:none; color:var(--accent); font-weight:600; font-size:13px;}
 
   /* ---------- TASK LIST/CARDS ---------- */
@@ -188,8 +189,8 @@
   }
   .task-card:hover{border-color:var(--accent);}
   .task-check{
-    width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; margin-top:2px;
-    display:flex; align-items:center; justify-content:center; background:var(--surface);
+    width:20px; height:20px; aspect-ratio:1/1; border-radius:5px; border:2px solid var(--border); flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center; background:var(--surface); box-sizing:border-box;
   }
   .task-check.checked{background:var(--accent); border-color:var(--accent); color:#fff;}
   .task-check svg{width:12px; height:12px;}
@@ -240,8 +241,37 @@
   .cal-day.other-month{opacity:.35;}
   .cal-day.today{border-color:var(--accent); border-width:2px;}
   .cal-daynum{font-weight:700; font-size:12.5px;}
-  .cal-task-pill{background:var(--accent-soft); color:var(--accent); border-radius:5px; padding:1px 5px; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .cal-more{font-size:10px; color:var(--ink-faint);}
+  .cal-dots{display:flex; flex-direction:column; gap:2px; margin-top:3px;}
+  .cal-dot{width:100%; height:3px; border-radius:2px; flex-shrink:0;}
+  .cal-dot-red{background:var(--red);}
+  .cal-dot-blue{background:var(--accent);}
+  .cal-dot-work{opacity:.42;}
+  .cal-dot-more{font-size:9px; font-weight:700; color:var(--ink-faint); text-align:center; margin-top:1px;}
+  .cal-legend{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-soft); margin:8px 0 4px;}
+  .cal-legend .item{
+    display:flex; align-items:center; gap:5px; background:var(--surface); border:1px solid var(--border);
+    border-radius:999px; padding:5px 11px; line-height:1.2;
+  }
+  .cal-legend .cal-dot{width:16px; height:3px;}
+  .cal-info-btn{width:22px; height:22px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--ink-soft); font-size:12px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;}
+  .cal-info-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .cal-info-backdrop{position:fixed; inset:0; background:rgba(20,22,18,.32); z-index:59; display:none;}
+  .cal-info-backdrop.show{display:block;}
+  .cal-info-bubble{
+    position:absolute; z-index:60; max-width:280px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+    box-shadow:var(--shadow-lg); padding:14px 16px; font-size:12.5px; color:var(--ink-soft); line-height:1.55; display:none;
+  }
+  .cal-info-bubble.show{display:block;}
+  .cal-info-bubble h4{font-size:13px; color:var(--ink); margin-bottom:6px;}
+  .cal-info-bubble .row{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+  .cal-info-bubble .swatch{width:14px; height:14px; border-radius:4px; flex-shrink:0; background:var(--accent);}
+  .cal-info-bubble .swatch.faded{opacity:.42;}
+  .cal-info-color-demo{margin-top:10px; padding:10px 11px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-s);}
+  .cal-info-color-demo .ttl{font-weight:700; color:var(--ink); font-size:12px; margin-bottom:4px;}
+  .cal-info-color-demo p{margin-bottom:8px;}
+  .swatch-row{display:flex; flex-wrap:wrap; gap:6px;}
+  .swatch-row .sw{display:flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:var(--ink); background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:3px 8px 3px 5px;}
+  .swatch-row .sw i{width:11px; height:11px; border-radius:50%; display:inline-block;}
 
   /* ---------- MODAL ---------- */
   /* ---------- FIRST-LAUNCH ONBOARDING (spec §25) ---------- */
@@ -272,6 +302,11 @@
     position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-start; justify-content:center;
     padding:40px 16px; overflow-y:auto; z-index:100;
   }
+  /* Bugfix: file-location detail window is a .modal-overlay (z-index:100)
+     but the file actions sheet it's opened from is a .sheet-overlay
+     (z-index:110) — so the detail window used to render BEHIND the sheet.
+     Give it its own higher z-index so it always sits on top. */
+  #fileLocationModalOverlay{ z-index:120; }
   .modal-overlay.open{display:flex;}
   .modal{
     background:var(--surface); border-radius:var(--radius-l); max-width:560px; width:100%; padding:26px 26px 22px;
@@ -317,6 +352,22 @@
   .folder-row{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:13px 15px;}
   .folder-row .fname{font-weight:600; flex:1; cursor:pointer;}
   .folder-row .fcount{font-size:12px; color:var(--ink-soft); margin-right:8px;}
+  .folder-file-row{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:10px 13px; margin-bottom:8px;}
+  .folder-file-row .ffile-icon{font-size:20px; flex-shrink:0;}
+  .folder-file-row .rmain{flex:1; min-width:0;}
+  .folder-file-row .rtitle{font-weight:600; font-size:13.5px;}
+  .folder-file-row .rsub{font-size:12px; color:var(--ink-soft);}
+  /* File type thumbnail: real image preview for images, a colored
+     document-style icon (with extension badge) for everything else. */
+  .ffile-thumb{
+    width:44px; height:44px; border-radius:10px; flex-shrink:0; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--surface-2);
+  }
+  .ffile-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .ffile-thumb .ext-badge{
+    position:absolute; bottom:2px; right:2px; font-size:7.5px; font-weight:800; letter-spacing:.2px;
+    color:#fff; padding:1px 4px; border-radius:4px; line-height:1.4;
+  }
 
   /* courses/lecturers */
   .rowcard{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:13px 15px; margin-bottom:9px;}
@@ -357,6 +408,9 @@
   .weekly-items{flex:1; display:flex; flex-direction:column; gap:6px;}
   .weekly-item{font-size:13px; display:flex; justify-content:space-between; gap:8px;}
   .weekly-item .t{font-weight:600;}
+  /* Kegiatan (tanpa mata kuliah) di "Tugas & Kegiatan Minggu Ini" — dibedakan
+     dari tugas ber-mata-kuliah dengan titik yang sama seperti di Jadwal Terdekat. */
+  .weekly-item .cat-dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; background:var(--red);}
 
   /* mobile bottom nav */
   .bottom-nav{display:none;}
@@ -394,6 +448,14 @@
     .fab{display:none;}
     .verity-fab{display:none !important;}
     .verity-fab-bubble{display:none !important;}
+    /* Verity's desktop dock reads too small at the base size — scale the
+       whole widget up on larger screens so it feels present, not a tiny
+       afterthought floating next to the sidebar. */
+    .verity-dock{width:264px;}
+    .verity-dock .verity-avatar{width:60px; height:60px; font-size:30px;}
+    .verity-dock-bubble{max-width:262px; padding:14px 17px 15px;}
+    .verity-dock-name{font-size:12.5px;}
+    .verity-dock-msg{font-size:14.5px;}
   }
 
   @media (max-width:480px){
@@ -403,9 +465,12 @@
 
   /* touch targets on small screens */
   @media (max-width:880px){
-    .btn, .btn-icon, .nav-item, .task-check, .switch{min-height:44px;}
+    .btn, .btn-icon, .nav-item, .switch{min-height:44px;}
     .btn-icon{width:44px; height:44px;}
     select, input[type=text], input[type=date], input[type=time], input[type=url]{min-height:44px;}
+    /* Keep the task checkbox visually square on mobile — a bigger tap target
+       is provided via padding/touch-area, not by stretching the box itself. */
+    .task-check{width:22px; height:22px; flex-shrink:0;}
   }
 
   /* ---------- BOTTOM SHEET (More menu) ---------- */
@@ -466,7 +531,7 @@
      language as the mobile speech bubble below. On mobile it's replaced
      by .verity-fab + .verity-fab-bubble, which sit above the bottom nav. */
   .verity-dock{
-    position:fixed; left:246px; bottom:20px; z-index:56; width:208px;
+    position:fixed; left:246px; bottom:20px; z-index:300; width:208px;
     display:flex; flex-direction:column; align-items:center; gap:0;
     cursor:pointer; background:none; border:none; padding:0; box-shadow:none;
     animation:verityBubbleFloat 3.2s ease-in-out infinite;
@@ -479,6 +544,15 @@
   .verity-dock-bubble::after{
     content:""; position:absolute; left:50%; bottom:-7px; width:13px; height:13px; background:var(--surface);
     border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:translateX(-50%) rotate(45deg); border-radius:0 0 3px 0;
+  }
+  /* When there isn't enough room above Verity (e.g. dragged near the top
+     of the viewport), JS flips the whole dock so the bubble renders
+     below the avatar instead, with its tail pointing up to match. */
+  .verity-dock.flip-below{flex-direction:column-reverse;}
+  .verity-dock.flip-below .verity-dock-bubble{margin-bottom:0; margin-top:12px;}
+  .verity-dock.flip-below .verity-dock-bubble::after{
+    bottom:auto; top:-7px; border-right:none; border-bottom:none;
+    border-left:1px solid var(--border); border-top:1px solid var(--border); border-radius:3px 0 0 0;
   }
   .verity-dock.vbounce{animation:verityBubbleFloat 3.2s ease-in-out infinite, verityBounce .38s ease-out;}
   .verity-avatar{
@@ -496,16 +570,28 @@
   .verity-fab{
     display:none; position:fixed; left:18px; bottom:calc(78px + env(safe-area-inset-bottom,0px)); width:52px; height:52px; border-radius:50%;
     background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); align-items:center; justify-content:center;
-    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); z-index:59; transition:transform .12s var(--ease-standard);
+    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); z-index:300; transition:transform .12s var(--ease-standard);
   }
   .verity-fab:active{transform:scale(.92);}
+  /* Verity being dragged — squish for a playful "held" feel, then a little
+     jelly bounce back to normal when dropped. Cursor communicates it's
+     grabbable at all times, not just mid-drag. */
+  .verity-fab, .verity-dock{cursor:grab; touch-action:none;}
+  .verity-fab.v-dragging, .verity-dock.v-dragging{cursor:grabbing; transition:none !important; transform:scale(1.14,.84) !important; box-shadow:0 12px 28px rgba(0,0,0,.35);}
+  .verity-fab.v-drop, .verity-dock.v-drop{animation:vDropSquish .3s ease;}
+  @keyframes vDropSquish{
+    0%{transform:scale(1.14,.84);}
+    45%{transform:scale(.84,1.18);}
+    75%{transform:scale(1.06,.94);}
+    100%{transform:scale(1,1);}
+  }
   .verity-fab .badge-dot{position:absolute; top:-2px; right:-2px; width:11px; height:11px; border-radius:50%; background:var(--red); border:2px solid var(--bg);}
   /* Mobile speech bubble: the phone-sized equivalent of the desktop dock's
      always-on message line, so Verity still feels present/"alive" when the
      sidebar is hidden — not just the silent floating emoji. Persistent
      (not the timed proactive .verity-toast), tap opens the same panel. */
   .verity-fab-bubble{
-    display:none; position:fixed; left:18px; bottom:calc(136px + env(safe-area-inset-bottom,0px)); z-index:59;
+    display:none; position:fixed; left:18px; bottom:calc(136px + env(safe-area-inset-bottom,0px)); z-index:300;
     max-width:min(72vw, 240px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
     padding:8px 12px; box-shadow:var(--shadow); align-items:center; cursor:pointer;
     animation:verityBubbleFloat 3.2s ease-in-out infinite;
@@ -516,6 +602,13 @@
     position:absolute; left:20px; bottom:-6px; width:12px; height:12px; background:var(--surface);
     border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:rotate(45deg); border-radius:0 0 3px 0;
   }
+  /* When the fab is dragged low enough that the bubble no longer fits
+     above it, JS repositions the bubble below the fab instead and adds
+     this class so the tail points up at it. */
+  .verity-fab-bubble.tail-up .vfb-tail{
+    bottom:auto; top:-6px; border-right:none; border-bottom:none;
+    border-left:1px solid var(--border); border-top:1px solid var(--border); border-radius:3px 0 0 0;
+  }
   @keyframes verityBubbleFloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px);}}
   /* Generic "a new line just appeared" pop — shared by every Verity bubble
      surface (dock, mobile bubble, toast, in-game companion). */
@@ -524,7 +617,7 @@
   .verity-fab-bubble.vbounce{animation:verityBubbleFloat 3.2s ease-in-out infinite, verityBounce .38s ease-out;}
 
   .verity-panel-overlay{
-    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-end; justify-content:flex-end; z-index:115; padding:0;
+    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-end; justify-content:flex-end; z-index:320; padding:0;
   }
   .verity-panel-overlay.open{display:flex;}
   .verity-panel{
@@ -552,7 +645,7 @@
   .verity-input-row button{width:40px; height:40px; border-radius:50%; background:var(--accent); color:var(--accent-ink); border:none; flex-shrink:0;}
   .verity-toast{
     position:fixed; left:18px; bottom:140px; max-width:260px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
-    padding:11px 13px; display:flex; gap:9px; align-items:flex-start; box-shadow:var(--shadow); z-index:58; opacity:0; transform:translateY(8px);
+    padding:11px 13px; display:flex; gap:9px; align-items:flex-start; box-shadow:var(--shadow); z-index:305; opacity:0; transform:translateY(8px);
     transition:opacity .2s, transform .2s; pointer-events:none;
   }
   .verity-toast.show{opacity:1; transform:translateY(0);}
@@ -563,7 +656,7 @@
   /* ---------- VERITY CELEBRATION WINDOW ---------- */
   .verity-celebrate-overlay{
     position:fixed; inset:0; background:rgba(20,22,18,.5); display:none; align-items:center; justify-content:center;
-    z-index:120; padding:20px;
+    z-index:310; padding:20px;
   }
   .verity-celebrate-overlay.open{display:flex;}
   .verity-celebrate-card{
@@ -616,16 +709,16 @@
   .stat-bar-track{flex:1; height:9px; background:var(--surface-2); border-radius:99px; overflow:hidden;}
   .stat-bar-fill{height:100%; background:var(--accent); border-radius:99px;}
   .stat-bar-pct{width:38px; text-align:right; font-size:11.5px; color:var(--ink-soft); flex-shrink:0;}
-  .stat-days{display:flex; gap:8px;}
-  .stat-day{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;}
-  .stat-day .col{width:100%; max-width:26px; height:70px; background:var(--surface-2); border-radius:6px; display:flex; align-items:flex-end; overflow:hidden;}
-  .stat-day .col-fill{width:100%; background:var(--gradient-primary); border-radius:6px 6px 0 0;}
+  .stat-days{display:flex; gap:2px; background:var(--surface-2); border-radius:8px; padding:3px; border:1px solid var(--border);}
+  .stat-day{flex:1; display:flex; flex-direction:column; align-items:stretch; gap:4px; min-width:0;}
+  .stat-day .col{width:46%; height:84px; margin:0 auto; background:var(--surface); display:flex; align-items:flex-end; overflow:hidden; border-radius:4px;}
+  .stat-day .col-fill{width:100%; background:var(--gradient-primary); border-radius:3px 3px 0 0;}
   /* Focus Mode ring: gradient border via padding trick, calm pulse while running */
   .focus-ring{width:232px; height:232px; border-radius:50%; background:var(--gradient-primary); padding:6px; box-shadow:var(--shadow-accent-glow);}
   .focus-ring-inner{width:100%; height:100%; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center;}
   .focus-wrap.running .focus-ring{animation:focusPulse 2.6s ease-in-out infinite;}
   @keyframes focusPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.015);}}
-  .stat-day .lbl{font-size:10px; color:var(--ink-faint);}
+  .stat-day .lbl{font-size:9px; color:var(--ink-faint); text-align:center; font-weight:600; line-height:1.15; white-space:normal; word-break:break-word;}
 
   /* ---------- STUDY BLOCK MINI-GAME ---------- */
   :root{ --sb-c1:#5C8B79; --sb-c2:#D9A25C; --sb-c3:#C97B7B; --sb-c4:#6E9BC2; --sb-c5:#B389C9; }
@@ -686,6 +779,16 @@
   body.hide-global-verity .verity-dock,
   body.hide-global-verity .verity-fab,
   body.hide-global-verity .verity-fab-bubble{ display:none !important; }
+
+  /* Bugfix: the mobile media query forces .verity-fab/.verity-fab-bubble to
+     display:flex !important, which used to beat the inline style="display:none"
+     that renderDock() set when Verity is switched off in Settings — so on
+     mobile the floating avatar kept showing even with the toggle off. This
+     selector has higher specificity (body.verity-off ...) than the plain
+     class rule in the media query, so it always wins regardless of order. */
+  body.verity-off .verity-dock,
+  body.verity-off .verity-fab,
+  body.verity-off .verity-fab-bubble{ display:none !important; }
 
   /* ---------- NOTEBOOK (3D book page-flip) ---------- */
   .nb-book{
@@ -802,6 +905,8 @@
   .agenda-kind.k-class{background:var(--ink-faint);}
   .agenda-kind.k-session{background:var(--accent);}
   .agenda-kind.k-meeting{background:var(--amber);}
+  .agenda-kind.k-subtask{background:var(--orange);}
+  .agenda-kind.k-task{background:var(--red);}
   .agenda-actions{flex:0 0 auto; display:flex; gap:6px;}
 
   /* Tugas yang Perlu Dikerjakan */
@@ -809,10 +914,6 @@
   .unplanned-main{flex:1; min-width:0;}
   .unplanned-title{font-weight:600; font-size:13.5px;}
   .unplanned-sub{font-size:11.5px; color:var(--amber); margin-top:2px;}
-
-  /* Unplanned indicator on task cards (noticeable but not alarming) */
-  .chip-unplanned{background:transparent; color:var(--amber); border:1px solid var(--amber); }
-  .chip-planned{background:transparent; color:var(--accent); border:1px solid var(--accent);}
 
   /* Planning blocks inside task detail */
   .planning-section{margin-top:18px; padding-top:14px; border-top:1px solid var(--border);}
@@ -822,14 +923,18 @@
   .session-row, .meeting-row, .subtask-row{display:flex; align-items:flex-start; gap:10px; background:var(--surface-2); border-radius:var(--radius-s); padding:10px 12px; margin-bottom:7px;}
   .subtask-countdown{font-size:11px; font-weight:700; color:var(--accent); margin-top:2px;}
   .subtask-countdown.overdue{color:var(--red);}
+  .plan-cd-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .plan-cd-badge{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:999px; background:var(--accent-soft); color:var(--accent); white-space:nowrap;}
+  .plan-cd-badge.overdue{background:var(--red-soft); color:var(--red);}
   .session-row.completed, .meeting-row.completed, .subtask-row.done{opacity:.6;}
   .session-when{flex:0 0 auto; min-width:78px; font-size:12px; font-weight:700; color:var(--accent);}
   .session-body, .meeting-body, .subtask-body{flex:1; min-width:0;}
   .session-body .stitle, .meeting-body .mtitle, .subtask-body .sktitle{font-weight:600; font-size:13px;}
   .session-body .ssub, .meeting-body .msub, .subtask-body .sksub{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
   .session-actions, .meeting-actions, .subtask-actions{flex:0 0 auto; display:flex; gap:4px; flex-wrap:wrap; align-items:center;}
-  .subtask-check{width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex:0 0 auto; display:flex; align-items:center; justify-content:center; margin-top:1px; cursor:pointer; background:var(--surface);}
+  .subtask-check{width:20px; height:20px; aspect-ratio:1/1; border-radius:5px; border:2px solid var(--border); flex:0 0 auto; display:flex; align-items:center; justify-content:center; margin-top:1px; cursor:pointer; background:var(--surface); box-sizing:border-box;}
   .subtask-check.checked{background:var(--gradient-primary); border-color:transparent; color:var(--accent-ink);}
+  .subtask-check.checked::after{content:"✓"; color:#fff; font-size:12px; font-weight:700; line-height:1;}
   .subtask-check svg{width:12px; height:12px;}
   .subtask-title.done{text-decoration:line-through; color:var(--ink-faint);}
   .planning-empty{font-size:12.5px; color:var(--ink-soft); background:var(--surface-2); border-radius:var(--radius-s); padding:12px; text-align:center;}
@@ -853,7 +958,7 @@
   /* Checkbox groups (used for meeting participants) */
   .checkbox-group{display:flex; flex-direction:column; gap:6px; max-height:180px; overflow:auto;}
   .checkbox-row{display:flex; align-items:center; gap:8px; font-size:13px; min-height:28px;}
-  .checkbox-row input{width:17px; height:17px;}
+  .checkbox-row input{width:18px; height:18px; flex-shrink:0; accent-color:var(--accent); border-radius:5px; cursor:pointer;}
 
   /* Calendar: sessions & meetings distinct from deadline pills */
   .cal-session-pill{background:var(--accent-soft); color:var(--accent); border-radius:5px; padding:1px 5px; font-size:9.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-left:2px solid var(--accent);}
@@ -940,15 +1045,6 @@
         Pengaturan
       </button>
     </nav>
-    <div class="sidebar-foot">
-      <div class="verity-dock" id="verityDock" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Verity assistant">
-        <div class="verity-dock-bubble" id="verityDockBubble">
-          <div class="verity-dock-name">Verity</div>
-          <div class="verity-dock-msg" id="verityDockMsg">Menyiapkan...</div>
-        </div>
-        <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
-      </div>
-    </div>
   </aside>
 
   <!-- MAIN -->
@@ -987,6 +1083,11 @@
         <div id="todayContent"></div>
       </section>
 
+      <section class="block" id="nearestScheduleBlock">
+        <div class="block-head"><h2>⏭️ Jadwal Terdekat</h2></div>
+        <div id="nearestScheduleContent"></div>
+      </section>
+
       <section class="block" id="unplannedBlock">
         <div class="block-head"><h2>🎯 Tugas yang Perlu Dikerjakan</h2></div>
         <div id="unplannedContent"></div>
@@ -1005,7 +1106,7 @@
       </section>
 
       <section class="block">
-        <div class="block-head"><h2>Tugas Minggu Ini</h2></div>
+        <div class="block-head"><h2>Tugas &amp; Kegiatan Minggu Ini <span class="notif-dot" id="weeklyNotifDot" style="display:none;"></span></h2></div>
         <div class="weekly-track" id="weeklyTrack"></div>
       </section>
 
@@ -1028,6 +1129,23 @@
         <h2 id="calMonthLabel"></h2>
         <button class="btn btn-icon" id="calNext">›</button>
         <button class="btn btn-sm" id="calToday">Hari Ini</button>
+      </div>
+      <div class="cal-legend">
+        <button class="cal-info-btn" id="calInfoBtn" type="button" aria-label="Info cara baca kalender">ⓘ</button>
+        <span class="item"><span class="cal-dot" style="background:var(--ink-faint);"></span> Solid = Deadline</span>
+        <span class="item"><span class="cal-dot cal-dot-work" style="background:var(--ink-faint);"></span> Pudar = Waktu Pengerjaan</span>
+        <span class="item">🌈 Warna = tugas yang sama</span>
+      </div>
+      <div class="cal-info-backdrop" id="calInfoBackdrop"></div>
+      <div class="cal-info-bubble" id="calInfoBubble">
+        <h4>Cara baca titik di kalender</h4>
+        <div class="row"><span class="swatch"></span> Solid (pekat) = tanggal <strong>deadline</strong> tugas.</div>
+        <div class="row"><span class="swatch faded"></span> Pudar (transparan) = tanggal <strong>waktu pengerjaan</strong> (sesi, subtugas, atau janjian kelompok) untuk tugas itu.</div>
+        <div class="cal-info-color-demo">
+          <div class="ttl">🌈 Warna per tugas</div>
+          <p>Setiap tugas dapat <strong>warna sendiri</strong> — jadi kalau satu tugas punya deadline dan beberapa waktu pengerjaan di tanggal berbeda, semuanya (kotak tanggal maupun garis kecilnya) tampil dengan warna yang sama.</p>
+          <div class="swatch-row" id="calInfoSwatchRow"></div>
+        </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
 
@@ -1097,7 +1215,19 @@
 
       <section class="block" id="folderTasksBlock" style="display:none; margin-top:24px;">
         <div class="block-head"><h2 id="folderTasksLabel"></h2><button class="link-btn" id="backToFolders">‹ Kembali ke folder</button></div>
-        <div class="task-list" id="folderTasksList"></div>
+
+        <div class="block-head" style="margin-bottom:10px;">
+          <h3 style="font-size:14.5px;">📎 File</h3>
+          <button class="btn btn-sm btn-primary" id="addFolderFileBtn">+ Tambah File</button>
+          <input type="file" id="folderFileInput" multiple style="display:none;">
+        </div>
+        <p class="hint" style="margin-bottom:10px;">Unggah file sungguhan (PDF, gambar, dokumen, dll) ke folder ini — folder ini bekerja seperti arsip/zip, jadi file betulan tersimpan di sini. Tap tombol ⋮ pada file untuk membuka, mengunduh, atau melihat detail lokasi penyimpanannya.</p>
+        <div id="folderFilesList"></div>
+
+        <div id="folderTasksWrap" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
+          <div class="block-head" style="margin-bottom:10px;"><h3 style="font-size:14.5px;">✅ Tugas di folder ini</h3></div>
+          <div class="task-list" id="folderTasksList"></div>
+        </div>
       </section>
     </section>
 
@@ -1528,12 +1658,41 @@
   </div>
 </div>
 
+<!-- FILE ACTIONS SHEET (folder file "⋮" menu: open / download / storage location / delete) -->
+<div class="sheet-overlay" id="fileActionsSheetOverlay" role="dialog" aria-modal="true" aria-label="Aksi file">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 id="fileActionsTitle" style="font-size:15px;">File</h2>
+      <button class="btn btn-icon btn-ghost" id="fileActionsClose" aria-label="Tutup">✕</button>
+    </div>
+    <div style="padding:0 4px 6px;">
+      <div class="hint" id="fileActionsMeta" style="margin-bottom:10px;"></div>
+      <div class="sheet-list">
+        <button class="sheet-item" id="fileActionOpen">👁️ Buka File</button>
+        <button class="sheet-item" id="fileActionDownload">⬇️ Unduh File</button>
+        <button class="sheet-item" id="fileActionLocation">📍 Lokasi Penyimpanan</button>
+        <button class="sheet-item" id="fileActionDelete" style="color:var(--red);">🗑️ Hapus File</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- COMMAND PALETTE / QUICK ADD -->
 <div class="cmdk-overlay" id="cmdkOverlay" role="dialog" aria-modal="true" aria-label="Tambah cepat">
   <div class="cmdk-box">
     <input type="text" class="cmdk-search" id="cmdkSearch" placeholder="Ketik untuk aksi cepat... (Ctrl+K)">
     <div class="cmdk-list" id="cmdkList"></div>
   </div>
+</div>
+
+<!-- Verity floating avatar (desktop dock) -->
+<div class="verity-dock" id="verityDock" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Verity assistant">
+  <div class="verity-dock-bubble" id="verityDockBubble">
+    <div class="verity-dock-name">Verity</div>
+    <div class="verity-dock-msg" id="verityDockMsg">Menyiapkan...</div>
+  </div>
+  <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
 </div>
 
 <!-- Verity floating avatar (mobile) -->
@@ -1757,6 +1916,17 @@
   </div>
 </div>
 
+<!-- FILE STORAGE LOCATION DETAIL WINDOW -->
+<div class="modal-overlay" id="fileLocationModalOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head"><h2>Lokasi Penyimpanan File</h2><button class="btn btn-icon btn-ghost" data-close-modal="fileLocationModalOverlay">✕</button></div>
+    <div id="fileLocationBody" style="font-size:13.5px; line-height:1.7;"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" data-close-modal="fileLocationModalOverlay">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- First-launch onboarding (max 3 screens, spec §25) -->
@@ -1817,7 +1987,7 @@
    STORAGE MANAGER
 ========================================================= */
 const APP_VERSION = "6.0.0";
-const CURRENT_DATA_VERSION = 11;
+const CURRENT_DATA_VERSION = 12;
 const StorageManager = (function(){
   const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
   function defaultData(){
@@ -1940,6 +2110,14 @@ const StorageManager = (function(){
       });
       d.version = 11;
     }
+    if(d.version < 12){
+      // v11 -> v12: folder bisa menyimpan daftar file/lokasi referensi
+      // (nama, link/lokasi, catatan) — murni tambahan, tidak menyentuh data lama.
+      (d.folders||[]).forEach(f=>{
+        if(!Array.isArray(f.files)) f.files = [];
+      });
+      d.version = 12;
+    }
     return d;
   }
   function load(){
@@ -2048,7 +2226,7 @@ const SoundManager = (function(){
   }
   return { play, SOUND_TYPES };
 })();
-function persist(){ StorageManager.save(DB); }
+function persist(){ return StorageManager.save(DB); }
 
 /* =========================================================
    VERITY DIALOG TYPEWRITER
@@ -2276,11 +2454,44 @@ const PlanningManager = (function(){
     });
     return out;
   }
+  function allSubtasksFlat(){
+    const out = [];
+    DB.tasks.forEach(t=>{
+      ensure(t);
+      t.planning.subtasks.forEach(sk=>out.push(Object.assign({taskId:t.id}, sk)));
+    });
+    return out;
+  }
   function sessionsOn(dateKey){
     return allSessionsFlat().filter(s=>s.date===dateKey);
   }
   function meetingsOn(dateKey){
     return allMeetingsFlat().filter(m=>m.date===dateKey);
+  }
+  function subtasksOn(dateKey){
+    return allSubtasksFlat().filter(sk=>sk.date===dateKey && !sk.done);
+  }
+  // Nearest upcoming planned items across ALL tasks (sessions + subtasks
+  // with a date) — used by the dashboard "Jadwal Terdekat" widget so the
+  // user can see what's coming up next regardless of which task it's on.
+  function upcomingPlannedItems(limit){
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const out = [];
+    allSessionsFlat()
+      .filter(s=> s.status!=="completed" && s.status!=="skipped")
+      .forEach(s=>{
+        const dt = new Date(`${s.date}T${(s.startTime||"00:00")}:00`);
+        if(dt >= todayStart) out.push({kind:"session", date:s.date, time:s.startTime||"", title:s.title||"Sesi pengerjaan", taskId:s.taskId, dt});
+      });
+    allSubtasksFlat()
+      .filter(sk=> !sk.done && sk.date)
+      .forEach(sk=>{
+        const dt = new Date(`${sk.date}T${(sk.time||"00:00")}:00`);
+        if(dt >= todayStart) out.push({kind:"subtask", date:sk.date, time:sk.time||"", title:sk.title, taskId:sk.taskId, dt});
+      });
+    out.sort((a,b)=>a.dt-b.dt);
+    return limit ? out.slice(0, limit) : out;
   }
   // Earliest planned/in-progress session today-or-later for a task — used
   // by task cards ("Berikutnya: ...") and the "belum dijadwalkan" flag.
@@ -2339,8 +2550,8 @@ const PlanningManager = (function(){
     ensure, addSession, updateSession, removeSession, setSessionStatus,
     addSubtask, updateSubtask, toggleSubtask, removeSubtask, reorderSubtask,
     addMeeting, updateMeeting, removeMeeting, setMeetingStatus,
-    allSessionsFlat, allMeetingsFlat, sessionsOn, meetingsOn,
-    nextSession, hasPlanning, progress, estimateCompare, nextPlannedItem
+    allSessionsFlat, allMeetingsFlat, allSubtasksFlat, sessionsOn, meetingsOn, subtasksOn,
+    nextSession, hasPlanning, progress, estimateCompare, nextPlannedItem, upcomingPlannedItems
   };
 })();
 function fmtMinutes(min){
@@ -2439,7 +2650,7 @@ function ymd(d){
 ========================================================= */
 const FolderManager = (function(){
   function create(name){
-    const f = {id:uid("folder"), name};
+    const f = {id:uid("folder"), name, files:[]};
     DB.folders.push(f);
     persist();
     return f;
@@ -2459,7 +2670,27 @@ const FolderManager = (function(){
   }
   function all(){ return DB.folders; }
   function taskCount(id){ return DB.tasks.filter(t=>t.folderId===id).length; }
-  return {create, rename, remove, all, taskCount};
+  function addFile(folderId, file){
+    const f = DB.folders.find(x=>x.id===folderId);
+    if(!f) return false;
+    if(!Array.isArray(f.files)) f.files=[];
+    const rec = Object.assign({id:uid("file"), addedAt:new Date().toISOString()}, file);
+    f.files.push(rec);
+    const ok = persist();
+    if(!ok){
+      // Rolled back: browser storage was full (dataUrl files can be heavy),
+      // don't leave a half-saved entry the user can't actually open later.
+      f.files = f.files.filter(x=>x.id!==rec.id);
+    }
+    return ok;
+  }
+  function removeFile(folderId, fileId){
+    const f = DB.folders.find(x=>x.id===folderId);
+    if(!f) return;
+    f.files = (f.files||[]).filter(x=>x.id!==fileId);
+    persist();
+  }
+  return {create, rename, remove, all, taskCount, addFile, removeFile};
 })();
 
 /* =========================================================
@@ -2727,8 +2958,8 @@ function renderTaskCard(task){
         <span class="chip ${cat.cls}">${cat.label}</span>
         <span class="chip">${task.type==="group"?"Kelompok":"Mandiri"}</span>
         <span class="chip">${statusLabel[task.status]}</span>
+        ${done ? "" : (PlanningManager.hasPlanning(task) ? "" : `<span class="chip chip-amber">Tidak Dijadwalkan</span>`)}
       </div>
-      ${done ? "" : (PlanningManager.hasPlanning(task) ? "" : `<div class="chip-unplanned">⚠ Belum dijadwalkan</div>`)}
     </div>
     <div class="task-deadline ${overdue?'overdue':(isUrgent(task)?'urgent':'')}">${overdue?'⚠ ':''}${countdownText(task)}</div>
   `;
@@ -2893,15 +3124,19 @@ function renderOverdue(){
 
 function renderWeekly(){
   const track = document.getElementById("weeklyTrack");
+  const dot = document.getElementById("weeklyNotifDot");
   const days = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
   const today = new Date(); today.setHours(0,0,0,0);
   const weekLimit = new Date(today); weekLimit.setDate(weekLimit.getDate()+7);
   const upcoming = DB.tasks.filter(t=> t.status!=="done" && new Date(t.deadline)>=today && new Date(t.deadline)<weekLimit)
     .sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
   if(upcoming.length===0){
+    dot.style.display = "none";
     track.innerHTML = `<div class="empty-state"><span class="emoji">🗓️</span><p>Tidak ada deadline dalam 7 hari ke depan.</p></div>`;
     return;
   }
+  dot.style.display = "inline-flex";
+  dot.textContent = upcoming.length>9 ? "9+" : String(upcoming.length);
   const byDay = {};
   upcoming.forEach(t=>{
     const d = new Date(t.deadline);
@@ -2912,13 +3147,17 @@ function renderWeekly(){
   track.innerHTML = Object.keys(byDay).sort().map(key=>{
     const d = new Date(key+"T00:00:00");
     const label = days[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1);
-    const items = byDay[key].map(t=>`<div class="weekly-item"><span class="t">${escapeHtml(t.title)}</span><span>${countdownText(t)}</span></div>`).join("");
+    const items = byDay[key].map(t=>{
+      const catDot = `<span class="cat-dot" style="background:${colorForTask(t.id)};" title="${t.courseId?"Tugas":"Kegiatan"}"></span>`;
+      return `<div class="weekly-item"><span class="t">${catDot}${escapeHtml(t.title)}</span><span>${countdownText(t)}</span></div>`;
+    }).join("");
     return `<div class="weekly-day"><div class="weekly-daylabel">${label}</div><div class="weekly-items">${items}</div></div>`;
   }).join("");
 }
 
 function renderDashboard(){
   renderGreetingAndToday();
+  renderNearestSchedule();
   renderUnplannedTasks();
   renderSummary();
   renderMatrix();
@@ -3113,11 +3352,13 @@ const VerityEngine = (function(){
   let lastDockText = null;
   function renderDock(){
     if(!DB.settings.verityEnabled){
+      document.body.classList.add("verity-off");
       document.getElementById("verityDock").style.display = "none";
       document.getElementById("verityFab").style.display = "none";
       document.getElementById("verityFabBubble").style.display = "none";
       return;
     }
+    document.body.classList.remove("verity-off");
     document.getElementById("verityDock").style.display = "";
     const m = currentPageMoodOverride || computeMood();
     if(currentPageMoodOverride) verityMood = m.mood;
@@ -3139,6 +3380,7 @@ const VerityEngine = (function(){
       verityPop(bubble);
       lastFabBubbleText = m.text;
     }
+    syncDockBubble();
   }
   /* ---- proactive commentary (cooldown to avoid spam) ---- */
   const PROACTIVE_COOLDOWN_MS = 60*1000; // min gap between unsolicited toasts
@@ -3272,11 +3514,17 @@ const VerityEngine = (function(){
     document.getElementById("verityPanelOverlay").classList.add("open");
     document.getElementById("verityDock").setAttribute("aria-expanded", "true");
     document.getElementById("verityFab").setAttribute("aria-expanded", "true");
+    document.getElementById("verityDock").style.visibility = "hidden";
+    document.getElementById("verityFab").style.visibility = "hidden";
+    document.getElementById("verityFabBubble").style.visibility = "hidden";
   }
   function closePanel(){
     document.getElementById("verityPanelOverlay").classList.remove("open");
     document.getElementById("verityDock").setAttribute("aria-expanded", "false");
     document.getElementById("verityFab").setAttribute("aria-expanded", "false");
+    document.getElementById("verityDock").style.visibility = "";
+    document.getElementById("verityFab").style.visibility = "";
+    document.getElementById("verityFabBubble").style.visibility = "";
   }
   function addBotMsg(text){
     const msgs = document.getElementById("verityMsgs");
@@ -3312,6 +3560,116 @@ const VerityEngine = (function(){
     document.getElementById("verityInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") sendChat(); });
     document.getElementById("verityCelebrateClose").addEventListener("click", closeCelebration);
     document.getElementById("verityCelebrateOverlay").addEventListener("click", (e)=>{ if(e.target.id==="verityCelebrateOverlay") closeCelebration(); });
+    wireDraggable();
+  }
+  /* ---- drag-to-reposition: Verity can be held and moved around, but never
+     over the sidebar/bottom-nav ("menu") or past the edge of the screen. ---- */
+  function fabBounds(){
+    const margin = 8;
+    const nav = document.querySelector(".bottom-nav");
+    const navVisible = nav && getComputedStyle(nav).display !== "none";
+    const navTop = navVisible ? nav.getBoundingClientRect().top : window.innerHeight;
+    return {left:margin, top:52, right:window.innerWidth-margin, bottom:navTop-margin};
+  }
+  function dockBounds(){
+    const margin = 10;
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarVisible = sidebar && getComputedStyle(sidebar).display !== "none";
+    const sidebarRight = sidebarVisible ? sidebar.getBoundingClientRect().right : 0;
+    return {left:sidebarRight+margin, top:margin, right:window.innerWidth-margin, bottom:window.innerHeight-margin};
+  }
+  function syncFabBubble(){
+    const fab = document.getElementById("verityFab");
+    const bubble = document.getElementById("verityFabBubble");
+    if(fab.dataset.moved !== "1") return;
+    const r = fab.getBoundingClientRect();
+    bubble.style.right = "auto"; bubble.style.bottom = "auto";
+    let left = r.left - 30;
+    left = Math.max(8, Math.min(left, window.innerWidth - bubble.offsetWidth - 8));
+    let top = r.top - bubble.offsetHeight - 12;
+    if(top < 48){ top = r.bottom + 12; bubble.classList.add("tail-up"); }
+    else{ bubble.classList.remove("tail-up"); }
+    bubble.style.left = left+"px";
+    bubble.style.top = top+"px";
+  }
+  // Desktop dock: flip the bubble to sit below the avatar (tail pointing
+  // up) whenever there isn't enough room above it — e.g. Verity's been
+  // dragged near the top of the window, or the message is long/tall.
+  function syncDockBubble(){
+    const dock = document.getElementById("verityDock");
+    const bubble = document.getElementById("verityDockBubble");
+    if(!dock || !bubble) return;
+    const avatar = dock.querySelector(".verity-avatar");
+    if(!avatar) return;
+    const r = avatar.getBoundingClientRect();
+    const needed = bubble.offsetHeight + 12;
+    if(r.top - needed < 8) dock.classList.add("flip-below");
+    else dock.classList.remove("flip-below");
+  }
+  function makeVerityDraggable(el, opts){
+    let startX, startY, origLeft, origTop, dragging=false, moved=false, pointerId=null;
+    const faceEl = opts.faceEl ? document.getElementById(opts.faceEl) : null;
+    let normalFace = faceEl ? faceEl.textContent : null;
+    function onDown(e){
+      if(e.button!==undefined && e.button!==0) return;
+      const rect = el.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      origLeft = rect.left; origTop = rect.top;
+      moved = false; pointerId = e.pointerId;
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+    }
+    function onMove(e){
+      if(pointerId!==null && e.pointerId!==pointerId) return;
+      const dx = e.clientX-startX, dy = e.clientY-startY;
+      if(!moved && Math.hypot(dx,dy) > 6){
+        moved = true; dragging = true;
+        el.classList.remove("v-drop");
+        el.classList.add("v-dragging");
+        if(faceEl){ normalFace = faceEl.textContent; faceEl.textContent = "😆"; }
+        el.style.right = "auto"; el.style.bottom = "auto";
+        el.style.left = origLeft+"px"; el.style.top = origTop+"px";
+      }
+      if(dragging){
+        const b = opts.getBounds();
+        const w = el.offsetWidth, h = el.offsetHeight;
+        let nx = origLeft+dx, ny = origTop+dy;
+        nx = Math.max(b.left, Math.min(nx, b.right-w));
+        ny = Math.max(b.top, Math.min(ny, b.bottom-h));
+        el.style.left = nx+"px"; el.style.top = ny+"px";
+        el.dataset.moved = "1";
+        if(opts.onMove) opts.onMove();
+      }
+    }
+    function onUp(){
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      if(dragging){
+        el.classList.remove("v-dragging");
+        el.classList.add("v-drop");
+        if(faceEl){ faceEl.textContent = "🥴"; }
+        SoundManager.play("click");
+        setTimeout(()=>{
+          el.classList.remove("v-drop");
+          if(opts.onSettle) opts.onSettle();
+        }, 300);
+        const swallowClick = (ev)=>{ ev.stopPropagation(); ev.preventDefault(); el.removeEventListener("click", swallowClick, true); };
+        el.addEventListener("click", swallowClick, true);
+      }
+      dragging = false; pointerId = null;
+    }
+    el.addEventListener("pointerdown", onDown);
+  }
+  function wireDraggable(){
+    makeVerityDraggable(document.getElementById("verityFab"), {
+      faceEl:"verityFabFace", getBounds:fabBounds, onMove:syncFabBubble,
+      onSettle:()=>{ renderDock(); syncFabBubble(); }
+    });
+    makeVerityDraggable(document.getElementById("verityDock"), {
+      faceEl:"verityDockFace", getBounds:dockBounds, onMove:syncDockBubble,
+      onSettle:()=>{ renderDock(); syncDockBubble(); }
+    });
+    window.addEventListener("resize", ()=>{ syncFabBubble(); syncDockBubble(); });
   }
   function onDataRefresh(){ currentPageMoodOverride = null; renderDock(); }
   /* ---- Study Block companion reactions (spec §19-21): its own cooldown
@@ -4170,11 +4528,11 @@ function renderStatisticsPage(){
     days.push(d);
   }
   const maxCount = Math.max(1, ...days.map(d=>tasks.filter(t=>t.completedAt && ymd(new Date(t.completedAt))===ymd(d)).length));
-  const dowShort = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+  const dowFull = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
   document.getElementById("statLast7").innerHTML = `<div class="stat-days">` + days.map(d=>{
     const c = tasks.filter(t=>t.completedAt && ymd(new Date(t.completedAt))===ymd(d)).length;
-    const h = Math.max(4, Math.round((c/maxCount)*70));
-    return `<div class="stat-day"><div class="col"><div class="col-fill" style="height:${h}px;"></div></div><div class="lbl">${dowShort[d.getDay()]}</div></div>`;
+    const h = Math.max(4, Math.round((c/maxCount)*84));
+    return `<div class="stat-day" title="${c} tugas selesai"><div class="col"><div class="col-fill" style="height:${h}px;"></div></div><div class="lbl">${dowFull[d.getDay()]}</div></div>`;
   }).join("") + `</div>`;
 
   const sessions = DB.focusSessions||[];
@@ -4242,6 +4600,23 @@ const FocusTimer = (function(){
     document.getElementById("focusPauseBtn").style.display="none";
     document.getElementById("focusTaskLabel").textContent = "Pilih durasi lalu mulai fokus.";
   }
+  function forceExit(){
+    if(running){ running=false; clearInterval(tickHandle); }
+    document.querySelector(".focus-wrap").classList.remove("running");
+    remainingSec = durationMin*60;
+    render();
+    document.getElementById("focusStartBtn").style.display="";
+    document.getElementById("focusPauseBtn").style.display="none";
+    document.getElementById("focusTaskLabel").textContent = "Pilih durasi lalu mulai fokus.";
+  }
+  function requestExit(onConfirmed){
+    if(!running){ if(onConfirmed) onConfirmed(); return; }
+    openConfirm("Keluar dari Focus Mode?", "Sesi fokus yang sedang berjalan akan dihentikan.", [
+      {label:"Lanjut Fokus", cls:"btn"},
+      {label:"Keluar", cls:"btn btn-danger", action:()=>{ forceExit(); if(onConfirmed) onConfirmed(); }}
+    ]);
+  }
+  function isRunning(){ return running; }
   function wire(){
     document.querySelectorAll("#focusDurationSeg button").forEach(b=>{
       b.addEventListener("click", ()=>{ if(!running) setDuration(+b.dataset.min); });
@@ -4250,7 +4625,7 @@ const FocusTimer = (function(){
     document.getElementById("focusPauseBtn").addEventListener("click", pause);
     document.getElementById("focusResetBtn").addEventListener("click", reset);
   }
-  return {wire, render};
+  return {wire, render, isRunning, requestExit};
 })();
 function renderFocusPage(){ FocusTimer.render(); }
 
@@ -4309,6 +4684,19 @@ function sizeCalGrid(){
   if(cellW>0) grid.querySelectorAll(".cal-day").forEach(d=>{ d.style.height = cellW + "px"; });
 }
 window.addEventListener("resize", ()=>{ if(currentPage==="calendar") sizeCalGrid(); });
+// Warna pelangi per tugas: tugas yang sama (deadline + waktu pengerjaan)
+// selalu tampil dengan warna kalender yang sama, supaya gampang dibedakan
+// dari tugas lain. Diberikan berurutan sesuai urutan tugas dibuat.
+const CAL_TASK_COLORS = ["#E24C4C","#3B82F6","#22C55E","#F59E0B","#A855F7","#14B8A6","#EC4899","#84CC16","#6366F1","#F97316"];
+function colorForTask(taskId){
+  const idx = DB.tasks.findIndex(t=>t.id===taskId);
+  return CAL_TASK_COLORS[(idx<0?0:idx) % CAL_TASK_COLORS.length];
+}
+function hexToRgba(hex, alpha){
+  const h = hex.replace("#","");
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 function renderCalendar(){
   const label = document.getElementById("calMonthLabel");
   const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -4330,22 +4718,20 @@ function renderCalendar(){
   const daysInPrevMonth = new Date(year, month, 0).getDate();
   const today = new Date(); const todayKey = ymd(today);
 
-  const tasksByDate = {};
-  DB.tasks.forEach(t=>{
-    const key = ymd(new Date(t.deadline));
-    if(!tasksByDate[key]) tasksByDate[key]=[];
-    tasksByDate[key].push(t);
-  });
-  const sessionsByDate = {};
-  PlanningManager.allSessionsFlat().forEach(s=>{
-    if(!sessionsByDate[s.date]) sessionsByDate[s.date]=[];
-    sessionsByDate[s.date].push(s);
-  });
-  const meetingsByDate = {};
-  PlanningManager.allMeetingsFlat().forEach(m=>{
-    if(!meetingsByDate[m.date]) meetingsByDate[m.date]=[];
-    meetingsByDate[m.date].push(m);
-  });
+  // Kumpulan entry per tanggal per tugas — dipakai untuk pewarnaan pelangi:
+  // satu tugas = satu warna, dipakai di titik deadline maupun titik waktu
+  // pengerjaannya, dibedakan lewat solid (deadline) vs pudar (pengerjaan).
+  const dayEntries = {};
+  function pushEntry(dateKey, taskId, kind){
+    if(!taskId || !dateKey) return;
+    if(!dayEntries[dateKey]) dayEntries[dateKey] = [];
+    const arr = dayEntries[dateKey];
+    if(!arr.some(e=>e.taskId===taskId && e.kind===kind)) arr.push({taskId, kind});
+  }
+  DB.tasks.forEach(t=>pushEntry(ymd(new Date(t.deadline)), t.id, "deadline"));
+  PlanningManager.allSessionsFlat().forEach(s=>pushEntry(s.date, s.taskId, "work"));
+  PlanningManager.allMeetingsFlat().forEach(m=>pushEntry(m.date, m.taskId, "work"));
+  PlanningManager.allSubtasksFlat().forEach(sk=>{ if(!sk.date||sk.done) return; pushEntry(sk.date, sk.taskId, "work"); });
 
   const totalCells = Math.ceil((startOffset+daysInMonth)/7)*7;
   for(let i=0;i<totalCells;i++){
@@ -4363,20 +4749,37 @@ function renderCalendar(){
     const key = ymd(cellDate);
     const cell = document.createElement("div");
     cell.className = "cal-day"+(otherMonth?" other-month":"")+(key===todayKey?" today":"");
-    const dayTasks = tasksByDate[key]||[];
-    let pillsHtml = dayTasks.slice(0,2).map(t=>`<div class="cal-task-pill">${escapeHtml(t.title)}</div>`).join("");
-    if(dayTasks.length>2) pillsHtml += `<div class="cal-more">+${dayTasks.length-2} lagi</div>`;
-    const daySessions = sessionsByDate[key]||[];
-    const dayMeetings = meetingsByDate[key]||[];
-    pillsHtml += daySessions.slice(0,2).map(s=>{
-      const t = TaskManager.get(s.taskId);
-      return `<div class="cal-session-pill">${escapeHtml(t?t.title:"")}</div>`;
-    }).join("");
-    pillsHtml += dayMeetings.slice(0,2).map(m=>{
-      const t = TaskManager.get(m.taskId);
-      return `<div class="cal-meeting-pill">${escapeHtml(t?t.title:"")}</div>`;
-    }).join("");
-    cell.innerHTML = `<div class="cal-daynum">${dayNum}</div>${pillsHtml}`;
+    // Titik per tugas, diwarnai pelangi (warna sama = tugas sama), solid
+    // untuk deadline dan pudar untuk waktu pengerjaan — legenda lengkap ada
+    // di bubble info ⓘ di sebelah judul bulan. Aturannya sama seperti
+    // sebelumnya; yang berubah cuma warnanya (ikut warna tugas) dan sekarang
+    // kotak tanggalnya sendiri juga ikut diberi warna, bukan cuma garisnya.
+    const entries = (dayEntries[key]||[]).slice().sort((a,b)=>{
+      const ca = DB.tasks.findIndex(t=>t.id===a.taskId), cb = DB.tasks.findIndex(t=>t.id===b.taskId);
+      return ca-cb;
+    });
+    let dotsHtml = "";
+    let dayNumStyle = "";
+    if(entries.length){
+      const maxShow = 4;
+      const shown = entries.slice(0, maxShow);
+      const extra = entries.length - shown.length;
+      dotsHtml = `<div class="cal-dots">` + shown.map(e=>{
+        const color = colorForTask(e.taskId);
+        const t = TaskManager.get(e.taskId);
+        const label = (e.kind==="deadline"?"Deadline":"Waktu pengerjaan")+": "+(t?t.title:"");
+        return `<span class="cal-dot${e.kind==="work"?" cal-dot-work":""}" style="background:${color};" title="${escapeHtml(label)}"></span>`;
+      }).join("") + (extra>0 ? `<span class="cal-dot-more">+${extra}</span>` : "") + `</div>`;
+      // Kotak tanggal ikut diwarnai sesuai warna tugas dominan (tugas dengan
+      // urutan terkecil) di hari itu — solid/pekat kalau ada deadline,
+      // pudar kalau cuma waktu pengerjaan, mengikuti aturan yang sama.
+      const dominant = colorForTask(shown[0].taskId);
+      const hasDeadline = entries.some(e=>e.kind==="deadline");
+      cell.style.background = hexToRgba(dominant, hasDeadline?0.26:0.13);
+      cell.style.borderColor = dominant;
+      dayNumStyle = ` style="color:${dominant}; font-weight:800;"`;
+    }
+    cell.innerHTML = `<div class="cal-daynum"${dayNumStyle}>${dayNum}</div>${dotsHtml}`;
     cell.addEventListener("click", ()=>{ calSelectedDate = key; renderCalSelected(); });
     grid.appendChild(cell);
   }
@@ -4396,21 +4799,26 @@ function renderCalSelected(){
   const tasks = DB.tasks.filter(t=>ymd(new Date(t.deadline))===calSelectedDate);
   const sessions = PlanningManager.sessionsOn(calSelectedDate);
   const meetings = PlanningManager.meetingsOn(calSelectedDate);
+  const subtasks = PlanningManager.subtasksOn(calSelectedDate);
   list.innerHTML="";
-  if(tasks.length===0 && sessions.length===0 && meetings.length===0){
+  if(tasks.length===0 && sessions.length===0 && meetings.length===0 && subtasks.length===0){
     renderEmpty(list, "Tidak ada event atau deadline untuk tanggal ini.", "", false, "relaxed"); return;
   }
-  if(sessions.length>0 || meetings.length>0){
+  if(sessions.length>0 || meetings.length>0 || subtasks.length>0){
     const extra = document.createElement("div");
     extra.style.marginBottom = "10px";
     extra.innerHTML =
       sessions.map(s=>{
         const t = TaskManager.get(s.taskId);
-        return `<div class="session-row"><span class="agenda-kind k-session"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">Sesi pengerjaan • ${fmtSessionWhen(s)}</div></div></div>`;
+        return `<div class="session-row" style="border-left:4px solid ${colorForTask(s.taskId)}; padding-left:8px;"><span class="agenda-kind k-session"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">Sesi pengerjaan • ${fmtSessionWhen(s)}</div></div></div>`;
+      }).join("") +
+      subtasks.map(sk=>{
+        const t = TaskManager.get(sk.taskId);
+        return `<div class="subtask-row" style="border-left:4px solid ${colorForTask(sk.taskId)}; padding-left:8px;"><span class="agenda-kind k-subtask"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">✅ Subtugas: ${escapeHtml(sk.title)}${sk.time?" • "+sk.time:""}</div></div></div>`;
       }).join("") +
       meetings.map(m=>{
         const t = TaskManager.get(m.taskId);
-        return `<div class="meeting-row"><span class="agenda-kind k-meeting"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">Janjian kelompok${m.startTime?" • "+m.startTime:""}${m.location?" • "+escapeHtml(m.location):""}</div></div></div>`;
+        return `<div class="meeting-row" style="border-left:4px solid ${colorForTask(m.taskId)}; padding-left:8px;"><span class="agenda-kind k-meeting"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"")}</div><div class="rsub">Janjian kelompok${m.startTime?" • "+m.startTime:""}${m.location?" • "+escapeHtml(m.location):""}</div></div></div>`;
       }).join("");
     list.appendChild(extra);
   }
@@ -4463,9 +4871,283 @@ function openFolderTasks(folderId){
   const list = document.getElementById("folderTasksList");
   list.innerHTML="";
   const tasks = DB.tasks.filter(t=>t.folderId===folderId);
-  if(tasks.length===0){ renderEmpty(list, "Tidak ada tugas di folder ini.", "", false); return; }
+  renderFolderFiles(folderId);
+  // Folder behaves like an archive first, task list second — no "belum ada
+  // tugas" placeholder clutter; the tasks block simply stays hidden when empty.
+  document.getElementById("folderTasksWrap").style.display = tasks.length===0 ? "none" : "";
   tasks.forEach(t=>list.appendChild(renderTaskCard(t)));
 }
+const FILE_ICONS = [
+  {test:/\.pdf$/i,            icon:"📕", color:"#B5462F", label:"PDF"},
+  {test:/\.(docx?|rtf|odt)$/i,icon:"📘", color:"#2F5FA8", label:"DOC"},
+  {test:/\.(xlsx?|csv|ods)$/i,icon:"📗", color:"#2F8A4E", label:"XLS"},
+  {test:/\.(pptx?|odp)$/i,    icon:"📙", color:"#C06A2C", label:"PPT"},
+  {test:/\.(zip|rar|7z)$/i,   icon:"🗜️", color:"#5B5F56", label:"ZIP"},
+  {test:/\.(mp3|wav|m4a|ogg)$/i, icon:"🎵", color:"#8A4FB0", label:"AUDIO"},
+  {test:/\.(mp4|mov|avi|mkv|webm)$/i, icon:"🎬", color:"#2F5FA8", label:"VIDEO"},
+  {test:/\.txt$/i,            icon:"📄", color:"#5B5F56", label:"TXT"},
+];
+const IMAGE_TEST = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
+function isImageFile(f){
+  if(!f) return false;
+  if(f.type && f.type.startsWith("image/")) return true;
+  return IMAGE_TEST.test(f.name||"");
+}
+function fileTypeInfo(name){
+  const hit = FILE_ICONS.find(f=>f.test.test(name||""));
+  return hit || {icon:"📄", color:"#5B5F56", label:(name||"").split(".").pop().slice(0,4).toUpperCase()||"FILE"};
+}
+function iconForFile(name){ return fileTypeInfo(name).icon; }
+// Builds the square "what's-inside" thumbnail: a real image preview when the
+// file is a picture, otherwise a colored document icon with an extension
+// badge — so folders read like a Finder/file-explorer grid, not a plain list.
+function fileThumbHtml(f){
+  if(isImageFile(f) && f.dataUrl){
+    return `<div class="ffile-thumb"><img src="${f.dataUrl}" alt="" loading="lazy"></div>`;
+  }
+  const info = fileTypeInfo(f.name);
+  return `<div class="ffile-thumb" style="background:${info.color}22;">
+    <span>${info.icon}</span>
+    <span class="ext-badge" style="background:${info.color};">${info.label}</span>
+  </div>`;
+}
+function formatFileSize(bytes){
+  if(!bytes && bytes!==0) return "";
+  if(bytes < 1024) return bytes+" B";
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1)+" KB";
+  return (bytes/(1024*1024)).toFixed(1)+" MB";
+}
+function formatFileDate(iso){
+  if(!iso) return "";
+  try{
+    return new Date(iso).toLocaleString("id-ID", {day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit"});
+  }catch(e){ return ""; }
+}
+function renderFolderFiles(folderId){
+  const folder = FolderManager.all().find(f=>f.id===folderId);
+  const wrap = document.getElementById("folderFilesList");
+  const files = (folder && folder.files) || [];
+  if(files.length===0){
+    wrap.innerHTML = `<div class="hint">Belum ada file yang diunggah di folder ini.</div>`;
+    return;
+  }
+  wrap.innerHTML = files.map(f=>`
+    <div class="folder-file-row" data-file="${f.id}">
+      ${fileThumbHtml(f)}
+      <div class="rmain" data-act="openname" style="cursor:pointer;">
+        <div class="rtitle">${escapeHtml(f.name)}</div>
+        <div class="rsub">${formatFileSize(f.size)}${f.size?" · ":""}${formatFileDate(f.addedAt)}</div>
+      </div>
+      <button class="btn btn-icon btn-ghost" data-act="filemenu" aria-label="Menu file">⋮</button>
+    </div>
+  `).join("");
+  wrap.querySelectorAll("[data-act='filemenu']").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const row = btn.closest("[data-file]");
+      openFileActionsSheet(folderId, row.dataset.file);
+    });
+  });
+  // Tapping the file name/row itself opens the file directly, same as
+  // "Buka File" in the ⋮ menu — no need to go through the menu just to view it.
+  wrap.querySelectorAll("[data-act='openname']").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const row = el.closest("[data-file]");
+      const folder = FolderManager.all().find(x=>x.id===folderId);
+      const file = folder && (folder.files||[]).find(x=>x.id===row.dataset.file);
+      if(file) openFileForViewing(file);
+    });
+  });
+}
+document.getElementById("addFolderFileBtn").addEventListener("click", ()=>{
+  if(!currentFolderView) return;
+  document.getElementById("folderFileInput").click();
+});
+// Note: the old "+ Tambah File" shortcut next to "+ Buat Folder" (outside
+// any opened folder) was removed on purpose — files can now only be added
+// from inside an opened folder, so students build the habit of keeping
+// their files organized into folders instead of dumping them loose.
+// Real file upload: reads each picked file as a data URL and stores it
+// directly on the folder record (this is a local/offline app — there's no
+// server to upload to — so the file's actual bytes live in the app's own
+// storage rather than just a name/link the user has to remember).
+const MAX_FOLDER_FILE_BYTES = 8*1024*1024; // 8MB — generous for docs/images, keeps localStorage safe
+document.getElementById("folderFileInput").addEventListener("change", (e)=>{
+  const picked = Array.from(e.target.files || []);
+  e.target.value = ""; // allow re-picking the same file later
+  if(!picked.length || !currentFolderView) return;
+  const folderId = currentFolderView;
+  let doneCount = 0, failCount = 0, tooBigCount = 0;
+  picked.forEach(file=>{
+    if(file.size > MAX_FOLDER_FILE_BYTES){
+      tooBigCount++;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const ok = FolderManager.addFile(folderId, {
+        name:file.name, type:file.type||"", size:file.size, dataUrl:reader.result
+      });
+      if(ok) doneCount++; else failCount++;
+      renderFolderFiles(folderId);
+      renderFolders();
+      if(doneCount+failCount+tooBigCount===picked.length){
+        if(failCount>0) toast("Penyimpanan penuh — sebagian file gagal disimpan.");
+        else if(tooBigCount>0) toast(`${tooBigCount} file dilewati (maks ${formatFileSize(MAX_FOLDER_FILE_BYTES)} per file).`);
+        else toast(picked.length>1 ? "File berhasil diunggah." : "File berhasil diunggah.");
+      }
+    };
+    reader.onerror = ()=>{ failCount++; toast("Gagal membaca file: "+file.name); };
+    reader.readAsDataURL(file);
+  });
+  if(tooBigCount===picked.length){
+    toast(`Ukuran file melebihi batas ${formatFileSize(MAX_FOLDER_FILE_BYTES)}.`);
+  }
+});
+
+/* ---- File actions sheet: open / download / storage location / delete ---- */
+let fileActionsCtx = null; // {folderId, fileId}
+function openFileActionsSheet(folderId, fileId){
+  const folder = FolderManager.all().find(f=>f.id===folderId);
+  const file = folder && (folder.files||[]).find(x=>x.id===fileId);
+  if(!file) return;
+  fileActionsCtx = {folderId, fileId};
+  document.getElementById("fileActionsTitle").textContent = file.name;
+  document.getElementById("fileActionsMeta").textContent =
+    `${formatFileSize(file.size)}${file.size?" · ":""}Ditambahkan ${formatFileDate(file.addedAt)}`;
+  const hasData = !!file.dataUrl;
+  document.getElementById("fileActionOpen").style.display = hasData ? "" : "none";
+  document.getElementById("fileActionDownload").style.display = hasData ? "" : "none";
+  document.getElementById("fileActionsSheetOverlay").classList.add("open");
+}
+function closeFileActionsSheet(){
+  document.getElementById("fileActionsSheetOverlay").classList.remove("open");
+  fileActionsCtx = null;
+}
+function currentFileActionsFile(){
+  if(!fileActionsCtx) return null;
+  const folder = FolderManager.all().find(f=>f.id===fileActionsCtx.folderId);
+  return folder && (folder.files||[]).find(x=>x.id===fileActionsCtx.fileId);
+}
+document.getElementById("fileActionsClose").addEventListener("click", closeFileActionsSheet);
+// Browser-previewable types (images, PDFs, plain text) can be shown inline
+// via window.open on a blob URL. Everything else — Word/Excel/PowerPoint
+// docs, zips, etc. — has no in-browser viewer, and a pure web app has no way
+// to hand a file straight to a native desktop/mobile app; the closest real
+// equivalent is: save it to the device's Downloads folder, then the user
+// taps it there and their OS opens it with whatever the default app is
+// (Word for .docx, Excel for .xlsx, Photos for images, and so on).
+function isPreviewableInBrowser(f){
+  const type = f.type || "";
+  if(type.startsWith("image/") || type==="application/pdf" || type.startsWith("text/")) return true;
+  if(!type){
+    if(IMAGE_TEST.test(f.name||"") || /\.pdf$/i.test(f.name||"") || /\.txt$/i.test(f.name||"")) return true;
+  }
+  return false;
+}
+// Bugfix "file gak bisa dibuka": window.open(dataUrl) is blocked by modern
+// browsers (Chrome/Firefox refuse to navigate a new tab straight to a
+// data: URL for security reasons — this silently fails or shows a blank
+// tab). Converting to a Blob + object URL first opens reliably.
+function openFileForViewing(file){
+  if(!file || !file.dataUrl) return;
+  try{
+    const blob = dataUrlToBlob(file.dataUrl);
+    const url = URL.createObjectURL(blob);
+    if(isPreviewableInBrowser(file)){
+      const win = window.open(url, "_blank");
+      if(!win) toast("Browser memblokir jendela baru. Izinkan pop-up untuk membuka file.");
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    } else {
+      // No in-app viewer for this type — save to Downloads so the OS's
+      // default app can open it, same as opening any normal download.
+      const a = document.createElement("a");
+      a.href = url; a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      toast(`"${file.name}" disimpan ke folder Unduhan/Downloads — buka dari sana untuk membukanya dengan aplikasi default perangkatmu (mis. Word, Excel).`);
+    }
+  }catch(err){
+    toast("File ini tidak bisa dibuka — coba unduh dulu.");
+  }
+}
+document.getElementById("fileActionOpen").addEventListener("click", ()=>{
+  const f = currentFileActionsFile();
+  openFileForViewing(f);
+  closeFileActionsSheet();
+});
+// Convert the stored data URL to a real Blob + object URL before triggering
+// the download. Browsers save an <a download> click through a blob: URL
+// straight into the device's normal Downloads folder (Downloads on PC,
+// Download/Unduhan on Android) — the same as any other file download —
+// whereas very large data: URIs are unreliable for that in some browsers.
+function dataUrlToBlob(dataUrl){
+  const [meta, b64] = dataUrl.split(",");
+  const mimeMatch = /data:(.*?);base64/.exec(meta);
+  const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], {type:mime});
+}
+document.getElementById("fileActionDownload").addEventListener("click", ()=>{
+  const f = currentFileActionsFile();
+  if(f && f.dataUrl){
+    try{
+      const blob = dataUrlToBlob(f.dataUrl);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = f.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      toast(`"${f.name}" disalin ke folder Unduhan/Downloads perangkatmu.`);
+    }catch(err){
+      // Fallback for edge cases where the data URL can't be decoded as base64
+      const a = document.createElement("a");
+      a.href = f.dataUrl; a.download = f.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      toast(`"${f.name}" diunduh ke folder Unduhan/Downloads perangkatmu.`);
+    }
+  }
+  closeFileActionsSheet();
+});
+document.getElementById("fileActionLocation").addEventListener("click", ()=>{
+  const f = currentFileActionsFile();
+  if(!f || !fileActionsCtx) return;
+  const folder = FolderManager.all().find(x=>x.id===fileActionsCtx.folderId);
+  const body = document.getElementById("fileLocationBody");
+  body.innerHTML = `
+    <table style="width:100%; border-collapse:collapse;">
+      <tr><td style="padding:6px 0; color:var(--ink-soft); width:40%;">Nama file</td><td style="padding:6px 0; font-weight:600;">${escapeHtml(f.name)}</td></tr>
+      <tr><td style="padding:6px 0; color:var(--ink-soft);">Disimpan di</td><td style="padding:6px 0;">Folder "${escapeHtml(folder?folder.name:"")}" — StudyFlow</td></tr>
+      <tr><td style="padding:6px 0; color:var(--ink-soft);">Media penyimpanan</td><td style="padding:6px 0;">Penyimpanan lokal aplikasi (browser storage) di perangkat ini</td></tr>
+      <tr><td style="padding:6px 0; color:var(--ink-soft);">Tipe file</td><td style="padding:6px 0;">${escapeHtml(f.type||"Tidak diketahui")}</td></tr>
+      <tr><td style="padding:6px 0; color:var(--ink-soft);">Ukuran</td><td style="padding:6px 0;">${formatFileSize(f.size)}</td></tr>
+      <tr><td style="padding:6px 0; color:var(--ink-soft);">Ditambahkan</td><td style="padding:6px 0;">${formatFileDate(f.addedAt)}</td></tr>
+      <tr><td style="padding:6px 0; color:var(--ink-soft); vertical-align:top;">ID internal</td><td style="padding:6px 0; font-family:monospace; font-size:12px; word-break:break-all;">${escapeHtml(f.id)}</td></tr>
+    </table>
+    <p class="hint" style="margin-top:12px;">File ini tidak diunggah ke server atau cloud mana pun — isinya hanya ada di dalam data aplikasi StudyFlow pada perangkat/browser ini. Gunakan "Unduh File" untuk menyalinnya ke folder Unduhan/Downloads perangkatmu agar bisa diakses dari luar aplikasi.</p>
+  `;
+  // Close the file-actions sheet first (belt-and-suspenders alongside the
+  // z-index fix above) so the detail window is never left stacked behind it.
+  closeFileActionsSheet();
+  document.getElementById("fileLocationModalOverlay").classList.add("open");
+});
+document.getElementById("fileActionDelete").addEventListener("click", ()=>{
+  if(!fileActionsCtx) return;
+  const {folderId, fileId} = fileActionsCtx;
+  const file = currentFileActionsFile();
+  const fileName = file ? file.name : "file ini";
+  closeFileActionsSheet();
+  openConfirm("Hapus file?", `Yakin mau hapus "${fileName}"? File yang sudah dihapus tidak bisa dikembalikan.`, [
+    {label:"Batal", cls:"btn"},
+    {label:"Hapus", cls:"btn btn-danger", action:()=>{
+      FolderManager.removeFile(folderId, fileId);
+      renderFolderFiles(folderId);
+      renderFolders();
+      toast("File dihapus.");
+    }},
+  ]);
+});
 
 /* ---- Courses page ---- */
 function renderCourses(){
@@ -4719,6 +5401,20 @@ function openScheduleForm(sched){
 }
 
 /* ---- Dashboard: greeting + Today view ---- */
+/* Small "Mulai: ..." + "Deadline: ..." badge pair shown under agenda/nearest-schedule
+   items, so it's clear both when the work starts and when the task itself is due. */
+function planCountdownBadges(task, dateStr, timeStr){
+  const startCd = countdownFor(dateStr, timeStr, false);
+  const startLate = startCd.startsWith("Terlambat");
+  let html = `<div class="plan-cd-row"><span class="plan-cd-badge ${startLate?'overdue':''}">⏳ Mulai: ${startCd}</span>`;
+  if(task && task.status!=="done"){
+    const dlCd = countdownText(task);
+    const dlLate = isOverdue(task);
+    html += `<span class="plan-cd-badge ${dlLate?'overdue':''}">🎯 Deadline: ${dlCd}</span>`;
+  }
+  html += `</div>`;
+  return html;
+}
 function renderGreetingAndToday(){
   const hour = new Date().getHours();
   const greet = hour<11 ? "Good Morning" : hour<15 ? "Good Afternoon" : hour<19 ? "Good Evening" : "Good Night";
@@ -4745,6 +5441,7 @@ function renderGreetingAndToday(){
   const todayKey = ymd(today);
   const todaySessions = PlanningManager.sessionsOn(todayKey);
   const todayMeetings = PlanningManager.meetingsOn(todayKey);
+  const todaySubtasks = PlanningManager.subtasksOn(todayKey);
   const agendaItems = [];
   todaysSchedule.forEach(s=>{
     const c = CourseManager.get(s.courseId);
@@ -4758,44 +5455,100 @@ function renderGreetingAndToday(){
     const t = TaskManager.get(s.taskId);
     agendaItems.push({
       time: s.startTime||"", kind:"session",
-      html:`<div class="agenda-row"><span class="agenda-time">${s.startTime||"—"}${s.endTime?"–"+s.endTime:""}</span><span class="agenda-kind k-session"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">${escapeHtml(s.activity||"Sesi pengerjaan")}</div></div></div>`
+      html:`<div class="agenda-row"><span class="agenda-time">${s.startTime||"—"}${s.endTime?"–"+s.endTime:""}</span><span class="agenda-kind k-session"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">${escapeHtml(s.activity||"Sesi pengerjaan")}</div>${planCountdownBadges(t, s.date, s.startTime)}</div></div>`
     });
   });
   todayMeetings.forEach(m=>{
     const t = TaskManager.get(m.taskId);
     agendaItems.push({
       time: m.startTime||"", kind:"meeting",
-      html:`<div class="agenda-row"><span class="agenda-time">${m.startTime||"—"}${m.endTime?"–"+m.endTime:""}</span><span class="agenda-kind k-meeting"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">Janjian kelompok${m.location?" • "+escapeHtml(m.location):""}</div></div></div>`
+      html:`<div class="agenda-row"><span class="agenda-time">${m.startTime||"—"}${m.endTime?"–"+m.endTime:""}</span><span class="agenda-kind k-meeting"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">Janjian kelompok${m.location?" • "+escapeHtml(m.location):""}</div>${planCountdownBadges(t, m.date, m.startTime)}</div></div>`
+    });
+  });
+  todaySubtasks.forEach(sk=>{
+    const t = TaskManager.get(sk.taskId);
+    agendaItems.push({
+      time: sk.time||"", kind:"subtask",
+      html:`<div class="agenda-row"><span class="agenda-time">${sk.time||"—"}</span><span class="agenda-kind k-subtask"></span><div class="rmain"><div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div><div class="rsub">✅ Subtugas: ${escapeHtml(sk.title)}${sk.assignee?" • 👤 "+escapeHtml(sk.assignee):""}</div>${planCountdownBadges(t, sk.date, sk.time)}</div></div>`
+    });
+  });
+  // Deadline tugas hari ini digabung ke agenda yang sama (bukan daftar
+  // terpisah) supaya tidak makan tempat dua kali — cukup satu daftar,
+  // diurutkan berdasarkan waktu, dengan penanda merah untuk deadline.
+  dueToday.forEach(t=>{
+    const dl = new Date(t.deadline);
+    const timeStr = String(dl.getHours()).padStart(2,"0")+":"+String(dl.getMinutes()).padStart(2,"0");
+    agendaItems.push({
+      time: timeStr, kind:"deadline",
+      html:`<div class="agenda-row"><span class="agenda-time">${timeStr}</span><span class="agenda-kind k-task"></span><div class="rmain"><div class="rtitle">🔴 ${escapeHtml(t.title)}</div><div class="rsub">Deadline hari ini • <strong>${countdownText(t)}</strong></div></div></div>`
     });
   });
   agendaItems.sort((a,b)=>(a.time||"").localeCompare(b.time||""));
 
   let html = "";
-  html += `<div style="margin-bottom:14px;"><div style="font-size:12px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px;">Jadwal &amp; Rencana Hari Ini</div>`;
   if(agendaItems.length===0){
-    html += `<div class="hint">Tidak ada kelas, sesi, atau janjian hari ini.</div>`;
+    html += `<div class="hint" style="margin-bottom:10px;">Tidak ada kelas, sesi, janjian, atau deadline hari ini.</div>`;
   } else {
     html += agendaItems.map(i=>i.html).join("");
   }
-  html += `</div>`;
 
   if(nextClass){
     const c = CourseManager.get(nextClass.courseId);
-    html += `<div class="chip chip-accent" style="margin-bottom:14px; display:inline-block;">NEXT · ${nextClass.startTime} — ${escapeHtml(c?c.name:"")}</div>`;
+    html += `<div class="chip chip-accent" style="margin:10px 0 4px; display:inline-block;">NEXT · ${nextClass.startTime} — ${escapeHtml(c?c.name:"")}</div>`;
   }
 
-  html += `<div style="margin-bottom:10px;"><div style="font-size:12px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; margin-bottom:6px;">Tugas Hari Ini</div>`;
-  html += dueToday.length===0 ? `<div class="hint">Tidak ada tugas dengan deadline hari ini.</div>` :
-    `<div class="task-list">` + dueToday.map(t=>`<div class="chip chip-red" style="display:block; width:fit-content; margin-bottom:4px;">🔴 ${escapeHtml(t.title)} — Deadline ${new Date(t.deadline).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}</div>`).join("") + `</div>`;
-  html += `</div>`;
-
   if(overdue.length>0){
-    html += `<div><div style="font-size:12px; font-weight:700; color:var(--red); text-transform:uppercase; margin-bottom:6px;">⚠️ Tugas Terlambat</div>`;
-    html += overdue.map(t=>`<div class="chip chip-red" style="display:block; width:fit-content; margin-bottom:4px;">⚠️ ${escapeHtml(t.title)}</div>`).join("");
+    html += `<div style="margin-top:14px;"><div style="font-size:12px; font-weight:700; color:var(--red); text-transform:uppercase; margin-bottom:6px;">⚠️ Tugas Terlambat</div>`;
+    html += overdue.map(t=>`<div class="chip chip-red" style="display:block; width:fit-content; margin-bottom:4px;">⚠️ ${escapeHtml(t.title)} — <strong>${countdownText(t)}</strong></div>`).join("");
     html += `</div>`;
   }
 
   document.getElementById("todayContent").innerHTML = html;
+}
+
+function renderNearestSchedule(){
+  const container = document.getElementById("nearestScheduleContent");
+  const block = document.getElementById("nearestScheduleBlock");
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const items = PlanningManager.upcomingPlannedItems();
+  // Kegiatan tanpa mata kuliah (pertemuan/tugas umum): deadline-nya ADALAH
+  // waktu pengerjaannya, jadi langsung tampil di sini sebagai jadwal —
+  // bukan dipisah ke "Tugas yang Perlu Dikerjakan" (lihat renderUnplannedTasks).
+  DB.tasks.forEach(t=>{
+    if(t.courseId || t.status==="done") return;
+    const dt = new Date(t.deadline);
+    if(dt < todayStart) return; // yang sudah lewat tetap muncul di Tugas Terlambat
+    items.push({kind:"task", date: ymd(dt), time: String(dt.getHours()).padStart(2,"0")+":"+String(dt.getMinutes()).padStart(2,"0"), title: t.title, taskId: t.id, dt});
+  });
+  items.sort((a,b)=>a.dt-b.dt);
+  const top = items.slice(0,5);
+  if(top.length===0){
+    block.style.display="none";
+    return;
+  }
+  block.style.display="block";
+  const todayKey = ymd(new Date());
+  container.innerHTML = top.map(i=>{
+    const t = TaskManager.get(i.taskId);
+    const isToday = i.date===todayKey;
+    let dotClass, sub;
+    if(i.kind==="subtask"){ dotClass="k-subtask"; sub = `✅ Subtugas: ${escapeHtml(i.title)}`; }
+    else if(i.kind==="task"){ dotClass="k-task"; sub = `🔔 Kegiatan Umum${t&&t.type==="group"?" • Kelompok":""}`; }
+    else { dotClass="k-session"; sub = `📌 Sesi: ${escapeHtml(i.title)}`; }
+    return `<div class="agenda-row" data-task="${i.taskId}" style="cursor:pointer;">
+      <span class="agenda-time">${isToday?"Hari ini":fmtWhen(i.date,"")}${i.time?" • "+i.time:""}</span>
+      <span class="agenda-kind ${dotClass}"></span>
+      <div class="rmain">
+        <div class="rtitle">${escapeHtml(t?t.title:"(tugas dihapus)")}</div>
+        <div class="rsub">${sub}</div>
+        ${planCountdownBadges(t, i.date, i.time)}
+      </div>
+    </div>`;
+  }).join("");
+  container.querySelectorAll("[data-task]").forEach(row=>{
+    row.addEventListener("click", ()=>openDetail(row.dataset.task));
+  });
 }
 
 function renderUnplannedTasks(){
@@ -4806,6 +5559,7 @@ function renderUnplannedTasks(){
   const limit = new Date(today); limit.setDate(limit.getDate()+7);
   const candidates = DB.tasks.filter(t=>{
     if(t.status==="done") return false;
+    if(!t.courseId) return false; // tanpa mata kuliah = pertemuan/tugas, deadline-nya langsung jadi jadwal (tampil di Jadwal Terdekat, bukan di sini)
     const dl = new Date(t.deadline);
     if(!(dl < limit)) return false; // overdue or within 7 days
     const hasSessionToday = PlanningManager.sessionsOn(todayKey).some(s=>s.taskId===t.id);
@@ -5468,6 +6222,10 @@ function goToPage(page, opts){
     ChessGame.requestExit(()=>goToPage(page, {confirmedExit:true}));
     return;
   }
+  if(!opts.confirmedExit && currentPage==="focus" && page!=="focus" && FocusTimer.isRunning()){
+    FocusTimer.requestExit(()=>goToPage(page, {confirmedExit:true}));
+    return;
+  }
   currentPage = page;
   if(!(opts && opts.skipHistory) && window.NavHistory) NavHistory.pushPage(page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -5501,6 +6259,22 @@ document.querySelectorAll("[data-page-jump]").forEach(el=>{
 document.getElementById("backToFolders").addEventListener("click", ()=>{
   currentFolderView=null;
   document.getElementById("folderTasksBlock").style.display="none";
+});
+document.getElementById("calInfoSwatchRow").innerHTML = CAL_TASK_COLORS.map((c,i)=>`<span class="sw"><i style="background:${c};"></i>Tugas ${i+1}</span>`).join("");
+function toggleCalInfoBubble(show){
+  document.getElementById("calInfoBubble").classList.toggle("show", show);
+  document.getElementById("calInfoBackdrop").classList.toggle("show", show);
+}
+document.getElementById("calInfoBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  toggleCalInfoBubble(!document.getElementById("calInfoBubble").classList.contains("show"));
+});
+document.getElementById("calInfoBackdrop").addEventListener("click", ()=>toggleCalInfoBubble(false));
+document.addEventListener("click", (e)=>{
+  const bubble = document.getElementById("calInfoBubble");
+  if(bubble.classList.contains("show") && !bubble.contains(e.target) && e.target.id!=="calInfoBtn"){
+    toggleCalInfoBubble(false);
+  }
 });
 
 /* =========================================================
@@ -5603,6 +6377,22 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 document.getElementById("fabAdd").addEventListener("click", openCmdk);
+
+/* ---- Focus Mode lock: while a focus session is running, block every
+   interaction outside the Focus page (and the exit-confirmation dialog
+   itself) so the user must explicitly stop/exit focus before doing
+   anything else. Runs in the capture phase so it wins over nav/FAB/etc. ---- */
+document.addEventListener("click", function(e){
+  if(!window.FocusTimer || !FocusTimer.isRunning()) return;
+  const focusPage = document.getElementById("page-focus");
+  const confirmOverlay = document.getElementById("confirmModalOverlay");
+  if(focusPage.contains(e.target)) return;
+  if(confirmOverlay.contains(e.target)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+  FocusTimer.requestExit();
+}, true);
 
 /* =========================================================
    HEADER ACTIONS
