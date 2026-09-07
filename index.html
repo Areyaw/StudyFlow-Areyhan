@@ -441,19 +441,16 @@
     .fab svg{width:24px; height:24px;}
     .topbar-actions .btn-primary.desktop-only, .topbar .btn-icon.cal-jump{display:none;}
     .verity-dock{display:none !important;}
-    .verity-fab{display:flex !important;}
-    .verity-fab-bubble{display:flex !important;}
+    .verity-fab-dock{display:flex !important;}
   }
   @media (min-width:881px){
     .fab{display:none;}
-    .verity-fab{display:none !important;}
-    .verity-fab-bubble{display:none !important;}
+    .verity-fab-dock{display:none !important;}
     /* Verity's desktop dock reads too small at the base size — scale the
        whole widget up on larger screens so it feels present, not a tiny
        afterthought floating next to the sidebar. */
-    .verity-dock{width:264px;}
     .verity-dock .verity-avatar{width:60px; height:60px; font-size:30px;}
-    .verity-dock-bubble{max-width:262px; padding:14px 17px 15px;}
+    .verity-dock-bubble{width:262px; max-width:262px; padding:14px 17px 15px;}
     .verity-dock-name{font-size:12.5px;}
     .verity-dock-msg{font-size:14.5px;}
   }
@@ -531,25 +528,33 @@
      language as the mobile speech bubble below. On mobile it's replaced
      by .verity-fab + .verity-fab-bubble, which sit above the bottom nav. */
   .verity-dock{
-    position:fixed; left:246px; bottom:20px; z-index:300; width:208px;
-    display:flex; flex-direction:column; align-items:center; gap:0;
+    position:fixed; left:246px; bottom:20px; z-index:300;
+    display:flex; align-items:center; justify-content:center; gap:0;
     cursor:pointer; background:none; border:none; padding:0; box-shadow:none;
     animation:verityBubbleFloat 3.2s ease-in-out infinite;
   }
+  /* The bubble is positioned relative to the avatar's own box, NOT laid
+     out as a flex sibling — this is what keeps the avatar rock-solid in
+     place when flipping. (A flex-direction reverse used to physically
+     swap which child sat at the anchored edge, making the avatar itself
+     "teleport" to the opposite side any time the bubble flipped.) */
   .verity-dock-bubble{
-    position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
-    padding:10px 13px 11px; box-shadow:var(--shadow); max-width:206px; margin-bottom:12px; text-align:left;
+    position:absolute; left:50%; bottom:calc(100% + 12px); transform:translateX(-50%);
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:10px 13px 11px; box-shadow:var(--shadow); width:206px; max-width:206px; text-align:left;
   }
   .verity-dock:hover .verity-dock-bubble{border-color:var(--accent);}
   .verity-dock-bubble::after{
     content:""; position:absolute; left:50%; bottom:-7px; width:13px; height:13px; background:var(--surface);
     border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:translateX(-50%) rotate(45deg); border-radius:0 0 3px 0;
   }
-  /* When there isn't enough room above Verity (e.g. dragged near the top
-     of the viewport), JS flips the whole dock so the bubble renders
-     below the avatar instead, with its tail pointing up to match. */
-  .verity-dock.flip-below{flex-direction:column-reverse;}
-  .verity-dock.flip-below .verity-dock-bubble{margin-bottom:0; margin-top:12px;}
+  /* When Verity's avatar is in the top half of the screen, JS adds this
+     class so the bubble renders below her instead, tail pointing up — the
+     avatar's own fixed position never changes, only the bubble slides
+     from one side of it to the other. */
+  .verity-dock.flip-below .verity-dock-bubble{
+    bottom:auto; top:calc(100% + 12px);
+  }
   .verity-dock.flip-below .verity-dock-bubble::after{
     bottom:auto; top:-7px; border-right:none; border-bottom:none;
     border-left:1px solid var(--border); border-top:1px solid var(--border); border-radius:3px 0 0 0;
@@ -567,18 +572,38 @@
   @keyframes verityBounce{0%{transform:scale(.7);} 55%{transform:scale(1.14);} 100%{transform:scale(1);}}
   .verity-dock-name{font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px;}
   .verity-dock-msg{font-size:12.5px; color:var(--ink); line-height:1.4;}
+  /* Mobile: fab + its speech bubble live inside ONE draggable anchor
+     (verity-fab-dock), exactly like the desktop .verity-dock. The bubble
+     is positioned absolutely off the fab's own box rather than laid out
+     as a flex sibling — so the fab (Verity herself) never moves; only
+     the bubble slides from above to below it. A flex-direction reverse
+     used to physically swap which child sat at the anchored corner,
+     making Verity "teleport" to the opposite side any time the bubble
+     flipped — this avoids that entirely. */
+  .verity-fab-dock{
+    display:none; position:fixed; left:18px; bottom:calc(78px + env(safe-area-inset-bottom,0px)); z-index:300;
+    align-items:center; justify-content:center; cursor:grab; touch-action:none;
+    background:none; border:none; padding:0; box-shadow:none;
+  }
+  .verity-fab-dock.flip-below .verity-fab-bubble{
+    bottom:auto; top:calc(100% + 12px);
+  }
+  .verity-fab-dock.flip-below .verity-fab-bubble .vfb-tail{
+    bottom:auto; top:-6px; border-right:none; border-bottom:none;
+    border-left:1px solid var(--border); border-top:1px solid var(--border); border-radius:3px 0 0 0;
+  }
   .verity-fab{
-    display:none; position:fixed; left:18px; bottom:calc(78px + env(safe-area-inset-bottom,0px)); width:52px; height:52px; border-radius:50%;
-    background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); align-items:center; justify-content:center;
-    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); z-index:300; transition:transform .12s var(--ease-standard);
+    position:static; width:52px; height:52px; border-radius:50%;
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+    font-size:22px; box-shadow:0 6px 18px rgba(0,0,0,.2); transition:transform .12s var(--ease-standard);
   }
   .verity-fab:active{transform:scale(.92);}
   /* Verity being dragged — squish for a playful "held" feel, then a little
      jelly bounce back to normal when dropped. Cursor communicates it's
      grabbable at all times, not just mid-drag. */
-  .verity-fab, .verity-dock{cursor:grab; touch-action:none;}
-  .verity-fab.v-dragging, .verity-dock.v-dragging{cursor:grabbing; transition:none !important; transform:scale(1.14,.84) !important; box-shadow:0 12px 28px rgba(0,0,0,.35);}
-  .verity-fab.v-drop, .verity-dock.v-drop{animation:vDropSquish .3s ease;}
+  .verity-fab-dock, .verity-dock{cursor:grab; touch-action:none;}
+  .verity-fab-dock.v-dragging, .verity-dock.v-dragging{cursor:grabbing; transition:none !important; transform:scale(1.14,.84) !important;}
+  .verity-fab-dock.v-drop, .verity-dock.v-drop{animation:vDropSquish .3s ease;}
   @keyframes vDropSquish{
     0%{transform:scale(1.14,.84);}
     45%{transform:scale(.84,1.18);}
@@ -589,26 +614,24 @@
   /* Mobile speech bubble: the phone-sized equivalent of the desktop dock's
      always-on message line, so Verity still feels present/"alive" when the
      sidebar is hidden — not just the silent floating emoji. Persistent
-     (not the timed proactive .verity-toast), tap opens the same panel. */
+     (not the timed proactive .verity-toast), tap opens the same panel.
+     Positioned relative to the fab's own box (see .verity-fab-dock above),
+     not laid out in flex flow, so it never moves the fab itself. */
   .verity-fab-bubble{
-    display:none; position:fixed; left:18px; bottom:calc(136px + env(safe-area-inset-bottom,0px)); z-index:300;
+    display:flex; position:absolute; left:50%; bottom:calc(100% + 12px); transform:translateX(-50%); z-index:300;
     max-width:min(72vw, 240px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
-    padding:8px 12px; box-shadow:var(--shadow); align-items:center; cursor:pointer;
+    padding:8px 12px; box-shadow:var(--shadow); align-items:center; cursor:pointer; text-align:left;
     animation:verityBubbleFloat 3.2s ease-in-out infinite;
   }
   .verity-fab-bubble:active{transform:scale(.96);}
   .verity-fab-bubble span{font-size:12.5px; color:var(--ink); line-height:1.35; font-weight:500;}
   .verity-fab-bubble .vfb-tail{
-    position:absolute; left:20px; bottom:-6px; width:12px; height:12px; background:var(--surface);
-    border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:rotate(45deg); border-radius:0 0 3px 0;
+    position:absolute; left:50%; bottom:-6px; width:12px; height:12px; background:var(--surface);
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:translateX(-50%) rotate(45deg); border-radius:0 0 3px 0;
   }
-  /* When the fab is dragged low enough that the bubble no longer fits
-     above it, JS repositions the bubble below the fab instead and adds
-     this class so the tail points up at it. */
-  .verity-fab-bubble.tail-up .vfb-tail{
-    bottom:auto; top:-6px; border-right:none; border-bottom:none;
-    border-left:1px solid var(--border); border-top:1px solid var(--border); border-radius:3px 0 0 0;
-  }
+  /* When Verity's fab is in the top half of the screen, JS adds
+     .flip-below to .verity-fab-dock (handled above) so the bubble
+     renders below it instead — same mechanism as the desktop dock. */
   @keyframes verityBubbleFloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px);}}
   /* Generic "a new line just appeared" pop — shared by every Verity bubble
      surface (dock, mobile bubble, toast, in-game companion). */
@@ -673,6 +696,349 @@
   .vcelebrate-name{font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.04em;}
   .vcelebrate-text{font-size:14.5px; line-height:1.55; color:var(--ink); margin:6px 0 16px;}
   .vcelebrate-close{width:100%; justify-content:center;}
+
+  /* ---------- VERITY BOSS MODE (spin-her-around easter egg) ---------- */
+  .verity-boss-overlay{
+    position:fixed; inset:0; background:#000; display:none; z-index:9999; overflow:hidden;
+    align-items:center; justify-content:center;
+  }
+  .verity-boss-overlay.open{display:flex;}
+  .vboss-yt{position:absolute; width:2px; height:2px; opacity:0; pointer-events:none; overflow:hidden;}
+  /* Siren layer: flashes red on every beat/note-spawn then eases back to
+     black. Was animating background-color on a full-screen element, which
+     forces a full repaint of the whole screen every frame of the fade —
+     now it's a static red layer whose opacity fades (GPU-compositor only,
+     no repaint), which looks identical but is far cheaper. */
+  .vboss-siren{position:absolute; inset:0; z-index:0; background:#c81e1e; opacity:0; pointer-events:none; will-change:opacity;}
+  /* Wrap handles scale (grows/shrinks smoothly as the dominance bar moves);
+     the inner .vboss-giant handles the cheap glitch shake/skew + emoji
+     swap. Splitting these two avoids the animation and the JS-driven
+     scale fighting over the same transform property. */
+  .vboss-giant-wrap{
+    position:absolute; top:38%; left:50%; z-index:1; pointer-events:none;
+    transform:translate(-50%,-50%) scale(1); transition:transform .5s cubic-bezier(.3,.7,.4,1);
+    will-change:transform;
+  }
+  .vboss-giant-wrap.punch{transition:transform .18s cubic-bezier(.3,.1,.4,1.6);}
+  /* Big faint silhouette of the same emoji, sitting behind the main one at
+     a larger size — makes Verity read as more menacing/looming without
+     any filter or shadow blur (just a plain low-opacity duplicate, which
+     is compositor-cheap). */
+  .vboss-giant-shadow{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-size:150px; line-height:1; opacity:.25; z-index:0; pointer-events:none;
+  }
+  .vboss-giant{
+    position:relative; z-index:1;
+    display:block; font-size:96px; line-height:1;
+    will-change:transform;
+  }
+  .vboss-giant.glitching{animation:vbossMonsterGlitch .18s steps(2,end) infinite;}
+  @keyframes vbossMonsterGlitch{
+    0%{transform:translate(0,0) skewX(0deg);}
+    25%{transform:translate(6px,-4px) skewX(-3deg);}
+    50%{transform:translate(-5px,4px) skewX(2deg);}
+    75%{transform:translate(4px,3px) skewX(-2deg);}
+    100%{transform:translate(0,0) skewX(0deg);}
+  }
+  /* Big song-length timer sitting behind Verity — same center point as the
+     giant-wrap but lower z-index, so it reads as a huge watermark/backdrop
+     clock instead of competing with the HUD up top. */
+  .vboss-timer-bg{
+    position:absolute; top:38%; left:50%; transform:translate(-50%,-50%); z-index:0; pointer-events:none;
+    font-family:var(--font-display); font-weight:800; font-size:min(20vw,170px); letter-spacing:.02em;
+    color:rgba(255,255,255,.08); text-shadow:0 0 40px rgba(255,0,0,.18); white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .vboss-game{position:relative; z-index:2; width:100%; height:100%; display:flex; flex-direction:column; align-items:center;}
+  .vboss-score{
+    color:#fff; font-family:var(--font-display); font-size:20px; margin-top:16px;
+    text-shadow:0 0 8px rgba(255,60,60,.7); letter-spacing:.04em;
+  }
+  /* ---- Dominance bar: green (us) fills from the left, purple (boss)
+     from the right; a knob marks the split. Hits push it toward us
+     (green grows); misses push it toward the boss (purple grows, boss
+     visibly swells) until it hits the right edge and Verity wins. ---- */
+  .vboss-barwrap{display:flex; align-items:center; gap:8px; margin-top:10px; width:min(92vw,420px);}
+  .vboss-bar-icon{font-size:16px; flex-shrink:0; filter:drop-shadow(0 0 4px rgba(0,0,0,.6));}
+  /* Boss-side bar icon now shown in full color (grayscale/mono filter
+     removed per request) — just keeps the glow so it's still readable
+     against the purple bar. */
+  .vboss-bar-icon.boss{filter:drop-shadow(0 0 4px rgba(255,255,255,.7));}
+  .vboss-bar{
+    position:relative; flex:1; height:15px; border-radius:999px; overflow:visible;
+    background:linear-gradient(90deg, #7A3FE0, #4B1E8C);
+    box-shadow:0 0 0 2px rgba(255,255,255,.18) inset, 0 0 10px rgba(122,63,224,.5);
+  }
+  .vboss-bar-fill-player{
+    position:absolute; left:0; top:0; bottom:0; border-radius:999px 0 0 999px;
+    background:linear-gradient(90deg, #2ecc71, #1f9e56); box-shadow:0 0 10px rgba(46,204,113,.55);
+    transition:width .25s cubic-bezier(.3,.7,.4,1); width:50%;
+  }
+  .vboss-bar-knob{
+    position:absolute; top:50%; width:20px; height:20px; border-radius:50%;
+    background:#fff; border:3px solid #17181a; transform:translate(-50%,-50%);
+    transition:left .25s cubic-bezier(.3,.7,.4,1); left:50%; box-shadow:0 0 8px rgba(0,0,0,.6);
+  }
+
+  /* ---- Boss-mode ending: Verity swallows the screen, then a black
+     takeover fades in and the app "kicks you out". ---- */
+  .vboss-gameover-overlay{
+    position:fixed; inset:0; background:#000; z-index:20000; opacity:0; pointer-events:none;
+    transition:opacity 1s ease; display:flex; align-items:center; justify-content:center;
+  }
+  .vboss-gameover-overlay.show{opacity:1; pointer-events:all;}
+  .vboss-gameover-text{
+    color:#ff2323; font-family:var(--font-display); font-weight:800; font-size:30px; letter-spacing:.07em;
+    text-transform:uppercase; opacity:0; transition:opacity 1.2s ease 1s; text-align:center; padding:0 24px;
+    text-shadow:0 0 14px rgba(255,20,20,.85), 0 0 34px rgba(255,0,0,.5), 0 2px 0 #3a0000;
+  }
+  .vboss-gameover-overlay.show .vboss-gameover-text{opacity:1; animation:vbossGameoverPulse 1.3s ease-in-out infinite;}
+  @keyframes vbossGameoverPulse{
+    0%,100%{text-shadow:0 0 14px rgba(255,20,20,.85), 0 0 34px rgba(255,0,0,.5), 0 2px 0 #3a0000;}
+    50%{text-shadow:0 0 26px rgba(255,50,50,1), 0 0 60px rgba(255,0,0,.85), 0 2px 0 #3a0000;}
+  }
+  /* Verity's "eaten you" face at the very end: desaturated + high-contrast
+     to read as black-and-white with a stark outline, mouth thrown open. */
+  /* Final "she ate you" state — plain emoji, no filter/shadow (those were
+     the actual lag source when combined with the giant's scale-up, not the
+     scaling itself). Colour comes from picking a naturally red-toned emoji
+     instead of faking a colour with CSS. */
+  .vboss-giant.eaten{ }
+  /* No more monochrome tier — kept as a hook in case future states need
+     styling, but intentionally empty now. */
+  .vboss-giant.tier-mono{ }
+
+  /* Spans (almost) the full screen height now, top to bottom, so notes
+     visibly fall from the top edge instead of popping up mid-screen. */
+  .vboss-lanes{
+    position:absolute; top:78px; bottom:56px; left:50%; transform:translateX(-50%);
+    display:flex; gap:12px; width:min(92vw,420px); justify-content:space-between;
+  }
+  .vboss-lane{position:relative; width:70px; height:100%;}
+  /* One accent color per lane (FNF-style) so falling notes are easy to
+     tell apart at a glance. */
+  .vboss-lane[data-lane="0"]{ --lc: #3ED0C6; }
+  .vboss-lane[data-lane="1"]{ --lc: #E85C8A; }
+  .vboss-lane[data-lane="2"]{ --lc: #F2C94C; }
+  .vboss-lane[data-lane="3"]{ --lc: #5C8BE8; }
+  .vboss-hitzone{
+    position:absolute; bottom:0; left:0; width:70px; height:70px; border-radius:14px;
+    border:3px solid var(--lc); display:flex; align-items:center; justify-content:center;
+    font-size:26px; color:var(--lc); background:rgba(255,255,255,.06); transition:background .08s, transform .08s;
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none;
+  }
+  .vboss-hitzone.hit{background:var(--lc); color:#000; }
+  .vboss-note{
+    position:absolute; left:0; top:0; width:70px; height:70px; border-radius:14px; background:var(--lc);
+    display:flex; align-items:center; justify-content:center; font-size:26px; color:#000;
+    transform:translateY(0); will-change:transform;
+  }
+  /* Huge screen-filling aura sitting behind "tidak..." — a radial glow the
+     size of the whole viewport so the text reads as looming over
+     everything instead of just a small glitchy line. */
+  .vboss-glitch-aura{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:220vmax; height:220vmax; z-index:2; pointer-events:none; opacity:0;
+    background:radial-gradient(circle, rgba(180,0,0,.55) 0%, rgba(120,0,0,.28) 22%, rgba(60,0,0,.1) 42%, transparent 62%);
+    transition:opacity 1s ease;
+  }
+  .vboss-glitch-aura.show{opacity:1; animation:vbossAuraPulse 1.6s ease-in-out infinite;}
+  @keyframes vbossAuraPulse{
+    0%,100%{opacity:.85; transform:translate(-50%,-50%) scale(1);}
+    50%{opacity:1; transform:translate(-50%,-50%) scale(1.06);}
+  }
+  .vboss-glitch{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#ff2323;
+    font-family:var(--font-display); font-size:44px; letter-spacing:.05em; text-transform:lowercase;
+    opacity:0; z-index:3; text-shadow:2px 0 red, -2px 0 cyan; pointer-events:none;
+  }
+  .vboss-glitch.show{opacity:1; animation:vbossGlitchShake .5s steps(2,end) infinite;}
+  @keyframes vbossGlitchShake{
+    0%{transform:translate(-50%,-50%);}
+    25%{transform:translate(calc(-50% - 3px), calc(-50% + 2px));}
+    50%{transform:translate(calc(-50% + 3px), calc(-50% - 2px));}
+    75%{transform:translate(calc(-50% - 2px), calc(-50% - 2px));}
+    100%{transform:translate(-50%,-50%);}
+  }
+
+  /* ---------- FAKE SYSTEM ERROR JUMPSCARE ---------- */
+  body.vboss-frozen{overflow:hidden;}
+  body.vboss-frozen .app{filter:saturate(.4) contrast(1.05); pointer-events:none; user-select:none;}
+  .fake-error-overlay{
+    position:fixed; inset:0; z-index:10050; display:none; align-items:center; justify-content:center;
+    background:rgba(4,5,4,.55); backdrop-filter:blur(1px);
+  }
+  .fake-error-overlay.open{display:flex; animation:feFlashIn .12s steps(2,end);}
+  @keyframes feFlashIn{0%{background:rgba(255,255,255,.9);} 100%{background:rgba(4,5,4,.55);}}
+  .fake-error-overlay.shake .fake-error-window{animation:feShake .35s linear infinite;}
+  @keyframes feShake{
+    0%{transform:translate(0,0);} 20%{transform:translate(-6px,2px);} 40%{transform:translate(5px,-3px);}
+    60%{transform:translate(-4px,-2px);} 80%{transform:translate(6px,3px);} 100%{transform:translate(0,0);}
+  }
+  .fake-error-window{
+    width:min(92vw,420px); background:#ECECEC; border-radius:6px; overflow:hidden; color:#111;
+    box-shadow:0 20px 60px rgba(0,0,0,.55), 0 0 0 1px #7a7a7a; font-family:var(--font-body);
+  }
+  .few-titlebar{
+    background:linear-gradient(180deg,#c0392b,#8e2418); color:#fff; padding:7px 8px 7px 12px;
+    display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700;
+  }
+  .few-titlebar .few-tico{font-size:14px;}
+  .few-titlebar .few-title{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .few-close{
+    width:22px; height:20px; border:1px solid rgba(255,255,255,.6); background:#b93424; color:#fff;
+    font-size:12px; line-height:1; border-radius:2px; flex-shrink:0;
+  }
+  .few-close:hover{background:#e74c3c;}
+  .few-body{padding:22px 20px 8px; display:flex; gap:16px; align-items:center;}
+  .few-icon-big{font-size:40px; flex-shrink:0; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));}
+  .few-msg{font-size:16.5px; font-weight:800; line-height:1.35; letter-spacing:.01em; color:#1a1a1a;}
+  /* Rapid text-cycling glitch for the opening jumpscare message — a quick
+     RGB-split jitter while the 3 text variants flicker through each other. */
+  .few-msg.glitching-text{animation:femGlitchJitter .1s steps(2,end) infinite;}
+  @keyframes femGlitchJitter{
+    0%{transform:translate(0,0); text-shadow:2px 0 #ff2b2b, -2px 0 #2bd6ff;}
+    50%{transform:translate(-1px,1px); text-shadow:-2px 0 #ff2b2b, 2px 0 #2bd6ff;}
+    100%{transform:translate(1px,-1px); text-shadow:2px 0 #ff2b2b, -2px 0 #2bd6ff;}
+  }
+  /* "Virus spam" burst — a flurry of tiny fake system-error windows popping
+     up at random spots before the real jumpscare window settles in, like a
+     real malware infection popup-bomb. */
+  .vspam-window{
+    position:fixed; z-index:10000; background:#e8e8e8; border:2px solid #7a0000; border-radius:6px;
+    box-shadow:0 8px 24px rgba(0,0,0,.55); font-family:var(--font-body); overflow:hidden;
+    animation:vspamShake .12s steps(2,end) 6; pointer-events:none;
+  }
+  .vspam-title{background:linear-gradient(180deg,#c0392b,#8e2418); color:#fff; font-size:11px; font-weight:800; padding:4px 8px;}
+  .vspam-msg{padding:8px 10px; font-size:12px; font-weight:800; color:#1a1a1a;}
+  @keyframes vspamShake{
+    0%{transform:translate(0,0);} 50%{transform:translate(2px,-2px);} 100%{transform:translate(-2px,1px);}
+  }
+  .few-sub{font-size:11.5px; color:#555; margin-top:6px; font-weight:500;}
+  .few-actions{display:flex; justify-content:flex-end; gap:8px; padding:14px 20px 20px;}
+  .few-ok-btn{
+    min-width:78px; padding:7px 14px; border-radius:3px; border:1px solid #8a8a8a; background:#e2e2e2;
+    color:#111; font-weight:700; font-size:13px;
+  }
+  .few-ok-btn:hover{background:#d5d5d5;}
+  .few-ok-btn:active{background:#c8c8c8;}
+  /* Anomaly (red) is the default look above. Recovery variant re-themes the
+     same window blue so the two message types are visually distinct. */
+  .fake-error-window.variant-recovery .few-titlebar{background:linear-gradient(180deg,#2569b0,#123a6e);}
+  .fake-error-window.variant-recovery .few-close{background:#1d4f8f; border-color:rgba(255,255,255,.6);}
+  .fake-error-window.variant-recovery .few-close:hover{background:#2a6fc0;}
+  .fake-error-window.variant-recovery .few-icon-big{filter:hue-rotate(180deg);}
+
+  /* ---------- GLASS SHATTER TRANSITION ---------- */
+  .glass-shatter-overlay{
+    position:fixed; inset:0; z-index:10040; display:none; pointer-events:none; overflow:hidden;
+  }
+  .glass-shatter-overlay.play{display:block;}
+  .gshard{
+    position:absolute; background:rgba(220,230,235,.22);
+    border:1px solid rgba(255,255,255,.5); box-shadow:0 0 10px rgba(255,255,255,.25) inset;
+    will-change:transform,opacity;
+    animation:gshardFly .62s cubic-bezier(.3,.7,.4,1) forwards;
+  }
+  @keyframes gshardFly{
+    0%{transform:translate(0,0) rotate(0deg) scale(1); opacity:1;}
+    100%{transform:var(--gfly) rotate(var(--grot)) scale(.4); opacity:0;}
+  }
+  .gshatter-flash{position:absolute; inset:0; background:#fff; opacity:0; animation:gflash .3s ease-out forwards;}
+  @keyframes gflash{0%{opacity:.95;} 100%{opacity:0;}}
+
+  /* ---------- BOSS PRE-FIGHT CONFRONTATION CUTSCENE ---------- */
+  .vboss-confront-overlay{
+    position:fixed; inset:0; background:#000; z-index:10050; display:none;
+    align-items:center; justify-content:center; flex-direction:column; gap:18px;
+  }
+  .vboss-confront-overlay.open{display:flex;}
+  .vboss-confront-avatar{font-size:96px; line-height:1;}
+  .vboss-confront-avatar.glitching{animation:femGlitchJitter .09s steps(2,end) infinite;}
+  .vboss-confront-bubble{
+    max-width:min(80vw,360px); background:#fff; color:#111; border-radius:16px; padding:12px 18px;
+    font-family:var(--font-body); font-size:15px; font-weight:600; text-align:center; position:relative;
+    box-shadow:0 8px 24px rgba(0,0,0,.4); min-height:1.4em;
+  }
+  .vboss-confront-bubble::after{
+    content:""; position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+    border-width:10px 8px 0; border-style:solid; border-color:#fff transparent transparent;
+  }
+  /* Full-screen white camera-flash, reused for both the pre-fight reveal
+     and the game-over sequence. */
+  .vboss-white-flash{
+    position:fixed; inset:0; background:#fff; opacity:0; z-index:10080; pointer-events:none;
+  }
+
+  /* ---------- BOSS "DON'T DO THAT AGAIN" CONFIRM BUBBLE ---------- */
+  .vboss-confirm-overlay{
+    position:fixed; inset:0; z-index:10060; display:none; align-items:center; justify-content:center;
+    background:rgba(15,17,14,.5);
+  }
+  .vboss-confirm-overlay.open{display:flex; animation:vcelebrateFade .18s ease;}
+  /* Visual now reuses .fake-error-window/.variant-recovery (same System
+     Recovery look as the fake-error popups) — this class only adds the
+     pop-in entrance animation on top of that. */
+  .vboss-confirm-box{animation:vcelebratePop .28s cubic-bezier(.34,1.56,.64,1);}
+
+  /* ---------- FNF-STYLE LANE KEY LABELS ---------- */
+  .vboss-hitzone{font-family:var(--font-display); font-weight:800;}
+  .vboss-hitzone.hit{transform:scale(.9);}
+  .vboss-note{font-family:var(--font-display); font-weight:800;}
+
+  /* ---------- FNF-STYLE HIT RATING POPUPS ---------- */
+  .vboss-rating{
+    position:absolute; left:50%; bottom:150px; z-index:5; pointer-events:none;
+    font-family:var(--font-display); font-weight:900; font-size:28px; letter-spacing:.03em;
+    text-transform:uppercase; opacity:0; text-shadow:0 2px 0 rgba(0,0,0,.55), 0 0 16px currentColor;
+    animation:vbossRatingPop .5s cubic-bezier(.25,.9,.35,1.4) forwards;
+  }
+  @keyframes vbossRatingPop{
+    0%{opacity:0; transform:translate(-50%,18px) scale(.6);}
+    22%{opacity:1; transform:translate(-50%,0) scale(1.18);}
+    38%{transform:translate(-50%,0) scale(1);}
+    72%{opacity:1;}
+    100%{opacity:0; transform:translate(-50%,-26px) scale(.92);}
+  }
+  .vboss-rating.r-perfect{color:#FFD54A;}
+  .vboss-rating.r-awesome{color:#3ED0C6;}
+  .vboss-rating.r-good{color:#8CE08A;}
+  .vboss-rating.r-miss{color:#FF3B3B; animation:vbossRatingPop .5s cubic-bezier(.25,.9,.35,1.4) forwards, vbossGlitchShake .12s steps(2,end) 3;}
+
+  /* ---------- RANDOM SCARY TEXT (scales up as Verity nears victory) ---------- */
+  .vboss-scary-text{
+    position:absolute; z-index:4; pointer-events:none; color:rgba(255,25,25,.88);
+    font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:.05em;
+    text-transform:uppercase; text-shadow:0 0 10px rgba(255,0,0,.75);
+    animation:vbossScaryFlash .75s steps(2,end) forwards;
+  }
+  @keyframes vbossScaryFlash{
+    0%{opacity:0;} 12%{opacity:1;} 70%{opacity:.85;} 100%{opacity:0;}
+  }
+  /* Behind Verity: same text, but sits under the giant-wrap layer (z-index 1)
+     so it reads as background noise instead of a foreground overlay. */
+  .vboss-scary-text.behind{ z-index:0; opacity:.7; }
+
+  /* ---------- PERIODIC WHOLE-SCREEN GLITCH ---------- */
+  .vboss-screen-glitch{
+    position:absolute; inset:0; z-index:6; pointer-events:none; opacity:0;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 4px);
+  }
+  /* Was mix-blend-mode:overlay + an animated filter:hue-rotate() on a
+     full-screen element — mix-blend-mode forces the browser to re-blend
+     everything underneath it, and animating filter on top of that forces
+     a full-screen re-rasterize every frame. That combo alone was enough
+     to choke a 2019-class phone. Same "glitchy flicker" read, achieved
+     with only opacity + transform (both GPU-compositor only, no blending,
+     no per-frame filter). */
+  .vboss-screen-glitch.show{ opacity:1; animation:vbossScreenGlitchAnim .22s steps(2,end); }
+  @keyframes vbossScreenGlitchAnim{
+    0%{transform:translate(0,0);}
+    30%{transform:translate(-6px,2px);}
+    60%{transform:translate(6px,-3px);}
+    100%{transform:translate(0,0);}
+  }
 
   /* ---------- REAL-TIME GUIDED TOUR ---------- */
   .tour-overlay{
@@ -777,18 +1143,16 @@
      dock and the mobile floating bubble/FAB are hidden to avoid showing her
      twice. Restored automatically the moment the game screen closes. */
   body.hide-global-verity .verity-dock,
-  body.hide-global-verity .verity-fab,
-  body.hide-global-verity .verity-fab-bubble{ display:none !important; }
+  body.hide-global-verity .verity-fab-dock{ display:none !important; }
 
-  /* Bugfix: the mobile media query forces .verity-fab/.verity-fab-bubble to
+  /* Bugfix: the mobile media query forces .verity-fab-dock to
      display:flex !important, which used to beat the inline style="display:none"
      that renderDock() set when Verity is switched off in Settings — so on
      mobile the floating avatar kept showing even with the toggle off. This
      selector has higher specificity (body.verity-off ...) than the plain
      class rule in the media query, so it always wins regardless of order. */
   body.verity-off .verity-dock,
-  body.verity-off .verity-fab,
-  body.verity-off .verity-fab-bubble{ display:none !important; }
+  body.verity-off .verity-fab-dock{ display:none !important; }
 
   /* ---------- NOTEBOOK (3D book page-flip) ---------- */
   .nb-book{
@@ -1598,6 +1962,7 @@
         <div class="setting-row">
           <div><div class="label">🙂 Meet Verity</div><div class="sub">Companion emoji StudyFlow — supportive, playful, caring, sometimes teasing, context-aware. Bukan dictator.</div></div>
         </div>
+        <p class="hint">Konon Verity nggak selalu sesantai kelihatannya. Beberapa pengguna cerita, kalau avatarnya diputar-putar cepat dan berulang kali... dia bisa "sadar" dan menunjukkan sisi lain yang jarang orang lihat. Entah itu cuma gosip, atau memang benar — cobain sendiri kalau berani.</p>
         <div class="setting-row">
           <div><div class="label">What's New</div><div class="sub">Lihat perubahan di versi ini</div></div>
           <button class="btn btn-sm" id="changelogBtnSettings">Lihat</button>
@@ -1695,15 +2060,19 @@
   <div class="verity-avatar"><span class="vface" id="verityDockFace">🙂</span></div>
 </div>
 
-<!-- Verity floating avatar (mobile) -->
-<div class="verity-fab-bubble" id="verityFabBubble" role="button" tabindex="0" aria-label="Open Verity assistant">
-  <span id="verityFabBubbleMsg"></span>
-  <i class="vfb-tail" aria-hidden="true"></i>
+<!-- Verity floating avatar (mobile) — fab + bubble share one draggable
+     flex column, same structure as the desktop .verity-dock, so the
+     bubble always stays attached directly above/below her. -->
+<div class="verity-fab-dock" id="verityFabDock" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Verity assistant">
+  <div class="verity-fab-bubble" id="verityFabBubble">
+    <span id="verityFabBubbleMsg"></span>
+    <i class="vfb-tail" aria-hidden="true"></i>
+  </div>
+  <div class="verity-fab" id="verityFab">
+    <span id="verityFabFace">🙂</span>
+    <span class="badge-dot" id="verityFabBadge" style="display:none;"></span>
+  </div>
 </div>
-<button class="verity-fab" id="verityFab" aria-label="Open Verity assistant" aria-haspopup="dialog" aria-expanded="false">
-  <span id="verityFabFace">🙂</span>
-  <span class="badge-dot" id="verityFabBadge" style="display:none;"></span>
-</button>
 
 <!-- Verity dialogue panel -->
 <div class="verity-panel-overlay" id="verityPanelOverlay" role="dialog" aria-modal="true" aria-label="Verity">
@@ -1742,6 +2111,96 @@
     <button class="btn btn-primary vcelebrate-close" id="verityCelebrateClose">Makasih, Verity!</button>
   </div>
 </div>
+
+<!-- Verity "boss mode" — a hidden easter egg: spin her around rapidly and
+     repeatedly and she gets mad. Loads the linked track as the boss music
+     and turns it into a short rhythm mini-game (hard-mode note speed);
+     ends automatically when the track finishes. -->
+<div class="verity-boss-overlay" id="verityBossOverlay">
+  <div class="vboss-yt" id="vbossYt"></div>
+  <div class="vboss-siren" id="vbossSiren"></div>
+  <div class="vboss-timer-bg" id="vbossTimer">0:00</div>
+  <div class="vboss-screen-glitch" id="vbossScreenGlitch"></div>
+  <div class="vboss-giant-wrap" id="vbossGiantWrap"><div class="vboss-giant-shadow" id="vbossGiantShadow">👹</div><div class="vboss-giant" id="vbossGiant">👹</div></div>
+  <div class="vboss-game" id="vbossGame">
+    <div class="vboss-score">SCORE: <span id="vbossScore">0</span></div>
+    <div class="vboss-barwrap">
+      <span class="vboss-bar-icon">🙂</span>
+      <div class="vboss-bar" id="vbossBar">
+        <div class="vboss-bar-fill-player" id="vbossBarPlayer"></div>
+        <div class="vboss-bar-knob" id="vbossBarKnob"></div>
+      </div>
+      <span class="vboss-bar-icon boss">👹</span>
+    </div>
+    <div class="vboss-lanes" id="vbossLanes">
+      <div class="vboss-lane" data-lane="0"><div class="vboss-hitzone" id="vbossHit0" data-lane-btn="0">Z</div></div>
+      <div class="vboss-lane" data-lane="1"><div class="vboss-hitzone" id="vbossHit1" data-lane-btn="1">X</div></div>
+      <div class="vboss-lane" data-lane="2"><div class="vboss-hitzone" id="vbossHit2" data-lane-btn="2">N</div></div>
+      <div class="vboss-lane" data-lane="3"><div class="vboss-hitzone" id="vbossHit3" data-lane-btn="3">M</div></div>
+    </div>
+  </div>
+  <div class="vboss-glitch-aura" id="vbossGlitchAura"></div>
+  <div class="vboss-glitch" id="vbossGlitch">tidak...</div>
+</div>
+<div class="vboss-gameover-overlay" id="vbossGameOverOverlay">
+  <div class="vboss-gameover-text">Verity telah memakanmu</div>
+</div>
+
+<!-- Fake system-error jumpscare popup, reused both at boss-mode entry
+     and at boss-mode exit (different message each time). -->
+<div class="fake-error-overlay" id="fakeErrorOverlay">
+  <div class="fake-error-window">
+    <div class="few-titlebar">
+      <span class="few-tico">⚠️</span><span class="few-title" id="fakeErrorTitle">System Error</span>
+      <button class="few-close" id="fakeErrorClose" aria-label="Tutup">✕</button>
+    </div>
+    <div class="few-body">
+      <div class="few-icon-big">⛔</div>
+      <div>
+        <div class="few-msg" id="fakeErrorMsg">BERANINYA KAWW</div>
+        <div class="few-sub" id="fakeErrorSub"></div>
+      </div>
+    </div>
+    <div class="few-actions">
+      <button class="few-ok-btn" id="fakeErrorOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Glass-shatter transition, played once right before giant Verity appears -->
+<div class="glass-shatter-overlay" id="glassShatterOverlay"></div>
+
+<!-- Boss-mode pre-fight cutscene: Verity appears normal in front of a black
+     backdrop with a speech bubble, then glitches into the demon before the
+     fight actually starts. -->
+<div class="vboss-confront-overlay" id="vbossConfrontOverlay">
+  <div class="vboss-confront-bubble" id="vbossConfrontBubble"><span id="vbossConfrontBubbleText"></span></div>
+  <div class="vboss-confront-avatar" id="vbossConfrontAvatar">🙂</div>
+</div>
+<div class="vboss-white-flash" id="vbossWhiteFlash"></div>
+
+<!-- Post boss-mode confirmation bubble: choosing "Tidak" restarts the whole sequence -->
+<div class="vboss-confirm-overlay" id="vbossConfirmOverlay">
+  <div class="fake-error-window variant-recovery vboss-confirm-box">
+    <div class="few-titlebar">
+      <span class="few-tico">⚠️</span><span class="few-title">System Recovery</span>
+    </div>
+    <div class="few-body">
+      <div class="few-icon-big">⛔</div>
+      <div>
+        <div class="few-msg">Jangan lakukan itu lagi.</div>
+        <div class="few-sub"></div>
+      </div>
+    </div>
+    <div class="few-actions">
+      <button class="few-ok-btn" id="vbossConfirmYes">Ya</button>
+      <button class="few-ok-btn" id="vbossConfirmNo">Tidak</button>
+    </div>
+  </div>
+</div>
+
+<audio id="vbossErrorAudio" src="error.mp3" preload="auto"></audio>
+<audio id="vbossMusicAudio" src="boss_music.mp3" preload="auto"></audio>
 
 <!-- STUDY BLOCK — time's up / game over overlay (not a .modal-overlay: no back-navigation
      entry needed, it always resolves via its own button, never via device Back) -->
@@ -2011,7 +2470,8 @@ const StorageManager = (function(){
         soundEnabled:true, soundMasterVolume:0.6, soundUiVolume:0.5, soundVerityVolume:0.7, soundNotif:true,
         studyBlockHighScore:0,
         chessStats:{wins:0,losses:0,draws:0},
-        profilePhoto:null
+        profilePhoto:null,
+        vbossSurvived:0
       }
     };
   }
@@ -2118,6 +2578,13 @@ const StorageManager = (function(){
       });
       d.version = 12;
     }
+    if(d.version < 13){
+      // v12 -> v13: hitungan berapa kali berhasil bertahan dari mode boss
+      // Verity (dipakai badge tersembunyi), tanpa menyentuh data lama.
+      d.settings = d.settings || {};
+      if(d.settings.vbossSurvived===undefined) d.settings.vbossSurvived = 0;
+      d.version = 13;
+    }
     return d;
   }
   function load(){
@@ -2211,12 +2678,25 @@ const SoundManager = (function(){
     verityBlip: (c,v,freq)=> { tone(c,{freq:freq||600, dur:0.026, type:"square", gain:0.1*v}); },
     sbPlace:    (c,v)=> { tone(c,{freq:480, endFreq:420, dur:0.05, type:"sine", gain:0.14*v}); },
     sbClear:    (c,v)=> { tone(c,{freq:660, dur:0.08, type:"triangle", gain:0.18*v}); tone(c,{freq:990, dur:0.14, type:"triangle", gain:0.18*v, delay:0.06}); },
-    sbTimeUp:   (c,v)=> { tone(c,{freq:520, dur:0.12, type:"sine", gain:0.16*v}); tone(c,{freq:400, dur:0.2, type:"sine", gain:0.14*v, delay:0.12}); }
+    sbTimeUp:   (c,v)=> { tone(c,{freq:520, dur:0.12, type:"sine", gain:0.16*v}); tone(c,{freq:400, dur:0.2, type:"sine", gain:0.14*v, delay:0.12}); },
+    vbossGlitch:(c,v)=> {
+      // Quick stuttering descent — the "tidak..." glitch cue after boss mode ends.
+      for(let i=0;i<5;i++){
+        tone(c,{freq:900-i*140, dur:0.045, type:"square", gain:0.16*v, delay:i*0.05});
+      }
+    },
+    vbossMiss:(c,v)=> {
+      // Harsh synthesized buzz for a missed note — replaces resetting/replaying
+      // an <audio> file on every miss, which was seeking a compressed mp3 from
+      // frame zero repeatedly and stuttering the main thread on slower devices.
+      tone(c,{freq:220, endFreq:80, dur:0.14, type:"sawtooth", gain:0.22*v});
+      tone(c,{freq:140, dur:0.09, type:"square", gain:0.15*v, delay:0.03});
+    }
   };
   const SOUND_TYPES = Object.keys(RECIPES);
   function play(name, arg){
     if(!RECIPES[name]) return;
-    const bucket = (name==="notification") ? "notif" : ((name==="verityReact"||name==="verityBlip") ? "verity" : "ui");
+    const bucket = (name==="notification") ? "notif" : ((name==="verityReact"||name==="verityBlip"||name==="vbossMiss") ? "verity" : "ui");
     const v = volumeFor(bucket);
     if(v<=0) return;
     const c = ensureCtx();
@@ -3195,7 +3675,8 @@ const BADGE_DEFS = [
   {id:"sb-score", icon:"🧩", title:"Jago Study Block", desc:"Skor Study Block ≥ 500", test:d=>(d.settings.studyBlockHighScore||0)>=500},
   {id:"chess-win1", icon:"♟️", title:"Pecatur Andal", desc:"Menang 1x lawan AI Catur", test:d=>((d.settings.chessStats||{}).wins||0)>=1},
   {id:"chess-win5", icon:"👑", title:"Grandmaster Dadakan", desc:"Menang 5x lawan AI Catur", test:d=>((d.settings.chessStats||{}).wins||0)>=5},
-  {id:"no-overdue", icon:"🛡️", title:"Bebas Telat", desc:"Tidak ada tugas terlambat saat ini", test:d=>d.tasks.filter(t=>!t.completed && new Date(t.deadline)<new Date()).length===0 && d.tasks.length>0}
+  {id:"no-overdue", icon:"🛡️", title:"Bebas Telat", desc:"Tidak ada tugas terlambat saat ini", test:d=>d.tasks.filter(t=>!t.completed && new Date(t.deadline)<new Date()).length===0 && d.tasks.length>0},
+  {id:"vboss-survive", icon:"🫣", title:"Selamat dari Verity", desc:"Bertahan hidup sampai akhir dari sisi lain Verity", test:d=>(d.settings.vbossSurvived||0)>=1}
 ];
 function renderBadges(){
   const row = document.getElementById("badgeRow");
@@ -3354,12 +3835,12 @@ const VerityEngine = (function(){
     if(!DB.settings.verityEnabled){
       document.body.classList.add("verity-off");
       document.getElementById("verityDock").style.display = "none";
-      document.getElementById("verityFab").style.display = "none";
-      document.getElementById("verityFabBubble").style.display = "none";
+      document.getElementById("verityFabDock").style.display = "none";
       return;
     }
     document.body.classList.remove("verity-off");
     document.getElementById("verityDock").style.display = "";
+    document.getElementById("verityFabDock").style.display = "";
     const m = currentPageMoodOverride || computeMood();
     if(currentPageMoodOverride) verityMood = m.mood;
     document.getElementById("verityDockFace").textContent = MOODS[m.mood]||MOODS.neutral;
@@ -3381,6 +3862,7 @@ const VerityEngine = (function(){
       lastFabBubbleText = m.text;
     }
     syncDockBubble();
+    syncFabFlip();
   }
   /* ---- proactive commentary (cooldown to avoid spam) ---- */
   const PROACTIVE_COOLDOWN_MS = 60*1000; // min gap between unsolicited toasts
@@ -3428,8 +3910,7 @@ const VerityEngine = (function(){
     document.getElementById("verityCelebrateFace").textContent = MOODS[mood]||MOODS.proud||MOODS.happy||"🎉";
     document.getElementById("verityCelebrateText").textContent = text;
     document.getElementById("verityDock").style.display = "none";
-    document.getElementById("verityFab").style.display = "none";
-    document.getElementById("verityFabBubble").style.display = "none";
+    document.getElementById("verityFabDock").style.display = "none";
     overlay.classList.add("open");
     SoundManager.play("verityReact");
   }
@@ -3513,18 +3994,16 @@ const VerityEngine = (function(){
     });
     document.getElementById("verityPanelOverlay").classList.add("open");
     document.getElementById("verityDock").setAttribute("aria-expanded", "true");
-    document.getElementById("verityFab").setAttribute("aria-expanded", "true");
+    document.getElementById("verityFabDock").setAttribute("aria-expanded", "true");
     document.getElementById("verityDock").style.visibility = "hidden";
-    document.getElementById("verityFab").style.visibility = "hidden";
-    document.getElementById("verityFabBubble").style.visibility = "hidden";
+    document.getElementById("verityFabDock").style.visibility = "hidden";
   }
   function closePanel(){
     document.getElementById("verityPanelOverlay").classList.remove("open");
     document.getElementById("verityDock").setAttribute("aria-expanded", "false");
-    document.getElementById("verityFab").setAttribute("aria-expanded", "false");
+    document.getElementById("verityFabDock").setAttribute("aria-expanded", "false");
     document.getElementById("verityDock").style.visibility = "";
-    document.getElementById("verityFab").style.visibility = "";
-    document.getElementById("verityFabBubble").style.visibility = "";
+    document.getElementById("verityFabDock").style.visibility = "";
   }
   function addBotMsg(text){
     const msgs = document.getElementById("verityMsgs");
@@ -3551,9 +4030,8 @@ const VerityEngine = (function(){
   function wire(){
     document.getElementById("verityDock").addEventListener("click", openPanel);
     document.getElementById("verityDock").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") { e.preventDefault(); openPanel(); }});
-    document.getElementById("verityFab").addEventListener("click", openPanel);
-    document.getElementById("verityFabBubble").addEventListener("click", openPanel);
-    document.getElementById("verityFabBubble").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") { e.preventDefault(); openPanel(); }});
+    document.getElementById("verityFabDock").addEventListener("click", openPanel);
+    document.getElementById("verityFabDock").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") { e.preventDefault(); openPanel(); }});
     document.getElementById("verityPanelClose").addEventListener("click", closePanel);
     document.getElementById("verityPanelOverlay").addEventListener("click", (e)=>{ if(e.target.id==="verityPanelOverlay") closePanel(); });
     document.getElementById("veritySendBtn").addEventListener("click", sendChat);
@@ -3578,23 +4056,43 @@ const VerityEngine = (function(){
     const sidebarRight = sidebarVisible ? sidebar.getBoundingClientRect().right : 0;
     return {left:sidebarRight+margin, top:margin, right:window.innerWidth-margin, bottom:window.innerHeight-margin};
   }
-  function syncFabBubble(){
-    const fab = document.getElementById("verityFab");
-    const bubble = document.getElementById("verityFabBubble");
-    if(fab.dataset.moved !== "1") return;
-    const r = fab.getBoundingClientRect();
-    bubble.style.right = "auto"; bubble.style.bottom = "auto";
-    let left = r.left - 30;
-    left = Math.max(8, Math.min(left, window.innerWidth - bubble.offsetWidth - 8));
-    let top = r.top - bubble.offsetHeight - 12;
-    if(top < 48){ top = r.bottom + 12; bubble.classList.add("tail-up"); }
-    else{ bubble.classList.remove("tail-up"); }
-    bubble.style.left = left+"px";
-    bubble.style.top = top+"px";
+  // Mobile fab: exactly the same idea as the desktop syncDockBubble below —
+  // the bubble is a flex sibling inside .verity-fab-dock (see CSS), so it's
+  // always centered directly on the fab automatically. All this needs to
+  // decide is which half of the screen Verity's avatar is sitting in, and
+  // flip the whole dock so the bubble always lands in the OTHER half —
+  // Verity in the bottom half of the screen -> bubble above her; Verity in
+  // the top half -> bubble below her. Shared with the desktop dock so both
+  // behave identically.
+  function decideBubbleBelow(avatarRect){
+    const center = avatarRect.top + avatarRect.height/2;
+    return center < window.innerHeight/2;
   }
-  // Desktop dock: flip the bubble to sit below the avatar (tail pointing
-  // up) whenever there isn't enough room above it — e.g. Verity's been
-  // dragged near the top of the window, or the message is long/tall.
+  function syncFabFlip(){
+    const wrap = document.getElementById("verityFabDock");
+    const bubble = document.getElementById("verityFabBubble");
+    if(!wrap || !bubble) return;
+    const fab = document.getElementById("verityFab");
+    const r = fab.getBoundingClientRect();
+    const nav = document.querySelector(".bottom-nav");
+    const navVisible = nav && getComputedStyle(nav).display !== "none";
+    const navTop = navVisible ? nav.getBoundingClientRect().top : window.innerHeight;
+    const spaceAbove = r.top - 48;
+    const spaceBelow = (navTop - 8) - r.bottom;
+    const useBelow = decideBubbleBelow(r);
+    wrap.classList.toggle("flip-below", useBelow);
+    const needed = bubble.offsetHeight + 12;
+    const available = (useBelow ? spaceBelow : spaceAbove) - 12;
+    if(needed > available + 12 && available > 60){
+      bubble.style.maxHeight = available+"px";
+      bubble.style.overflowY = "auto";
+    } else {
+      bubble.style.maxHeight = "";
+      bubble.style.overflowY = "";
+    }
+  }
+  // Desktop dock: same rule as the mobile fab above — bottom half of the
+  // screen -> bubble above Verity; top half -> bubble below her.
   function syncDockBubble(){
     const dock = document.getElementById("verityDock");
     const bubble = document.getElementById("verityDockBubble");
@@ -3602,19 +4100,43 @@ const VerityEngine = (function(){
     const avatar = dock.querySelector(".verity-avatar");
     if(!avatar) return;
     const r = avatar.getBoundingClientRect();
+    const topBoundary = 52, bottomBoundary = window.innerHeight - 10;
+    const spaceAbove = r.top - topBoundary;
+    const spaceBelow = bottomBoundary - r.bottom;
+    const useBelow = decideBubbleBelow(r);
+    dock.classList.toggle("flip-below", useBelow);
+    // If the message is tall and its side is tight on room, let the
+    // bubble scroll internally instead of getting visually cut off or
+    // spilling past the edge of the screen — the whole sentence stays
+    // reachable either way.
     const needed = bubble.offsetHeight + 12;
-    if(r.top - needed < 8) dock.classList.add("flip-below");
-    else dock.classList.remove("flip-below");
+    const available = (useBelow ? spaceBelow : spaceAbove) - 12;
+    if(needed > available + 12 && available > 60){
+      bubble.style.maxHeight = available+"px";
+      bubble.style.overflowY = "auto";
+    } else {
+      bubble.style.maxHeight = "";
+      bubble.style.overflowY = "";
+    }
   }
   function makeVerityDraggable(el, opts){
     let startX, startY, origLeft, origTop, dragging=false, moved=false, pointerId=null;
     const faceEl = opts.faceEl ? document.getElementById(opts.faceEl) : null;
     let normalFace = faceEl ? faceEl.textContent : null;
+    // Easter egg: spinning Verity around rapidly in a circle (not just
+    // dragging her from A to B) accumulates signed angle around her own
+    // starting center; enough full rotations in one drag triggers boss
+    // mode. Ordinary drags barely change angle relative to the center, so
+    // this doesn't false-trigger on normal repositioning.
+    let spinCx, spinCy, spinLastAngle = null, spinAccum = 0;
+    const SPIN_TRIGGER = Math.PI*2*3; // 3 full rotations
     function onDown(e){
       if(e.button!==undefined && e.button!==0) return;
       const rect = el.getBoundingClientRect();
       startX = e.clientX; startY = e.clientY;
       origLeft = rect.left; origTop = rect.top;
+      spinCx = rect.left + rect.width/2; spinCy = rect.top + rect.height/2;
+      spinLastAngle = null; spinAccum = 0;
       moved = false; pointerId = e.pointerId;
       document.addEventListener("pointermove", onMove);
       document.addEventListener("pointerup", onUp);
@@ -3631,6 +4153,18 @@ const VerityEngine = (function(){
         el.style.left = origLeft+"px"; el.style.top = origTop+"px";
       }
       if(dragging){
+        const angle = Math.atan2(e.clientY-spinCy, e.clientX-spinCx);
+        if(spinLastAngle !== null){
+          let d = angle - spinLastAngle;
+          if(d > Math.PI) d -= Math.PI*2;
+          if(d < -Math.PI) d += Math.PI*2;
+          spinAccum += Math.abs(d);
+          if(spinAccum >= SPIN_TRIGGER){
+            spinAccum = 0;
+            triggerVerityBossMode();
+          }
+        }
+        spinLastAngle = angle;
         const b = opts.getBounds();
         const w = el.offsetWidth, h = el.offsetHeight;
         let nx = origLeft+dx, ny = origTop+dy;
@@ -3661,16 +4195,701 @@ const VerityEngine = (function(){
     el.addEventListener("pointerdown", onDown);
   }
   function wireDraggable(){
-    makeVerityDraggable(document.getElementById("verityFab"), {
-      faceEl:"verityFabFace", getBounds:fabBounds, onMove:syncFabBubble,
-      onSettle:()=>{ renderDock(); syncFabBubble(); }
+    makeVerityDraggable(document.getElementById("verityFabDock"), {
+      faceEl:"verityFabFace", getBounds:fabBounds, onMove:syncFabFlip,
+      onSettle:()=>{ renderDock(); syncFabFlip(); }
     });
     makeVerityDraggable(document.getElementById("verityDock"), {
       faceEl:"verityDockFace", getBounds:dockBounds, onMove:syncDockBubble,
       onSettle:()=>{ renderDock(); syncDockBubble(); }
     });
-    window.addEventListener("resize", ()=>{ syncFabBubble(); syncDockBubble(); });
+    window.addEventListener("resize", ()=>{ syncFabFlip(); syncDockBubble(); });
   }
+
+  /* =========================================================
+     VERITY "BOSS MODE" — hidden easter egg. Spin her around in a
+     circle enough times (tracked in makeVerityDraggable above) and
+     she snaps: black screen, the linked track plays as boss music,
+     a giant angry Verity looms and grows for the whole song, and a
+     simple hard-mode rhythm mini-game runs alongside it. When the
+     track ends, a short glitch plays and she says "tidak..." before
+     everything returns to normal.
+     Note: the falling notes are a simple hard-speed rhythm loop, not
+     a beat-map charted to this specific track (that'd need manually
+     annotating the song's actual beat timings, which isn't something
+     that can be derived from just a link) — it's timed to the song's
+     length, not its individual beats. ---------------------------- */
+  let vbossActive = false;
+  let vbossMusic = null;
+  let vbossSpawnTimer = null;
+  let vbossMonsterTimer = null;
+  let vbossScore = 0;
+  let vbossBalance = 50; // 0 = fully ours (green), 100 = boss wins (purple, screen eaten)
+  let vbossOver = false;
+  let vbossNotes = []; // {el, lane, bornAt}
+  const VBOSS_FALL_MS = 650;      // hard mode: fast fall, top of screen to the hitzone
+  const VBOSS_SPAWN_MS = 320;     // hard mode: frequent notes
+  const VBOSS_HIT_WINDOW = 0.28;  // fraction of fall progress counted as "in the zone"
+  const VBOSS_KEYMAP = {z:0, x:1, n:2, m:3}; // FNF-style keyboard lanes (desktop + mobile taps)
+  // Only two faces, throughout the whole fight, always at the fastest/most
+  // glitchy cadence, both rendered in monochrome (see .vboss-giant.tier-mono).
+  // The only thing that still escalates over the fight is Verity's on-screen
+  // *size*, driven by vbossBalance in updateVbossBar.
+  // (single-face constant VBOSS_FACE now lives next to startVbossMonsterFaceLoop below)
+  const VBOSS_FACE_SPEED_MS = 180;      // unused now (single face, no more swap loop)
+  const VBOSS_SCARY_LOOP_MS = 500;      // continuous scary-text cadence
+  const VBOSS_SCARY_WORDS = ["LARI","IA MELIHATMU","DI BELAKANGMU","TIDAK ADA JALAN KELUAR","JANGAN BERPALING","TERLAMBAT","AWAS","KELUAR SEKARANG","IA DATANG","JANGAN LIHAT LAYAR"];
+  const VBOSS_LANE_COLORS = ["#3ED0C6","#E85C8A","#F2C94C","#5C8BE8"]; // matches .vboss-lane --lc per lane
+  const VBOSS_HIT_DELTA = 4;   // each hit shifts the bar toward us
+  const VBOSS_MISS_DELTA = 8;  // each miss shifts it toward the boss (bigger — misses hurt more)
+  let vbossScaryLoopTimer = null;
+  let vbossScreenGlitchTimer = null;
+  let vbossTimerInterval = null;
+  let vbossKeyBound = false;
+
+  function fakeErrorOK(){ return new Promise(res=>{ vbossOkResolve = res; }); }
+  let vbossOkResolve = null;
+  function showFakeError(title, msg, sub, variant, msgVariants){
+    return new Promise(resolve=>{
+      document.getElementById("fakeErrorTitle").textContent = title;
+      const msgEl = document.getElementById("fakeErrorMsg");
+      msgEl.textContent = msg;
+      document.getElementById("fakeErrorSub").textContent = sub || "";
+      const overlay = document.getElementById("fakeErrorOverlay");
+      const win = overlay.querySelector(".fake-error-window");
+      if(win){
+        win.classList.remove("variant-anomaly","variant-recovery");
+        win.classList.add(variant==="recovery" ? "variant-recovery" : "variant-anomaly");
+      }
+      document.body.classList.add("vboss-frozen");
+      overlay.classList.add("open", "shake");
+      const audio = document.getElementById("vbossErrorAudio");
+      try{ audio.currentTime = 0; audio.play().catch(()=>{}); }catch(e){}
+      // Glitch-cycle through a few text variants before settling — reads
+      // like corrupted/flickering text instead of a single static line.
+      let glitchIv = null;
+      if(msgVariants && msgVariants.length > 1){
+        msgEl.classList.add("glitching-text");
+        glitchIv = setInterval(()=>{
+          msgEl.textContent = msgVariants[Math.floor(Math.random()*msgVariants.length)];
+        }, 90);
+        setTimeout(()=>{
+          clearInterval(glitchIv); glitchIv = null;
+          msgEl.classList.remove("glitching-text");
+          msgEl.textContent = msgVariants[0];
+        }, 850);
+      }
+      let done = false;
+      function close(){
+        if(done) return; done = true;
+        if(glitchIv) clearInterval(glitchIv);
+        msgEl.classList.remove("glitching-text");
+        overlay.classList.remove("open", "shake");
+        document.getElementById("fakeErrorOk").removeEventListener("click", close);
+        document.getElementById("fakeErrorClose").removeEventListener("click", close);
+        resolve();
+      }
+      document.getElementById("fakeErrorOk").addEventListener("click", close);
+      document.getElementById("fakeErrorClose").addEventListener("click", close);
+      // Never gets permanently stuck even if the user doesn't click.
+      setTimeout(close, 3200);
+    });
+  }
+  // Fake "virus infection" popup-bomb: a burst of tiny, non-interactive
+  // system-error windows at random spots on screen, like a real malware
+  // spam attack. Starts with just a single window, then ramps up faster
+  // and faster — by the end the screen is flooded. None of them auto-remove:
+  // they all stay put and become the backdrop once the one big real window
+  // (the actual showFakeError call right after this) settles on top of them.
+  const VBOSS_SPAM_TITLES = ["System Error","Critical Alert","Warning","ERROR 0x8007","Anomali Terdeteksi","Peringatan Sistem"];
+  const VBOSS_SPAM_MSGS = ["BERANINYA KAWW","BERANINYA KAU...","KAU BERANI SEKALI","VIRUS TERDETEKSI","SISTEM TERINFEKSI","JANGAN TUTUP INI","ANOMALI TERDETEKSI"];
+  function spawnVirusSpamWindow(){
+    const el = document.createElement("div");
+    el.className = "vspam-window";
+    const w = 190 + Math.random()*130;
+    el.style.width = w+"px";
+    el.style.left = Math.max(4, Math.random()*(window.innerWidth - w - 4))+"px";
+    el.style.top = Math.max(4, Math.random()*(window.innerHeight - 90))+"px";
+    const title = VBOSS_SPAM_TITLES[Math.floor(Math.random()*VBOSS_SPAM_TITLES.length)];
+    const msg = VBOSS_SPAM_MSGS[Math.floor(Math.random()*VBOSS_SPAM_MSGS.length)];
+    const t = document.createElement("div"); t.className = "vspam-title"; t.textContent = title;
+    const m = document.createElement("div"); m.className = "vspam-msg"; m.textContent = msg;
+    el.appendChild(t); el.appendChild(m);
+    document.body.appendChild(el);
+  }
+  // Detects a touch/mobile device (no fine mouse pointer) so the intro
+  // popup flood can be made denser on PC only, without also overwhelming
+  // phones. Not perfect device detection, but good enough for "is this a
+  // mouse-and-keyboard desktop or not".
+  function isLikelyDesktop(){
+    try{ return window.matchMedia && window.matchMedia("(pointer: fine)").matches; }
+    catch(e){ return !(('ontouchstart' in window) || navigator.maxTouchPoints > 0); }
+  }
+  function spawnVirusSpam(durationMs, minDelayMs, startDelayMs){
+    minDelayMs = minDelayMs==null ? 50 : minDelayMs;
+    startDelayMs = startDelayMs==null ? 420 : startDelayMs;
+    return new Promise(resolve=>{
+      const start = performance.now();
+      function loop(){
+        const elapsed = performance.now() - start;
+        if(elapsed >= durationMs){ resolve(); return; }
+        spawnVirusSpamWindow();
+        const progress = elapsed / durationMs;
+        const delay = startDelayMs - progress*(startDelayMs - minDelayMs);
+        setTimeout(loop, Math.max(minDelayMs, delay));
+      }
+      loop();
+    });
+  }
+  function clearVirusSpam(){
+    document.querySelectorAll(".vspam-window").forEach(e=>e.remove());
+  }
+  // Same fake-error jumpscare, but non-blocking and quick — used per-miss
+  // during gameplay so it doesn't stall the falling notes.
+  function flashMissError(){
+    // Sound removed per request — the synthesized tone wasn't audible
+    // anyway, so there's no feedback sound on Miss anymore (visual rating
+    // popup + monster punch + bar shift still happen).
+  }
+  function playGlassShatter(){
+    return new Promise(resolve=>{
+      const wrap = document.getElementById("glassShatterOverlay");
+      wrap.innerHTML = "";
+      const flash = document.createElement("div");
+      flash.className = "gshatter-flash";
+      wrap.appendChild(flash);
+      const w = window.innerWidth, h = window.innerHeight;
+      const cols = 6, rows = 5;
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          const shard = document.createElement("div");
+          shard.className = "gshard";
+          const sw = w/cols, sh = h/rows;
+          shard.style.left = (c*sw)+"px";
+          shard.style.top = (r*sh)+"px";
+          shard.style.width = sw+"px";
+          shard.style.height = sh+"px";
+          const dx = (c/(cols-1)-0.5) * (w*0.9);
+          const dy = (r/(rows-1)-0.5) * (h*0.9);
+          shard.style.setProperty("--gfly", `translate(${dx.toFixed(0)}px, ${dy.toFixed(0)}px)`);
+          shard.style.setProperty("--grot", (Math.random()*140-70).toFixed(0)+"deg");
+          shard.style.animationDelay = (Math.random()*0.06).toFixed(2)+"s";
+          wrap.appendChild(shard);
+        }
+      }
+      wrap.classList.add("play");
+      setTimeout(()=>{ wrap.classList.remove("play"); wrap.innerHTML = ""; resolve(); }, 700);
+    });
+  }
+  // Full-screen white camera-flash, reused before both the pre-fight reveal
+  // and inside the game-over sequence.
+  function playWhiteFlash(ms){
+    ms = ms || 400;
+    return new Promise(resolve=>{
+      const el = document.getElementById("vbossWhiteFlash");
+      if(!el){ resolve(); return; }
+      el.style.transition = "none";
+      el.style.opacity = "1";
+      requestAnimationFrame(()=>{
+        el.style.transition = `opacity ${ms}ms ease`;
+        el.style.opacity = "0";
+      });
+      setTimeout(resolve, ms+40);
+    });
+  }
+  // One typed line in Verity's pre-fight confrontation speech bubble —
+  // resolves once it's fully typed and has held on screen for a beat.
+  function vbossConfrontLine(text, holdMs){
+    return new Promise(resolve=>{
+      const span = document.getElementById("vbossConfrontBubbleText");
+      verityType(span, text, {speed:26, onDone:()=>{ setTimeout(resolve, holdMs||1100); }});
+    });
+  }
+  // Pre-fight cutscene: Verity appears calm/normal in front of a black
+  // backdrop, says a few lines, then glitches through faces and settles
+  // into the demon right before the fight starts.
+  async function playVerityConfrontScene(){
+    const overlay = document.getElementById("vbossConfrontOverlay");
+    const avatar = document.getElementById("vbossConfrontAvatar");
+    if(!overlay || !avatar) return;
+    avatar.classList.remove("glitching");
+    avatar.textContent = "🙂";
+    document.getElementById("vbossConfrontBubbleText").textContent = "";
+    overlay.classList.add("open");
+    await vbossConfrontLine("kau...");
+    if(!vbossActive){ overlay.classList.remove("open"); return; }
+    await vbossConfrontLine("mempermainkanku??");
+    if(!vbossActive){ overlay.classList.remove("open"); return; }
+    // Rapidly cycles through a few faces before settling on the demon —
+    // reads as her losing composure right in front of us.
+    const glitchFaces = ["🙂","😐","😠","👺","😨","👹"];
+    avatar.classList.add("glitching");
+    await new Promise(resolve=>{
+      let gi = 0;
+      const iv = setInterval(()=>{
+        avatar.textContent = glitchFaces[gi % glitchFaces.length];
+        gi++;
+        if(gi > 14){
+          clearInterval(iv);
+          avatar.textContent = "👹";
+          resolve();
+        }
+      }, 80);
+    });
+    await new Promise(r=>setTimeout(r, 220));
+    overlay.classList.remove("open");
+    avatar.classList.remove("glitching");
+  }
+  async function triggerVerityBossMode(){
+    if(vbossActive || DB.settings.verityEnabled===false) return;
+    vbossActive = true;
+    vbossOver = false;
+    // Reset any leftover state from a previous run (e.g. restarted via
+    // the "Tidak" answer after a game-over that the browser blocked from
+    // actually closing the tab).
+    document.getElementById("vbossGameOverOverlay").classList.remove("show");
+    const giantWrapReset = document.getElementById("vbossGiantWrap");
+    if(giantWrapReset){ giantWrapReset.style.transition = ""; giantWrapReset.style.transform = "translate(-50%,-50%) scale(1)"; giantWrapReset.style.opacity = ""; giantWrapReset.classList.remove("punch"); }
+    const sirenReset = document.getElementById("vbossSiren");
+    // Also clear the inline background — a previous win (endVerityBossMode)
+    // fades this to solid black permanently via inline style, which was
+    // left in place on restart and made every red siren pulse invisible.
+    if(sirenReset){ sirenReset.style.transition = "none"; sirenReset.style.opacity = "0"; sirenReset.style.background = ""; }
+
+    // 1) Spam a burst of fake virus-infection popups — they stay on screen
+    //    and become the backdrop once the real jumpscare window settles in
+    //    front of them. Its text glitches between 3 variants before settling.
+    await spawnVirusSpam(
+      isLikelyDesktop() ? 2600 : 1500,   // PC: longer burst window
+      isLikelyDesktop() ? 22 : 50,       // PC: denser flood at the end
+      isLikelyDesktop() ? 380 : 420
+    );
+    await showFakeError("System Error", "BERANINYA KAWW", "", "anomaly",
+      ["BERANINYA KAWW", "BERANINYA KAU...", "KAU BERANI SEKALI"]);
+    if(!vbossActive) return;
+    // System Recovery interrupts, overlaying the same window with its own
+    // messages — first promising help is coming, then announcing it's arrived.
+    await showFakeError("System Recovery", "Bertahan sampai aku tiba!!", "", "recovery");
+    if(!vbossActive) return;
+    await showFakeError("System Recovery", "Dia datang!!", "", "recovery");
+    clearVirusSpam();
+    document.body.classList.remove("vboss-frozen");
+
+    if(!vbossActive) return;
+
+    // A flash and an error cue announce her — then Verity appears calm and
+    // normal against a black backdrop for a short, unsettling exchange
+    // before she loses it and turns into the boss.
+    const errAudioPre = document.getElementById("vbossErrorAudio");
+    try{ errAudioPre.currentTime = 0; errAudioPre.play().catch(()=>{}); }catch(e){}
+    await playWhiteFlash(260);
+    if(!vbossActive) return;
+    await playVerityConfrontScene();
+    if(!vbossActive) return;
+
+    // 2) Set up the fight, then a final white flash reveals it as the
+    //    music kicks in.
+    document.getElementById("vbossScore").textContent = "0";
+    vbossScore = 0;
+    // Bar pinned hard to the right (green/player fills almost the whole
+    // bar, purple/boss squeezed to a sliver) so Verity visibly starts weak,
+    // at the early tier — she only grows dangerous as misses push the
+    // knob leftward over the course of the fight.
+    vbossBalance = 8;
+    updateVbossBar();
+    document.getElementById("vbossGiant").classList.remove("glitching","eaten","tier-mono");
+    document.getElementById("vbossGiant").textContent = "👹";
+    document.getElementById("vbossGiant").style.textShadow = "";
+    document.getElementById("vbossGlitch").classList.remove("show");
+    const auraReset = document.getElementById("vbossGlitchAura");
+    if(auraReset) auraReset.classList.remove("show");
+    document.getElementById("vbossGame").style.display = "flex";
+    const timerReset = document.getElementById("vbossTimer");
+    if(timerReset){ timerReset.textContent = "0:00"; timerReset.style.transition = ""; timerReset.style.opacity = "1"; }
+    document.getElementById("verityBossOverlay").classList.add("open");
+    document.body.classList.add("hide-global-verity");
+    await playWhiteFlash(320);
+
+    if(!vbossActive) return;
+
+    // 3) Boss music (real audio file) + hard-mode FNF-style note game.
+    const audio = document.getElementById("vbossMusicAudio");
+    vbossMusic = audio;
+    try{ audio.currentTime = 0; audio.play().catch(()=>{}); }catch(e){}
+    audio.addEventListener("ended", onVbossMusicEnded);
+    startVbossTimer();
+    startVerityBossGame();
+  }
+  function onVbossMusicEnded(){ endVerityBossMode(); }
+  function startVerityBossGame(){
+    const giant = document.getElementById("vbossGiant");
+    giant.classList.add("glitching");
+    startVbossMonsterFaceLoop();
+    startVbossScaryLoop();
+    startVbossScreenGlitchLoop();
+    clearInterval(vbossSpawnTimer);
+    vbossSpawnTimer = setInterval(spawnVerityBossNote, VBOSS_SPAWN_MS);
+    // Guarded binding: if boss mode ever gets triggered again before a
+    // previous run's listeners were cleaned up (slow devices, the "Tidak"
+    // restart racing a leftover timeout, etc.), attaching a second set of
+    // listeners used to make every press register as two hits/misses at
+    // once. Track binding state explicitly instead of assuming one-in
+    // one-out cleanup always ran first.
+    if(!vbossKeyBound){
+      window.addEventListener("keydown", onVerityBossKey);
+      vbossKeyBound = true;
+    }
+    document.querySelectorAll(".vboss-hitzone[data-lane-btn]").forEach(btn=>{
+      if(btn.dataset.vbossBound) return;
+      btn.addEventListener("pointerdown", onVerityBossLaneTap);
+      btn.dataset.vbossBound = "1";
+    });
+  }
+  // Single face throughout the whole fight now — no more swapping between
+  // faces, so this loop is skipped entirely (saves a 180ms interval + a
+  // textContent write that whole time). Kept as a no-op function so the
+  // rest of the code (which calls it) doesn't need to change.
+  const VBOSS_FACE = "👹";
+  function startVbossMonsterFaceLoop(){
+    clearInterval(vbossMonsterTimer);
+    vbossMonsterTimer = null;
+    const giant = document.getElementById("vbossGiant");
+    if(giant) giant.textContent = VBOSS_FACE;
+  }
+  // Random scary text keeps appearing throughout the fight regardless of
+  // hits/misses — half the time in front of Verity, half behind her.
+  function startVbossScaryLoop(){
+    clearInterval(vbossScaryLoopTimer);
+    vbossScaryLoopTimer = setInterval(()=>{
+      if(vbossOver) return;
+      spawnVbossScaryText();
+    }, VBOSS_SCARY_LOOP_MS);
+  }
+  function stopVbossScaryLoop(){ clearInterval(vbossScaryLoopTimer); vbossScaryLoopTimer = null; }
+  function startVbossScreenGlitchLoop(){
+    clearInterval(vbossScreenGlitchTimer);
+    vbossScreenGlitchTimer = setInterval(()=>{
+      if(vbossOver) return;
+      const el = document.getElementById("vbossScreenGlitch");
+      if(!el) return;
+      el.classList.remove("show");
+      void el.offsetWidth;
+      el.classList.add("show");
+      setTimeout(()=>el.classList.remove("show"), 220);
+    }, 2600);
+  }
+  function stopVbossScreenGlitchLoop(){ clearInterval(vbossScreenGlitchTimer); vbossScreenGlitchTimer = null; }
+  function vbossFmtTime(s){
+    if(!isFinite(s) || s<0) return "0:00";
+    s = Math.floor(s);
+    const m = Math.floor(s/60), sec = s%60;
+    return m+":"+String(sec).padStart(2,"0");
+  }
+  function startVbossTimer(){
+    clearInterval(vbossTimerInterval);
+    const el = document.getElementById("vbossTimer");
+    vbossTimerInterval = setInterval(()=>{
+      if(!vbossMusic || !el) return;
+      // Countdown to zero (time remaining in the track) instead of counting
+      // up — reads as "how much longer do I have to survive".
+      const remaining = (vbossMusic.duration||0) - (vbossMusic.currentTime||0);
+      el.textContent = vbossFmtTime(remaining);
+    }, 250);
+  }
+  function stopVbossTimer(){ clearInterval(vbossTimerInterval); vbossTimerInterval = null; }
+  function spawnVbossScaryText(){
+    const overlay = document.getElementById("verityBossOverlay");
+    if(!overlay) return;
+    const el = document.createElement("div");
+    const behind = Math.random() < 0.5;
+    el.className = "vboss-scary-text" + (behind ? " behind" : "");
+    el.textContent = VBOSS_SCARY_WORDS[Math.floor(Math.random()*VBOSS_SCARY_WORDS.length)];
+    el.style.top = (8+Math.random()*84)+"%";
+    el.style.left = (6+Math.random()*70)+"%";
+    el.style.transform = `rotate(${(Math.random()*16-8).toFixed(1)}deg)`;
+    overlay.appendChild(el);
+    setTimeout(()=>el.remove(), 750);
+  }
+  function showVbossRating(text, cls){
+    const game = document.getElementById("vbossGame");
+    if(!game) return;
+    const el = document.createElement("div");
+    el.className = "vboss-rating "+cls;
+    el.textContent = text;
+    game.appendChild(el);
+    setTimeout(()=>el.remove(), 520);
+  }
+  function pulseSiren(){
+    const siren = document.getElementById("vbossSiren");
+    if(!siren) return;
+    siren.style.transition = "none";
+    siren.style.opacity = "1";
+    requestAnimationFrame(()=>{
+      siren.style.transition = "opacity "+Math.round(VBOSS_SPAWN_MS*1.7)+"ms linear";
+      siren.style.opacity = "0";
+    });
+  }
+  function nudgeMonster(lane){
+    const giant = document.getElementById("vbossGiant");
+    const nudge = [-22,-8,8,22][lane] || 0;
+    giant.style.marginLeft = nudge+"px";
+    // Used to also flash a double text-shadow glow here on every note
+    // spawn (every ~320ms). That glow's blur cost scales with how big the
+    // element is being rendered — and the giant is being scaled up to
+    // 3.6x via its wrapper at the same time — so as Verity grew, this
+    // recurring shadow got proportionally more expensive to paint. That
+    // was the real reason the lag got worse the bigger she got, not the
+    // scaling itself. Removed; just the position nudge remains.
+    clearTimeout(nudgeMonster._t);
+    nudgeMonster._t = setTimeout(()=>{ giant.style.marginLeft = "0px"; }, 130);
+  }
+  // Updates the dominance bar fill/knob and the boss's overall size —
+  // moving left (toward 0) shrinks Verity back toward normal; moving
+  // right (toward 100) makes her swell, more panicked and error-y.
+  function updateVbossBar(){
+    const playerPct = Math.max(0, Math.min(100, 100 - vbossBalance));
+    const fill = document.getElementById("vbossBarPlayer");
+    const knob = document.getElementById("vbossBarKnob");
+    if(fill) fill.style.width = playerPct + "%";
+    if(knob) knob.style.left = playerPct + "%";
+    const wrap = document.getElementById("vbossGiantWrap");
+    if(wrap){
+      const scale = 1.75 + (vbossBalance/100) * 2.6; // starts noticeably bigger, up to ~4.35x as she nears victory
+      wrap.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(2)})`;
+    }
+  }
+  function punchMonster(){
+    const wrap = document.getElementById("vbossGiantWrap");
+    if(!wrap) return;
+    wrap.classList.add("punch");
+    clearTimeout(punchMonster._t);
+    punchMonster._t = setTimeout(()=>wrap.classList.remove("punch"), 200);
+  }
+  function onVbossMiss(){
+    if(vbossOver) return;
+    showVbossRating("Miss", "r-miss");
+    flashMissError();
+    punchMonster();
+    vbossBalance = Math.min(100, vbossBalance + VBOSS_MISS_DELTA);
+    updateVbossBar();
+    if(vbossBalance >= 100) vbossGameOver();
+  }
+  function onVbossHit(){
+    punchMonster();
+    vbossBalance = Math.max(0, vbossBalance - VBOSS_HIT_DELTA);
+    updateVbossBar();
+  }
+  function spawnVerityBossNote(){
+    if(vbossOver) return;
+    pulseSiren();
+    const lane = Math.floor(Math.random()*4);
+    nudgeMonster(lane);
+    const laneEl = document.querySelector(`.vboss-lane[data-lane="${lane}"]`);
+    if(!laneEl) return;
+    const el = document.createElement("div");
+    el.className = "vboss-note";
+    el.textContent = ["Z","X","N","M"][lane];
+    el.style.transform = "translateY(0px)";
+    el.style.transition = `transform ${VBOSS_FALL_MS}ms linear`;
+    laneEl.appendChild(el);
+    // translateY instead of animating "top": this stays on the compositor
+    // (GPU) instead of forcing a layout reflow every frame, which is what
+    // was causing the stutter as soon as notes started falling — especially
+    // with several notes/lanes animating at once on phones.
+    requestAnimationFrame(()=>{ el.style.transform = `translateY(${laneEl.offsetHeight-70}px)`; });
+    const note = {el, lane, bornAt:performance.now()};
+    vbossNotes.push(note);
+    setTimeout(()=>{
+      // Missed — never hit before reaching the bottom.
+      if(vbossNotes.includes(note)){
+        vbossNotes = vbossNotes.filter(n=>n!==note);
+        note.el.remove();
+        onVbossMiss();
+      }
+    }, VBOSS_FALL_MS+60);
+  }
+  function tryHitLane(lane){
+    if(vbossOver) return;
+    const hitzone = document.getElementById("vbossHit"+lane);
+    // Find the note in this lane closest to being "in the zone" (near the
+    // end of its fall) and count it as a hit. Also track whether *any*
+    // note is currently falling in this lane at all — a press only counts
+    // as an anti-spam miss when the lane is truly empty; if a note exists
+    // but just hasn't reached the window yet, ignore the early press and
+    // let that note's own fall (hit or its own eventual miss) decide it,
+    // so one note can never be miss-counted twice.
+    let best = null, bestProgress = -1, hasNoteInLane = false;
+    for(const n of vbossNotes){
+      if(n.lane!==lane) continue;
+      hasNoteInLane = true;
+      const progress = (performance.now()-n.bornAt)/VBOSS_FALL_MS;
+      if(progress > (1-VBOSS_HIT_WINDOW) && progress <= 1.15 && progress > bestProgress){
+        best = n; bestProgress = progress;
+      }
+    }
+    if(hitzone){ hitzone.classList.add("hit"); setTimeout(()=>hitzone.classList.remove("hit"), 90); }
+    if(best){
+      // FNF-style rating: how close bestProgress landed to the ideal
+      // moment (progress===1) decides Perfect / Awesome / Good.
+      const diff = Math.abs(bestProgress - 1);
+      if(diff <= 0.06) showVbossRating("Perfect", "r-perfect");
+      else if(diff <= 0.16) showVbossRating("Awesome", "r-awesome");
+      else showVbossRating("Good", "r-good");
+      vbossScore += 100;
+      document.getElementById("vbossScore").textContent = vbossScore;
+      vbossNotes = vbossNotes.filter(n=>n!==best);
+      best.el.remove();
+      SoundManager.play("verityBlip", 700);
+      onVbossHit();
+    } else if(!hasNoteInLane){
+      // Truly nothing incoming in this lane — mashing the key with no note
+      // to hit at all counts as a miss.
+      onVbossMiss();
+    }
+  }
+  function onVerityBossKey(e){
+    if(e.repeat) return; // ignore OS key-repeat while a key is held down
+    const k = (e.key||"").toLowerCase();
+    if(!(k in VBOSS_KEYMAP)) return;
+    e.preventDefault();
+    tryHitLane(VBOSS_KEYMAP[k]);
+  }
+  function onVerityBossLaneTap(e){
+    e.preventDefault();
+    const lane = +e.currentTarget.dataset.laneBtn;
+    tryHitLane(lane);
+  }
+  // Bar hits the right edge: Verity finishes swallowing the screen and the
+  // "app" kicks the user out. This is a one-shot transition (not a per-frame
+  // loop), so it stays cheap even at the very end.
+  function vbossGameOver(){
+    if(vbossOver) return;
+    vbossOver = true;
+    vbossActive = false;
+    clearInterval(vbossSpawnTimer); vbossSpawnTimer = null;
+    clearInterval(vbossMonsterTimer); vbossMonsterTimer = null;
+    stopVbossScaryLoop();
+    stopVbossScreenGlitchLoop();
+    stopVbossTimer();
+    window.removeEventListener("keydown", onVerityBossKey);
+    vbossKeyBound = false;
+    document.querySelectorAll(".vboss-hitzone[data-lane-btn]").forEach(btn=>{
+      btn.removeEventListener("pointerdown", onVerityBossLaneTap);
+      delete btn.dataset.vbossBound;
+    });
+    vbossNotes.forEach(n=>n.el.remove()); vbossNotes = [];
+    document.getElementById("vbossGame").style.display = "none";
+    if(vbossMusic){
+      vbossMusic.removeEventListener("ended", onVbossMusicEnded);
+      try{ vbossMusic.pause(); }catch(e){}
+    }
+    // Timer has no place on a screen where you've just been eaten — hide
+    // it immediately instead of leaving it ticking/frozen in the corner.
+    const timerLose = document.getElementById("vbossTimer");
+    if(timerLose){ timerLose.style.transition = "none"; timerLose.style.opacity = "0"; }
+    const wrap = document.getElementById("vbossGiantWrap");
+    const giant = document.getElementById("vbossGiant");
+    if(giant){
+      // "She ate you" — same emoji throughout, no special end-state face
+      // or filter, just the giant scale-up finishing.
+      giant.classList.remove("glitching");
+      giant.style.marginLeft = "0px";
+      giant.textContent = "👹";
+    }
+    if(wrap){
+      // Verity zooms straight at the camera until she fills (and swallows)
+      // the whole screen.
+      wrap.classList.remove("punch");
+      wrap.style.transition = "transform 1.1s cubic-bezier(.5,0,.85,1)";
+      requestAnimationFrame(()=>{ wrap.style.transform = "translate(-50%,-50%) scale(26)"; });
+    }
+    setTimeout(()=>{
+      document.getElementById("vbossGameOverOverlay").classList.add("show");
+    }, 700);
+    // "Verity telah memakanmu" holds on screen for a full 3 seconds before
+    // the app tries to close, instead of rushing straight out.
+    setTimeout(()=>{
+      try{ window.close(); }catch(e){}
+      // Most browsers block closing a tab the app didn't open itself —
+      // when that happens the black takeover screen just stays up, which
+      // reads the same as "kicked out": there is nothing left to interact
+      // with and no way back in without reloading.
+    }, 3700);
+  }
+  async function endVerityBossMode(){
+    if(!vbossActive) return;
+    clearInterval(vbossSpawnTimer); vbossSpawnTimer = null;
+    clearInterval(vbossMonsterTimer); vbossMonsterTimer = null;
+    stopVbossScaryLoop();
+    stopVbossScreenGlitchLoop();
+    stopVbossTimer();
+    window.removeEventListener("keydown", onVerityBossKey);
+    vbossKeyBound = false;
+    document.querySelectorAll(".vboss-hitzone[data-lane-btn]").forEach(btn=>{
+      btn.removeEventListener("pointerdown", onVerityBossLaneTap);
+      delete btn.dataset.vbossBound;
+    });
+    vbossNotes.forEach(n=>n.el.remove()); vbossNotes = [];
+    document.getElementById("vbossGame").style.display = "none";
+    document.getElementById("vbossGiant").classList.remove("glitching");
+    const giantWrap = document.getElementById("vbossGiantWrap");
+    const siren = document.getElementById("vbossSiren");
+    const timerEl = document.getElementById("vbossTimer");
+    if(vbossMusic){
+      vbossMusic.removeEventListener("ended", onVbossMusicEnded);
+      try{ vbossMusic.pause(); vbossMusic.currentTime = 0; }catch(e){}
+      vbossMusic = null;
+    }
+    // Song just stopped — a sudden white flash plus an error sound right
+    // at that moment, and everything snaps away while the screen is white
+    // instead of gradually fading, so she just isn't there once it clears.
+    // Reads more sudden/mysterious than a slow shrink-into-the-dark.
+    const errAudio = document.getElementById("vbossErrorAudio");
+    try{ errAudio.currentTime = 0; errAudio.play().catch(()=>{}); }catch(e){}
+    const flashPromise = playWhiteFlash(320);
+    setTimeout(()=>{
+      if(giantWrap){ giantWrap.style.transition = "none"; giantWrap.style.opacity = "0"; }
+      if(siren){ siren.style.transition = "none"; siren.style.background = "#000"; siren.style.opacity = "0"; }
+      if(timerEl){ timerEl.style.transition = "none"; timerEl.style.opacity = "0"; }
+    }, 140);
+    await flashPromise;
+    SoundManager.play("vbossGlitch");
+    document.getElementById("vbossGlitch").classList.add("show");
+    const aura = document.getElementById("vbossGlitchAura");
+    if(aura) aura.classList.add("show");
+    // Player survived the whole track without being eaten — unlocks the
+    // hidden "Selamat dari Verity" badge (persisted, so re-check + re-render).
+    DB.settings.vbossSurvived = (DB.settings.vbossSurvived||0) + 1;
+    persist();
+    renderBadges();
+    await new Promise(r=>setTimeout(r, 1400));
+    document.getElementById("verityBossOverlay").classList.remove("open");
+    document.getElementById("vbossGlitch").classList.remove("show");
+    const auraClose = document.getElementById("vbossGlitchAura");
+    if(auraClose) auraClose.classList.remove("show");
+    document.body.classList.remove("hide-global-verity");
+    renderDock();
+
+    // 4) System Recovery (not Verity) reports the anomaly and repair in one
+    //    blue message, then asks for a promise — answering "Tidak" restarts
+    //    the whole sequence.
+    await showFakeError("System Recovery", "ANOMALI TERDETEKSI, PERBAIKAN SISTEM", "Web kembali normal.", "recovery");
+    document.body.classList.remove("vboss-frozen");
+    vbossActive = false;
+    document.getElementById("vbossConfirmOverlay").classList.add("open");
+    const yesBtn = document.getElementById("vbossConfirmYes");
+    const noBtn = document.getElementById("vbossConfirmNo");
+    function cleanup(){
+      document.getElementById("vbossConfirmOverlay").classList.remove("open");
+      yesBtn.removeEventListener("click", onYes);
+      noBtn.removeEventListener("click", onNo);
+    }
+    function onYes(){ cleanup(); }
+    function onNo(){ cleanup(); triggerVerityBossMode(); }
+    yesBtn.addEventListener("click", onYes);
+    noBtn.addEventListener("click", onNo);
+  }
+
   function onDataRefresh(){ currentPageMoodOverride = null; renderDock(); }
   /* ---- Study Block companion reactions (spec §19-21): its own cooldown
      lives in StudyBlockGame, not the global proactive one, since gameplay
@@ -6892,7 +8111,7 @@ const TourGuide = (function(){
       { page:"tasks", selector:()=>navSel("tasks"), title:"Daftar Tugas", text:"Semua tugasmu ngumpul di halaman ini, dikelompokkin pakai matrix urgent/penting biar gampang milih mana yang dikerjain duluan." },
       { page:"calendar", selector:()=>navSel("calendar"), title:"Kalender", text:"Lihat jadwal dan deadline dalam tampilan kalender, biar nggak ada yang kelewat." },
       { page:"focus", selector:()=>navSel("focus"), title:"Fokus Mode", text:"Timer buat sesi belajar fokus. Selesai satu sesi, Verity bakal kasih semangat lewat window selamat." },
-      { page:"focus", selector:()=>document.getElementById("verityDock").offsetParent ? "#verityDock" : "#verityFab", title:"Kenalan Verity", text:"Ini Verity, temen belajarmu. Dia komentarin progresmu, ngingetin deadline, dan bisa diajak ngobrol — tap aja avatarnya." },
+      { page:"focus", selector:()=>document.getElementById("verityDock").offsetParent ? "#verityDock" : "#verityFabDock", title:"Kenalan Verity", text:"Ini Verity, temen belajarmu. Dia komentarin progresmu, ngingetin deadline, dan bisa diajak ngobrol — tap aja avatarnya." },
       { page:"settings", selector:()=>navSel("settings"), title:"Pengaturan", text:"Atur tema, notifikasi, kepribadian Verity, dan lain-lain di sini. Tur ini juga bisa diputar ulang kapan pun dari sini." }
     ];
   }
@@ -6957,6 +8176,10 @@ const TourGuide = (function(){
     steps = buildSteps();
     idx = 0;
     active = true;
+    // Verity's persistent dock/FAB sits at a higher z-index than this
+    // overlay, so it would otherwise float in front of the tour's
+    // spotlight and tooltip — hide it for the duration of the tour.
+    document.body.classList.add("hide-global-verity");
     overlay.classList.add("open");
     renderStep();
   }
@@ -6965,6 +8188,7 @@ const TourGuide = (function(){
   function finish(){
     active = false;
     overlay.classList.remove("open");
+    document.body.classList.remove("hide-global-verity");
   }
   document.getElementById("tourNext").addEventListener("click", ()=>{ SoundManager.play("click"); next(); });
   document.getElementById("tourPrev").addEventListener("click", ()=>{ SoundManager.play("click"); prev(); });
@@ -6989,7 +8213,8 @@ window.TourGuide = TourGuide;
   function finish(startTour){
     try{ localStorage.setItem(ONBOARD_KEY, "1"); }catch(e){}
     overlay.classList.remove("open");
-    if(startTour) TourGuide.start();
+    if(startTour){ TourGuide.start(); }
+    else{ document.body.classList.remove("hide-global-verity"); }
   }
   document.getElementById("onboardNext").addEventListener("click", ()=>{
     SoundManager.play("click");
@@ -6999,7 +8224,12 @@ window.TourGuide = TourGuide;
   document.getElementById("onboardSkip").addEventListener("click", ()=>finish(false));
   let seen = false;
   try{ seen = localStorage.getItem(ONBOARD_KEY)==="1"; }catch(e){}
-  if(!seen){ overlay.classList.add("open"); render(); }
+  if(!seen){
+    // Same z-index problem as the tour: Verity's dock/FAB would otherwise
+    // render in front of this first-launch window instead of underneath it.
+    document.body.classList.add("hide-global-verity");
+    overlay.classList.add("open"); render();
+  }
   const replayBtn = document.getElementById("replayTutorialBtn");
   if(replayBtn) replayBtn.addEventListener("click", ()=>{ SoundManager.play("click"); TourGuide.start(); });
 })();
