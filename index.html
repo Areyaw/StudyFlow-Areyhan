@@ -314,7 +314,15 @@
     animation:modalIn .22s var(--ease-standard);
   }
   @keyframes modalIn{from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);}}
-  .modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+  .modal-head{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;
+    /* V7 §10: keep the X button fixed/visible in the header on long modals
+       instead of scrolling away with the content — sticks to the top of
+       .modal-overlay's own scroll port since .modal is a normal block
+       inside it (no markup changes needed elsewhere). */
+    position:sticky; top:0; margin:-26px -26px 18px; padding:26px 26px 12px;
+    background:var(--surface); z-index:2; border-radius:var(--radius-l) var(--radius-l) 0 0;
+  }
   .modal-head h2{font-size:19px;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
@@ -344,6 +352,15 @@
   .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin:14px 0;}
   .detail-item .k{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.02em; margin-bottom:2px;}
   .detail-item .v{font-size:14px; font-weight:600;}
+  /* Nyawa Mata Kuliah (attendance-allowance) block, spec V7 §4-8 */
+  .nyawa-block{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:12px 14px;}
+  .nyawa-hearts{font-size:18px; letter-spacing:2px; margin:2px 0 4px;}
+  .nyawa-block.nyawa-warning{border-color:var(--amber);}
+  .nyawa-block.nyawa-critical{border-color:var(--orange);}
+  .nyawa-block.nyawa-exhausted{border-color:var(--red); background:var(--red-soft);}
+  .nyawa-block.nyawa-warning .hint{color:var(--amber);}
+  .nyawa-block.nyawa-critical .hint{color:var(--orange);}
+  .nyawa-block.nyawa-exhausted .hint{color:var(--red); font-weight:600;}
   .desc-box{background:var(--surface-2); border-radius:var(--radius-s); padding:11px 13px; font-size:13.5px; color:var(--ink-soft); margin-top:6px;}
   .status-seg{display:flex; gap:8px; margin-top:6px;}
 
@@ -528,7 +545,12 @@
      language as the mobile speech bubble below. On mobile it's replaced
      by .verity-fab + .verity-fab-bubble, which sit above the bottom nav. */
   .verity-dock{
-    position:fixed; left:246px; bottom:20px; z-index:300;
+    /* V7 §2: sit above the Dashboard but below any active window/modal/sheet
+       (those use z-index 110-200) so Verity never covers a window's own
+       controls — she only "peeks" from behind it. Her own panel/toast/
+       celebration surfaces (300+) stay above everything since those ARE
+       Verity's own active window when open. */
+    position:fixed; left:246px; bottom:20px; z-index:90;
     display:flex; align-items:center; justify-content:center; gap:0;
     cursor:pointer; background:none; border:none; padding:0; box-shadow:none;
     animation:verityBubbleFloat 3.2s ease-in-out infinite;
@@ -545,7 +567,10 @@
   }
   .verity-dock:hover .verity-dock-bubble{border-color:var(--accent);}
   .verity-dock-bubble::after{
-    content:""; position:absolute; left:50%; bottom:-7px; width:13px; height:13px; background:var(--surface);
+    /* --tail-left is set by JS (positionVerityBubble) so the tail keeps
+       pointing at the avatar's actual center even when the bubble itself
+       has been shifted/clamped to stay inside the viewport (V7 bugfix A). */
+    content:""; position:absolute; left:var(--tail-left, 50%); bottom:-7px; width:13px; height:13px; background:var(--surface);
     border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:translateX(-50%) rotate(45deg); border-radius:0 0 3px 0;
   }
   /* When Verity's avatar is in the top half of the screen, JS adds this
@@ -581,7 +606,8 @@
      making Verity "teleport" to the opposite side any time the bubble
      flipped — this avoids that entirely. */
   .verity-fab-dock{
-    display:none; position:fixed; left:18px; bottom:calc(78px + env(safe-area-inset-bottom,0px)); z-index:300;
+    /* Same reasoning as .verity-dock above (V7 §2). */
+    display:none; position:fixed; left:18px; bottom:calc(78px + env(safe-area-inset-bottom,0px)); z-index:90;
     align-items:center; justify-content:center; cursor:grab; touch-action:none;
     background:none; border:none; padding:0; box-shadow:none;
   }
@@ -626,7 +652,8 @@
   .verity-fab-bubble:active{transform:scale(.96);}
   .verity-fab-bubble span{font-size:12.5px; color:var(--ink); line-height:1.35; font-weight:500;}
   .verity-fab-bubble .vfb-tail{
-    position:absolute; left:50%; bottom:-6px; width:12px; height:12px; background:var(--surface);
+    /* Same --tail-left mechanism as the desktop dock bubble above (V7 bugfix A). */
+    position:absolute; left:var(--tail-left, 50%); bottom:-6px; width:12px; height:12px; background:var(--surface);
     border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:translateX(-50%) rotate(45deg); border-radius:0 0 3px 0;
   }
   /* When Verity's fab is in the top half of the screen, JS adds
@@ -640,16 +667,24 @@
   .verity-fab-bubble.vbounce{animation:verityBubbleFloat 3.2s ease-in-out infinite, verityBounce .38s ease-out;}
 
   .verity-panel-overlay{
-    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; align-items:flex-end; justify-content:flex-end; z-index:320; padding:0;
+    position:fixed; inset:0; background:rgba(20,22,18,.45); display:none; z-index:320; padding:0;
   }
-  .verity-panel-overlay.open{display:flex;}
+  .verity-panel-overlay.open{display:block;}
   .verity-panel{
-    background:var(--surface); width:100%; max-width:380px; height:min(78vh,620px); border-radius:20px 20px 0 0;
-    display:flex; flex-direction:column; box-shadow:0 -10px 40px rgba(0,0,0,.25); margin:0 12px 0 auto;
-  }
-  @media (min-width:881px){
-    .verity-panel-overlay{align-items:flex-end; justify-content:flex-start; padding:0 0 90px 20px;}
-    .verity-panel{border-radius:20px; height:min(70vh,560px); margin:0;}
+    /* V7 bugfix B: the panel used to be anchored with hardcoded CSS
+       (flex align to a fixed corner, or a fixed sidebar-width padding on
+       desktop) which only happened to line up with Verity when she sat at
+       her default spot. Since she's draggable, that made the chat window
+       open as a totally disconnected "new window" the moment she'd been
+       moved. Now --vp-left/--vp-bottom/--vp-width/--vp-height are computed
+       live from her CURRENT bounding box (positionVerityPanel, called right
+       before the overlay opens and on resize) so the panel always stays
+       visually anchored to wherever her avatar/bubble actually is — same
+       behavior on mobile and desktop. */
+    position:fixed; left:var(--vp-left, 12px); bottom:var(--vp-bottom, 12px);
+    width:var(--vp-width, min(380px, calc(100vw - 24px))); height:var(--vp-height, min(78vh,620px));
+    background:var(--surface); border-radius:20px;
+    display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,.25);
   }
   .verity-panel-head{display:flex; align-items:center; gap:10px; padding:16px 16px 12px; border-bottom:1px solid var(--border);}
   .verity-panel-head .verity-avatar{width:38px; height:38px; font-size:19px;}
@@ -1200,6 +1235,8 @@
   @media (max-width:640px){ .nb-arrow{ display:none; } }
   .nb-foot{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; flex-wrap:wrap; }
   .nb-foot #nbPageIndicator{ font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--ink-soft); }
+  .nb-save-indicator{ opacity:0; color:var(--accent); transition:opacity .35s ease; }
+  .nb-save-indicator.show{ opacity:1; }
   .sb-overlay-card{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:150; padding:16px;}
   .sb-overlay-card.show{display:flex;}
   .sb-overlay-inner{background:var(--surface); border-radius:var(--radius-xl); padding:28px 26px; max-width:320px; width:100%; text-align:center; box-shadow:var(--shadow-lg); animation:sbPop .25s ease;}
@@ -1846,6 +1883,7 @@
       </div>
       <div class="nb-foot">
         <span id="nbPageIndicator">1 / 1</span>
+        <span class="hint nb-save-indicator" id="nbSaveIndicator" aria-live="polite"></span>
         <span class="hint">Geser ke kiri/kanan untuk ganti halaman, seperti membuka buku.</span>
       </div>
     </section>
@@ -2446,7 +2484,7 @@
    STORAGE MANAGER
 ========================================================= */
 const APP_VERSION = "6.0.0";
-const CURRENT_DATA_VERSION = 12;
+const CURRENT_DATA_VERSION = 14;
 const StorageManager = (function(){
   const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
   function defaultData(){
@@ -2584,6 +2622,16 @@ const StorageManager = (function(){
       d.settings = d.settings || {};
       if(d.settings.vbossSurvived===undefined) d.settings.vbossSurvived = 0;
       d.version = 13;
+    }
+    if(d.version < 14){
+      // v13 -> v14 (StudyFlow V7): fitur "Nyawa Mata Kuliah" (batas absensi
+      // Alpa/Sakit/Izin dalam satu pool nyawa per mata kuliah), tanpa
+      // menyentuh data mata kuliah lama.
+      (d.courses||[]).forEach(c=>{
+        if(c.nyawaLimit===undefined) c.nyawaLimit = 0;
+        if(!Array.isArray(c.attendanceRecords)) c.attendanceRecords = [];
+      });
+      d.version = 14;
     }
     return d;
   }
@@ -3178,14 +3226,37 @@ const FolderManager = (function(){
 ========================================================= */
 const CourseManager = (function(){
   function create(data){
-    const c = {id:uid("course"), name:data.name, code:data.code||"", lecturerId:data.lecturerId||"", notes:data.notes||"", semesterId:data.semesterId||DB.activeSemesterId||""};
+    const c = {id:uid("course"), name:data.name, code:data.code||"", lecturerId:data.lecturerId||"", notes:data.notes||"", semesterId:data.semesterId||DB.activeSemesterId||"",
+      nyawaLimit: data.nyawaLimit!==undefined ? (parseInt(data.nyawaLimit,10)||0) : 0, attendanceRecords: []};
     DB.courses.push(c);
     persist();
     return c;
   }
   function update(id, patch){
     const c = DB.courses.find(x=>x.id===id);
-    if(c){ Object.assign(c, patch); persist(); }
+    if(c){
+      if(patch.nyawaLimit!==undefined) patch = Object.assign({}, patch, {nyawaLimit: parseInt(patch.nyawaLimit,10)||0});
+      Object.assign(c, patch);
+      persist();
+    }
+  }
+  /* ---- Nyawa Mata Kuliah: Alpa/Sakit/Izin share ONE absence pool ---- */
+  function nyawaUsed(c){ return Array.isArray(c.attendanceRecords) ? c.attendanceRecords.length : 0; }
+  function nyawaRemaining(c){ return Math.max(0, (c.nyawaLimit||0) - nyawaUsed(c)); }
+  function recordAbsence(id, type){
+    const c = DB.courses.find(x=>x.id===id);
+    if(!c) return null;
+    if(!Array.isArray(c.attendanceRecords)) c.attendanceRecords = [];
+    const rec = {id:uid("abs"), type, date:new Date().toISOString()};
+    c.attendanceRecords.push(rec);
+    persist();
+    return rec;
+  }
+  function removeAbsence(courseId, recId){
+    const c = DB.courses.find(x=>x.id===courseId);
+    if(!c) return;
+    c.attendanceRecords = (c.attendanceRecords||[]).filter(r=>r.id!==recId);
+    persist();
   }
   function remove(id){
     DB.courses = DB.courses.filter(x=>x.id!==id);
@@ -3193,7 +3264,7 @@ const CourseManager = (function(){
   }
   function get(id){ return DB.courses.find(x=>x.id===id); }
   function all(){ return DB.courses; }
-  return {create, update, remove, get, all};
+  return {create, update, remove, get, all, nyawaUsed, nyawaRemaining, recordAbsence, removeAbsence};
 })();
 
 /* =========================================================
@@ -3416,6 +3487,7 @@ const statusLabel = {todo:"Belum Dimulai", doing:"Sedang Dikerjakan", done:"Sele
 
 let currentPage = "dashboard";
 let currentFolderView = null; // folder id when viewing folder tasks
+let currentCourseDashboardId = null; // course id when viewing its dashboard (Nyawa/tasks), like currentFolderView
 let calDate = new Date();
 let calSelectedDate = null;
 let globalSearchQuery = "";
@@ -3846,7 +3918,7 @@ const VerityEngine = (function(){
     document.getElementById("verityDockFace").textContent = MOODS[m.mood]||MOODS.neutral;
     const dock = document.getElementById("verityDock");
     if(m.text !== lastDockText){
-      verityType(document.getElementById("verityDockMsg"), m.text);
+      verityType(document.getElementById("verityDockMsg"), m.text, {onDone:syncDockBubble});
       verityPop(dock);
       lastDockText = m.text;
     }
@@ -3857,7 +3929,7 @@ const VerityEngine = (function(){
     const bubble = document.getElementById("verityFabBubble");
     bubble.style.display = "";
     if(m.text !== lastFabBubbleText){
-      verityType(document.getElementById("verityFabBubbleMsg"), m.text);
+      verityType(document.getElementById("verityFabBubbleMsg"), m.text, {onDone:syncFabFlip});
       verityPop(bubble);
       lastFabBubbleText = m.text;
     }
@@ -3976,8 +4048,40 @@ const VerityEngine = (function(){
     {label:"Deadline terdekat apa?", handler:deadlineAnswer},
     {label:"Bagaimana progress-ku?", handler:progressAnswer},
   ];
+  // V7 bugfix B: anchor the chat panel to Verity's LIVE position (she's
+  // draggable) instead of a hardcoded screen corner — see .verity-panel
+  // comment above. Desktop anchors beside her avatar; mobile anchors a
+  // sheet directly above/below her fab, same idea as the speech bubble.
+  function positionVerityPanel(){
+    const overlay = document.getElementById("verityPanelOverlay");
+    const isDesktop = window.innerWidth >= 881;
+    const anchor = document.getElementById(isDesktop ? "verityDock" : "verityFabDock");
+    if(!overlay || !anchor) return;
+    const r = anchor.getBoundingClientRect();
+    const margin = 14;
+    const panelW = Math.min(380, window.innerWidth - margin*2);
+    const panelH = Math.min(isDesktop?560:620, window.innerHeight*(isDesktop?0.70:0.78));
+    let left;
+    if(isDesktop){
+      left = r.right + margin;
+      if(left + panelW > window.innerWidth - margin) left = window.innerWidth - margin - panelW;
+    } else {
+      left = r.left + r.width/2 - panelW/2;
+    }
+    left = Math.max(margin, Math.min(left, window.innerWidth - margin - panelW));
+    let bottom = window.innerHeight - r.bottom;
+    if(bottom + panelH > window.innerHeight - margin) bottom = Math.max(margin, window.innerHeight - margin - panelH);
+    overlay.style.setProperty("--vp-left", left+"px");
+    overlay.style.setProperty("--vp-bottom", bottom+"px");
+    overlay.style.setProperty("--vp-width", panelW+"px");
+    overlay.style.setProperty("--vp-height", panelH+"px");
+  }
+  window.addEventListener("resize", ()=>{
+    if(document.getElementById("verityPanelOverlay").classList.contains("open")) positionVerityPanel();
+  });
   function openPanel(){
     SoundManager.play("popup");
+    positionVerityPanel();
     const m = currentPageMoodOverride || computeMood();
     document.getElementById("verityPanelFace").textContent = MOODS[m.mood]||MOODS.neutral;
     document.getElementById("verityPanelMood").textContent = personalityLabel();
@@ -4068,6 +4172,33 @@ const VerityEngine = (function(){
     const center = avatarRect.top + avatarRect.height/2;
     return center < window.innerHeight/2;
   }
+  /* V7 bugfix A: the bubble used to be centered purely with CSS
+     (left:50%; transform:translateX(-50%)) relative to the dock/fab box.
+     That breaks near the edges of the screen — e.g. the mobile fab's
+     default position (left:18px) lets a wide bubble (up to 240px) run
+     off the left edge of the viewport entirely, so only the bubble's
+     right portion is visible and the tail (still centered on the FULL
+     bubble) reads as shifted off to the right instead of pointing at
+     Verity. Fix: position the bubble in JS, clamped to stay fully
+     inside the viewport, and move the tail (via the --tail-left CSS
+     var) so it still points at the avatar's true center regardless of
+     how far the bubble had to shift to fit. Shared by both the mobile
+     fab bubble and the desktop dock bubble. */
+  function positionVerityBubble(dockEl, bubbleEl){
+    if(!dockEl || !bubbleEl) return;
+    const bw = bubbleEl.offsetWidth;
+    if(!bw) return; // not laid out yet (e.g. display:none)
+    const margin = 8;
+    const dockRect = dockEl.getBoundingClientRect();
+    const avatarCenter = dockRect.left + dockRect.width/2;
+    let left = avatarCenter - bw/2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - margin - bw));
+    bubbleEl.style.left = (left - dockRect.left) + "px";
+    bubbleEl.style.transform = "translateX(0)";
+    let tailLeft = avatarCenter - left;
+    tailLeft = Math.max(14, Math.min(tailLeft, bw - 14));
+    bubbleEl.style.setProperty("--tail-left", tailLeft + "px");
+  }
   function syncFabFlip(){
     const wrap = document.getElementById("verityFabDock");
     const bubble = document.getElementById("verityFabBubble");
@@ -4090,6 +4221,7 @@ const VerityEngine = (function(){
       bubble.style.maxHeight = "";
       bubble.style.overflowY = "";
     }
+    positionVerityBubble(wrap, bubble);
   }
   // Desktop dock: same rule as the mobile fab above — bottom half of the
   // screen -> bubble above Verity; top half -> bubble below her.
@@ -4118,6 +4250,7 @@ const VerityEngine = (function(){
       bubble.style.maxHeight = "";
       bubble.style.overflowY = "";
     }
+    positionVerityBubble(dock, bubble);
   }
   function makeVerityDraggable(el, opts){
     let startX, startY, origLeft, origTop, dragging=false, moved=false, pointerId=null;
@@ -5601,6 +5734,36 @@ const NotebookManager = (function(){
   let idx = 0;
   let saveTimer = null;
   let touchStartX = null, touchStartY = null;
+  // V7 spec §9: autosave every 10s + subtle "Tersimpan" indicator, on top of
+  // the existing fast debounce (kept as-is so typing still feels instant).
+  let autosaveTimer = null;
+  let lastSavedText = null;
+  let indicatorTimer = null;
+
+  function showSavedIndicator(){
+    const el = document.getElementById("nbSaveIndicator");
+    if(!el) return;
+    el.textContent = "✓ Tersimpan";
+    el.classList.add("show");
+    clearTimeout(indicatorTimer);
+    indicatorTimer = setTimeout(()=>el.classList.remove("show"), 1600);
+  }
+  function saveIfChanged(){
+    const ta = document.getElementById("nbTextarea");
+    if(!ta) return;
+    const p = pages();
+    if(!p[idx]) return;
+    const current = ta.value;
+    if(current === (p[idx].text||"") ) return; // avoid excessive writes when nothing changed
+    p[idx].text = current;
+    persist();
+    lastSavedText = current;
+    showSavedIndicator();
+  }
+  function startAutosaveLoop(){
+    clearInterval(autosaveTimer);
+    autosaveTimer = setInterval(saveIfChanged, 10000);
+  }
 
   function pages(){
     if(!DB.notebookPages || DB.notebookPages.length===0){
@@ -5684,6 +5847,12 @@ const NotebookManager = (function(){
   function wire(){
     const book = document.getElementById("nbBook");
     document.getElementById("nbTextarea").addEventListener("input", scheduleSave);
+    startAutosaveLoop();
+    // Save immediately on tab hide/close and app close, per spec §9,
+    // without touching the existing debounce/manual-save behavior.
+    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") saveIfChanged(); });
+    window.addEventListener("beforeunload", saveIfChanged);
+    window.addEventListener("pagehide", saveIfChanged);
     document.getElementById("nbAddBtn").addEventListener("click", ()=>{ SoundManager.play("click"); addPage(); });
     document.getElementById("nbDeleteBtn").addEventListener("click", deletePage);
     document.getElementById("nbNextBtn").addEventListener("click", ()=>flip(1));
@@ -5701,7 +5870,7 @@ const NotebookManager = (function(){
       }
     }, {passive:true});
   }
-  return {wire, onEnterPage, render};
+  return {wire, onEnterPage, render, saveIfChanged};
 })();
 
 /* =========================================================
@@ -6414,6 +6583,7 @@ function openCourseForm(course){
     {id:"code", label:"Kode Mata Kuliah", value:course?course.code:""},
     {id:"lecturerId", label:"Dosen", type:"select", options:lectOptions, value:course?course.lecturerId:""},
     {id:"semesterId", label:"Semester", type:"select", options:semOptions, value:course?course.semesterId:DB.activeSemesterId},
+    {id:"nyawaLimit", label:"Batas Nyawa (jumlah absen yang diizinkan)", type:"number", value:course?(course.nyawaLimit||0):0},
     {id:"notes", label:"Catatan", type:"textarea", value:course?course.notes:""},
   ], (vals)=>{
     if(!vals.name.trim()) return toast("Nama mata kuliah wajib diisi.");
@@ -6425,7 +6595,8 @@ function openCourseForm(course){
 }
 function openCourseDashboard(courseId){
   const c = CourseManager.get(courseId);
-  if(!c) return;
+  if(!c){ currentCourseDashboardId = null; return; }
+  currentCourseDashboardId = courseId;
   const lect = LecturerManager.get(c.lecturerId);
   const tasks = DB.tasks.filter(t=>t.courseId===c.id);
   const done = tasks.filter(t=>t.status==="done").length;
@@ -6440,12 +6611,65 @@ function openCourseDashboard(courseId){
       <div class="detail-item"><div class="k">Progress</div><div class="v">${done} / ${tasks.length} selesai (${pct}%)</div></div>
     </div>
     ${sched.length ? `<div class="hint" style="margin-bottom:10px;"><strong>Jadwal:</strong> ${schedLine}</div>` : ""}
+    <div id="courseNyawaBlock"></div>
     <div class="task-list" id="courseDashTasks"></div>
   `;
+  renderCourseNyawa(c.id);
   const listEl = document.getElementById("courseDashTasks");
   listEl.innerHTML="";
   if(tasks.length===0){ renderEmpty(listEl,"Belum ada tugas untuk mata kuliah ini.","",false); }
   else tasks.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).forEach(t=>listEl.appendChild(renderTaskCard(t)));
+}
+
+/* ---- Nyawa Mata Kuliah: Alpa/Sakit/Izin share ONE attendance-allowance pool ---- */
+function renderCourseNyawa(courseId){
+  const c = CourseManager.get(courseId);
+  const holder = document.getElementById("courseNyawaBlock");
+  if(!c || !holder) return;
+  const limit = c.nyawaLimit||0;
+  const used = CourseManager.nyawaUsed(c);
+  const remaining = CourseManager.nyawaRemaining(c);
+  if(limit<=0){
+    holder.innerHTML = `<div class="hint" style="margin-bottom:10px;">Belum ada batas nyawa untuk mata kuliah ini. Atur "Batas Nyawa" lewat tombol Edit untuk mengaktifkan pelacakan kehadiran.</div>`;
+    return;
+  }
+  let level = "ok";
+  if(remaining<=0) level="exhausted"; else if(remaining===1) level="critical"; else if(remaining===2) level="warning";
+  const hearts = Array.from({length:limit}, (_,i)=> i<used ? "🖤" : "❤️").join(" ");
+  const records = (c.attendanceRecords||[]).slice().reverse();
+  holder.innerHTML = `
+    <div class="detail-item nyawa-block nyawa-${level}" style="margin-bottom:12px;">
+      <div class="k">Nyawa Kehadiran</div>
+      <div class="v nyawa-hearts">${hearts}</div>
+      <div class="hint">Tersisa: ${remaining} / ${limit}${level==="exhausted"?" • Batas absen sudah habis":level==="critical"?" • Hati-hati, tinggal 1 lagi":level==="warning"?" • Mulai perhatikan kehadiran":""}</div>
+      <div class="nyawa-actions" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" data-nyawa="Alpa">+ Alpa</button>
+        <button class="btn btn-sm" data-nyawa="Sakit">+ Sakit</button>
+        <button class="btn btn-sm" data-nyawa="Izin">+ Izin</button>
+      </div>
+      ${records.length ? `<div class="nyawa-log" style="margin-top:10px;">${records.map(r=>`
+        <div class="nyawa-log-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 0; font-size:12.5px; color:var(--ink-faint);">
+          <span>${escapeHtml(r.type)} • ${new Date(r.date).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})}</span>
+          <button class="btn btn-icon btn-ghost btn-sm" data-nyawa-remove="${r.id}" aria-label="Hapus catatan">✕</button>
+        </div>`).join("")}</div>` : ""}
+    </div>
+  `;
+  holder.querySelectorAll("[data-nyawa]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      CourseManager.recordAbsence(courseId, btn.dataset.nyawa);
+      SoundManager.play("click");
+      toast(btn.dataset.nyawa+" dicatat.");
+      renderCourseNyawa(courseId);
+      renderCourses();
+    });
+  });
+  holder.querySelectorAll("[data-nyawa-remove]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      CourseManager.removeAbsence(courseId, btn.dataset.nyawaRemove);
+      renderCourseNyawa(courseId);
+      renderCourses();
+    });
+  });
 }
 
 /* ---- Lecturers page ---- */
@@ -7445,6 +7669,7 @@ function goToPage(page, opts){
     FocusTimer.requestExit(()=>goToPage(page, {confirmedExit:true}));
     return;
   }
+  if(currentPage==="notebook" && page!=="notebook" && window.NotebookManager) NotebookManager.saveIfChanged();
   currentPage = page;
   if(!(opts && opts.skipHistory) && window.NavHistory) NavHistory.pushPage(page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -7459,6 +7684,9 @@ function goToPage(page, opts){
   document.querySelectorAll(".bn-item[data-page]").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
   document.querySelectorAll(".bn-item[data-more]").forEach(n=>n.classList.toggle("active", MOBILE_NAV.secondary.includes(page)));
   if(page==="folders"){ currentFolderView=null; document.getElementById("folderTasksBlock").style.display="none"; }
+  // Navigating to any page resets the Mata Kuliah dashboard sub-view — the
+  // user explicitly clicks a course row (openCourseDashboard) to open it again.
+  currentCourseDashboardId = null;
   if(page==="courses"){ document.getElementById("courseDashboardBlock").style.display="none"; }
   if(page==="statistics") renderStatisticsPage();
   if(page==="focus") renderFocusPage();
@@ -7704,6 +7932,7 @@ document.getElementById("addCourseBtn").addEventListener("click", ()=>openCourse
 document.getElementById("addLecturerBtn").addEventListener("click", ()=>openLecturerForm(null));
 document.getElementById("semesterFilterCourses").addEventListener("change", renderCourses);
 document.getElementById("backToCourses").addEventListener("click", ()=>{
+  currentCourseDashboardId = null;
   document.getElementById("courseDashboardBlock").style.display="none";
 });
 document.getElementById("addScheduleBtn").addEventListener("click", ()=>openScheduleForm(null));
@@ -8049,6 +8278,10 @@ function renderAll(){
     renderFolders();
   }
   renderCourses();
+  // Keep an open Mata Kuliah dashboard (Nyawa + task checklist) in sync with
+  // any data change elsewhere, exactly like the folder-view handling above —
+  // this is what was missing and caused stale progress/checkbox state (bug C/D).
+  if(currentCourseDashboardId) openCourseDashboard(currentCourseDashboardId);
   renderLecturers();
   renderScheduleWeekly();
   renderSemesterList();
@@ -8249,7 +8482,6 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   });
 }
 
-})();
 /* =========================================================
    NATIVE BACK BUTTON / HISTORY HANDLING (spec §1)
    Any overlay (modal / sheet / cmdk / verity panel / onboarding)
@@ -8260,7 +8492,16 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
      2) else go to the previous page in the in-app stack
      3) else (nothing left) let the OS/browser handle Back — this
         is the only case where the app is genuinely allowed to exit.
-========================================================= */
+   BUGFIX (V7 continuation): this whole block used to live AFTER the
+   main app's closing `})();`, in the outer global scope. From there it
+   could not see `currentPage`/`goToPage` (they're private to the main
+   IIFE), so `let pageStack = [currentPage || "dashboard"]` below threw
+   "currentPage is not defined" the instant the page loaded — the
+   NavHistory IIFE crashed before `window.NavHistory` was ever
+   assigned, silently disabling the entire Back-button feature (the
+   MutationObserver never got attached, popstate was never handled).
+   Moved inside the main IIFE, right before its own closing `})();`,
+   so it shares the same scope as everything it depends on. */
 const NavHistory = (function(){
   const overlaySelector = ".modal-overlay, .sheet-overlay, .cmdk-overlay, .verity-panel-overlay, .verity-celebrate-overlay, .tour-overlay, .onboard-overlay";
   let pageStack = [currentPage || "dashboard"];
@@ -8345,6 +8586,7 @@ const NavHistory = (function(){
   return { pushPage };
 })();
 window.NavHistory = NavHistory;
+})();
 </script>
 </body>
 </html>
