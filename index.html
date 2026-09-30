@@ -2228,9 +2228,9 @@
         <h3>About StudyFlow</h3>
         <div class="about-credit" style="text-align:left;">
           <div class="tag">StudyFlow — Areyhan &amp; Verity</div>
-          <div class="sub">Organize your study. Own your time.<br>Version <span id="aboutVersionInline"></span></div>
+          <div class="sub">Organize your study. Own your time.<br>Version <span id="aboutVersionInline"></span> (v10)</div>
         </div>
-        <p class="hint">StudyFlow adalah academic productivity app yang dibuat untuk membantu mahasiswa mengatur tugas, jadwal, deadline, kalender akademik, progress, dan fokus belajar dalam satu tempat.</p>
+        <p class="hint">StudyFlow v10 adalah academic productivity app yang dibuat untuk membantu mahasiswa mengatur tugas (lengkap dengan rencana pengerjaan, subtugas, dan janjian kelompok), jadwal kuliah, deadline, kalender akademik, nyawa/batas absensi mata kuliah, arsip file di folder, catatan lewat Notebook (tulis, gambar, dan foto), serta fokus belajar dengan Focus Mode. Ditemani Verity, companion emoji yang ikut menyemangati, plus Mini Game (Study Block &amp; Catur) untuk rehat sejenak.</p>
         <div class="detail-grid" style="margin:0 0 10px;">
           <div class="detail-item"><div class="k">Created by</div><div class="v">Areyhan<br><span style="font-weight:500;">Ahmad Roudhotun Ihsan</span></div></div>
           <div class="detail-item"><div class="k">Institusi</div><div class="v">Universitas Lampung<br><span style="font-weight:500;">Pendidikan Bahasa Lampung</span></div></div>
@@ -2754,7 +2754,7 @@
 /* =========================================================
    STORAGE MANAGER
 ========================================================= */
-const APP_VERSION = "6.0.0";
+const APP_VERSION = "10.0.0";
 const CURRENT_DATA_VERSION = 15;
 const StorageManager = (function(){
   const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
@@ -6695,12 +6695,6 @@ const NotebookManager = (function(){
       setTimeout(()=>sheet.classList.remove("flip-in-next","flip-in-prev"), 270);
     }, 250);
   }
-  function addPage(){
-    const p = pages();
-    p.splice(getIdx()+1, 0, newPage());
-    persist();
-    flip(1);
-  }
   function deletePage(){
     const p = pages();
     if(p.length<=1){ toast("Buku harus punya minimal 1 halaman."); return; }
@@ -6746,7 +6740,6 @@ const NotebookManager = (function(){
       {icon:"🖼️", label:"Pasang Foto", action:()=>{ $("nbPhotoInput").click(); }},
       {icon:"🧹", label:"Hapus Foto", dim:!p.images.length, action:deletePhotos},
       {icon:"🧽", label:"Hapus Gambar", dim:!p.drawing, action:deleteDrawing},
-      {icon:"📄", label:"Halaman Baru", action:()=>{ SoundManager.play("click"); addPage(); }},
       {icon:"🗑️", label:"Hapus Halaman", danger:true, dim:pages().length<=1, action:deletePage}
     ]);
   }
@@ -8663,7 +8656,9 @@ function goToPage(page, opts){
     FocusTimer.requestExit(()=>goToPage(page, {confirmedExit:true}));
     return;
   }
-  if(currentPage==="notebook" && page!=="notebook" && window.NotebookManager) NotebookManager.onLeavePage();
+  // BUGFIX: NotebookManager dideklarasikan dengan `const` sehingga TIDAK ada di `window`.
+  // Cek lama (`window.NotebookManager`) selalu false -> buku tetap terbuka menutupi halaman baru.
+  if(page!=="notebook" && typeof NotebookManager!=="undefined") NotebookManager.onLeavePage();
   currentPage = page;
   if(!(opts && opts.skipHistory) && window.NavHistory) NavHistory.pushPage(page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -9095,6 +9090,25 @@ document.getElementById("soundVerityVol").addEventListener("input", (e)=>{
 document.getElementById("soundVerityVol").addEventListener("change", ()=> SoundManager.play("verityReact"));
 
 /* About / Changelog */
+const CHANGELOG_V10 = [
+  "📚 Notebook v10: rak buku bergaya perpustakaan — buat banyak buku, masing-masing dengan judul, warna sampul, dan halaman sendiri",
+  "📖 Animasi buka buku 3D dan efek membalik halaman (geser kiri/kanan atau tombol panah)",
+  "✏️ Mode Gambar di halaman: pulpen &amp; penghapus dengan ukuran yang bisa diatur, plus Undo/Redo",
+  "🖼️ Pasang foto di halaman notebook — geser untuk memindahkan dan atur ukurannya",
+  "💾 Notebook tersimpan otomatis, termasuk saat tab ditutup",
+  "🎮 Menu Mini Game: Study Block dan Catur (lawan AI atau berdua di satu HP)",
+  "❤️ Nyawa Mata Kuliah: batas absensi Alpa/Sakit/Izin dalam satu pool nyawa per mata kuliah, lengkap dengan peringatan saat nyawa menipis",
+  "📎 Folder kini bisa menyimpan file sungguhan (PDF, gambar, dokumen) beserta lokasi/link referensi dan catatan",
+  "🙂 Foto profil opsional yang tampil di sapaan dashboard",
+  "🔊 Pengaturan Suara: efek suara, volume utama, volume UI, volume Verity, dan suara notifikasi",
+  "◀️ Tombol Back kini pintar: menutup jendela yang terbuka dulu, baru kembali ke halaman sebelumnya",
+  "⌨️ Pintasan keyboard dan command palette (Ctrl+K) untuk aksi cepat",
+  "🧭 Tur panduan untuk pengguna baru yang bisa diputar ulang dari Pengaturan",
+  "🕵️ Ada rahasia tersembunyi di Verity — kalau kamu cukup iseng, mungkin kamu akan menemukannya",
+  "🛠️ Perbaikan: setelah membuka buku di Notebook, pindah ke menu lain (mis. Pengaturan) kini langsung menutup buku dan membuka halaman yang dipilih",
+  "🧹 Tombol Halaman Baru dihapus dari menu buku agar lebih ringkas",
+  "✅ Semua data &amp; fitur sebelumnya tetap utuh — migrasi otomatis"
+];
 const CHANGELOG_V6 = [
   "🗓️ Sistem perencanaan tugas baru: sesi pengerjaan, subtugas, dan janjian kelompok",
   "🎯 Agenda Hari Ini di dashboard — gabungan jadwal kuliah, sesi, dan janjian dalam satu linimasa",
@@ -9125,7 +9139,7 @@ const CHANGELOG_V4 = [
   "✅ Existing academic systems preserved — no data reset"
 ];
 function renderChangelogInto(ulId){
-  document.getElementById(ulId).innerHTML = CHANGELOG_V6.concat(CHANGELOG_V4).map(li=>`<li>${li}</li>`).join("");
+  document.getElementById(ulId).innerHTML = CHANGELOG_V10.concat(CHANGELOG_V6, CHANGELOG_V4).map(li=>`<li>${li}</li>`).join("");
 }
 renderChangelogInto("changelogListSettings");
 document.getElementById("aboutVersionInline").textContent = APP_VERSION;
