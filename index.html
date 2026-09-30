@@ -1206,54 +1206,145 @@
   body.verity-off .verity-dock,
   body.verity-off .verity-fab-dock{ display:none !important; }
 
-  /* ---------- NOTEBOOK (3D book page-flip) ---------- */
-  .nb-book{
-    position:relative; width:min(94vw,520px); height:min(64vh,560px); margin:18px auto 0; perspective:1600px;
-    display:flex; align-items:center; justify-content:center;
+  /* ---------- NOTEBOOK v10: rak buku + buku terbuka ---------- */
+  /* Rak */
+  .nb-shelf-wrap{ background:var(--surface-2); border-radius:var(--radius-l); padding:26px 8px 4px; box-shadow:inset 0 3px 12px rgba(0,0,0,.08); max-width:920px; margin:0 auto; }
+  .nb-shelf{ display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); row-gap:22px; }
+  .nb-shelf-empty{ text-align:center; padding:34px 16px 44px; color:var(--ink-soft); font-size:14px; }
+  .nb-shelf-empty .emoji{ font-size:38px; display:block; margin-bottom:6px; }
+  .nb-book-cell{ position:relative; display:flex; justify-content:center; padding:0 12px 26px; }
+  .nb-book-cell::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:14px; border-radius:3px;
+    background:linear-gradient(#b8926073 0, #b89260 1px, #a9814f 40%, #87663a 100%); box-shadow:0 5px 9px rgba(0,0,0,.20); }
+  [data-theme="dark"] .nb-book-cell::after{ background:linear-gradient(#6a4f2f 0, #5d4527 40%, #46331c 100%); }
+  .nb-cover-wrap{ position:relative; width:min(100%,168px); }
+  .nb-cover{ position:relative; display:block; width:100%; aspect-ratio:3/4; container-type:inline-size; padding:0; border:none; overflow:hidden; cursor:pointer;
+    border-radius:3px 9px 9px 3px; color:#fff; text-align:center;
+    background:linear-gradient(135deg,var(--c1),var(--c2));
+    box-shadow:2px 0 0 #f4eedf, 3px 0 0 #d9d0ba, 4px 0 0 #f4eedf, 5px 0 0 #cfc5ad, 5px 7px 12px rgba(0,0,0,.30);
+    transition:transform .18s var(--ease-standard), box-shadow .18s var(--ease-standard); }
+  .nb-cover:hover{ transform:translateY(-4px) rotate(-.6deg); }
+  .nb-cover:active{ transform:translateY(-1px) scale(.985); }
+  .nb-cover:focus-visible{ outline:3px solid var(--accent); outline-offset:3px; }
+  .nb-cover::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:11%; background:linear-gradient(90deg,rgba(0,0,0,.30),rgba(0,0,0,.06) 70%,rgba(255,255,255,.10)); border-right:1px dashed rgba(255,255,255,.28); }
+  .nb-cover::after{ content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 70% at 30% 0%, rgba(255,255,255,.18), transparent 60%); }
+  .nb-cover-band{ position:absolute; top:0; bottom:0; right:13%; width:5%; background:rgba(0,0,0,.22); }
+  .nb-cover-plate{ position:absolute; left:19%; right:22%; top:26%; min-height:28%; display:flex; align-items:center; justify-content:center; padding:5% 4%;
+    background:#f7f1e1; color:#2b2a26; border-radius:3px; box-shadow:0 1px 2px rgba(0,0,0,.30), inset 0 0 0 1.5px rgba(0,0,0,.10); }
+  .nb-cover-title{ font-family:var(--font-display); font-weight:700; font-size:9.5cqw; line-height:1.2; word-break:break-word; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+  .nb-cover-menu{ position:absolute; top:4px; right:4px; z-index:3; width:40px; height:40px; border-radius:50%; border:none; padding:0;
+    display:flex; align-items:center; justify-content:center; color:#fff; background:rgba(0,0,0,.26); cursor:pointer; }
+  .nb-cover-menu:hover{ background:rgba(0,0,0,.42); }
+  .nb-cover-menu svg{ width:20px; height:20px; }
+  @keyframes nbPop{ from{ transform:scale(.7); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .nb-book-cell.nb-pop .nb-cover-wrap{ animation:nbPop .3s var(--ease-standard); }
+  .nb-shelf-actions{ position:sticky; bottom:24px; display:flex; justify-content:center; margin-top:24px; pointer-events:none; z-index:5; }
+  .nb-shelf-actions .btn{ pointer-events:auto; padding:13px 26px; font-size:14.5px; border-radius:999px; box-shadow:var(--shadow-lg); }
+  .nb-shelf-actions .btn-primary:hover{ background:var(--gradient-primary); color:var(--accent-ink); }
+  @media (max-width:880px){ .nb-shelf-actions{ bottom:calc(84px + env(safe-area-inset-bottom,0px)); } }
+
+  /* Animasi buka buku */
+  .nb-opener{ position:fixed; z-index:96; perspective:1500px; pointer-events:none; }
+  .nb-opener-page{ position:absolute; inset:0; background:#FBF8F0; border-radius:0 8px 8px 0; box-shadow:0 10px 30px rgba(0,0,0,.28); }
+  .nb-opener-cover{ position:absolute !important; inset:0; width:auto; height:auto; aspect-ratio:auto; transform-origin:left center; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  .nb-opener-cover:hover{ transform:none; }
+
+  /* Pembaca (buku terbuka) */
+  .nb-reader{ position:fixed; inset:0; z-index:95; display:none; flex-direction:column; background:var(--bg); }
+  .nb-reader.open{ display:flex; }
+  .nb-reader.closing{ opacity:0; transform:scale(.97); transition:opacity .2s ease, transform .2s ease; }
+  @media (min-width:881px){ .nb-reader{ left:230px; } }
+  .nb-r-head{ flex:0 0 auto; display:grid; grid-template-columns:52px 1fr 52px; align-items:center; padding:calc(6px + env(safe-area-inset-top,0px)) 6px 6px; }
+  .nb-r-title{ text-align:center; font-family:var(--font-display); font-weight:600; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 6px; }
+  .nb-r-btn{ width:46px; height:46px; border-radius:50%; border:none; background:transparent; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .nb-r-btn:hover{ background:var(--surface-2); }
+  .nb-r-btn svg{ width:22px; height:22px; }
+  .nb-reader.mode-draw #nbMoreBtn, .nb-reader.mode-photo #nbMoreBtn, .nb-reader.mode-draw #nbBackBtn, .nb-reader.mode-photo #nbBackBtn{ visibility:hidden; }
+  .nb-stage{ position:relative; flex:1 1 auto; min-height:0; container-type:size; display:flex; align-items:center; justify-content:center; }
+  .nb-sheet-wrap{ position:relative; width:min(92vw,640px); aspect-ratio:3/4; perspective:1800px; }
+  @supports (width:1cqw){ .nb-sheet-wrap{ width:min(calc(100cqw - 28px),calc(75cqh - 12px),640px); } }
+  .nb-pages-stack{ position:absolute; inset:5px 0 -5px 4px; border-radius:0 10px 10px 0; background:#ece5d3; box-shadow:2px 3px 0 #ddd4bd, 4px 6px 0 #ece5d3, 5px 9px 14px rgba(0,0,0,.22); }
+  .nb-sheet{ position:absolute; inset:0; container-type:inline-size; overflow:hidden; background:#FBF8F0; border-radius:0 10px 10px 0;
+    border-left:7px solid var(--nb-c1,var(--accent)); box-shadow:0 6px 22px rgba(0,0,0,.20); backface-visibility:hidden; }
+  .nb-sheet-spine{ position:absolute; left:0; top:0; bottom:0; width:5%; background:linear-gradient(90deg, rgba(0,0,0,.14), transparent); pointer-events:none; z-index:4; }
+  .nb-textarea{ position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box; border:none; outline:none; resize:none; color:#2a2a2a; caret-color:#2a2a2a;
+    font-family:var(--font-body); font-size:14.5px; line-height:28px; padding:28px 20px 20px 30px;
+    background-color:transparent; background-image:repeating-linear-gradient(transparent 0 27px, #ddd6c4 27px 28px); background-attachment:local; }
+  .nb-textarea::placeholder{ color:#9a9686; }
+  @supports (width:1cqw){
+    .nb-textarea{ font-size:3.7cqw; line-height:7cqw; padding:7cqw 5cqw 5cqw 8cqw;
+      background-image:repeating-linear-gradient(transparent 0 calc(7cqw - 1px), #ddd6c4 calc(7cqw - 1px) 7cqw); }
   }
-  .nb-pages-stack{
-    position:absolute; inset:6px 2px 0 2px; border-radius:0 var(--radius-m) var(--radius-m) 0;
-    background:var(--surface-2); box-shadow:0 2px 0 var(--border), 0 4px 0 var(--surface-2), 0 6px 10px rgba(32,35,31,.10);
-    transform:translateZ(-10px);
-  }
-  .nb-sheet{
-    position:relative; width:100%; height:100%; background:var(--surface); border-radius:0 var(--radius-m) var(--radius-m) 0;
-    box-shadow:var(--shadow-lg); overflow:hidden; transform-style:preserve-3d; backface-visibility:hidden;
-    border-left:6px solid var(--accent);
-  }
-  .nb-sheet-spine{
-    position:absolute; left:0; top:0; bottom:0; width:14px;
-    background:linear-gradient(90deg, rgba(0,0,0,.12), transparent);
-    pointer-events:none;
-  }
-  .nb-textarea{
-    width:100%; height:100%; border:none; outline:none; resize:none; background:transparent; color:var(--ink);
-    padding:26px 22px 20px 30px; font-family:var(--font-body); font-size:14.5px; line-height:28px;
-    background-image:repeating-linear-gradient(var(--surface) 0 27px, var(--border) 27px 28px);
-    background-attachment:local;
-  }
-  [data-theme="dark"] .nb-textarea{ background-image:repeating-linear-gradient(var(--surface) 0 27px, var(--border) 27px 28px); }
+  .nb-reader.mode-draw .nb-textarea, .nb-reader.mode-photo .nb-textarea{ pointer-events:none; }
   @keyframes nbFlipOutNext{ from{transform:rotateY(0deg); opacity:1;} to{transform:rotateY(-100deg); opacity:.35;} }
   @keyframes nbFlipInNext{ from{transform:rotateY(100deg); opacity:.35;} to{transform:rotateY(0deg); opacity:1;} }
   @keyframes nbFlipOutPrev{ from{transform:rotateY(0deg); opacity:1;} to{transform:rotateY(100deg); opacity:.35;} }
   @keyframes nbFlipInPrev{ from{transform:rotateY(-100deg); opacity:.35;} to{transform:rotateY(0deg); opacity:1;} }
-  .nb-sheet.flip-out-next{ transform-origin:left center; animation:nbFlipOutNext .28s ease forwards; }
-  .nb-sheet.flip-in-next{ transform-origin:left center; animation:nbFlipInNext .28s ease forwards; }
-  .nb-sheet.flip-out-prev{ transform-origin:left center; animation:nbFlipOutPrev .28s ease forwards; }
-  .nb-sheet.flip-in-prev{ transform-origin:left center; animation:nbFlipInPrev .28s ease forwards; }
-  .nb-arrow{
-    position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:50%; z-index:5;
-    background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-sm); display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
-  }
-  .nb-arrow:hover{ color:var(--accent); border-color:var(--accent); }
-  .nb-arrow svg{ width:17px; height:17px; }
-  .nb-arrow-prev{ left:-14px; }
-  .nb-arrow-next{ right:-14px; }
-  @media (max-width:640px){ .nb-arrow{ display:none; } }
-  .nb-foot{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; flex-wrap:wrap; }
-  .nb-foot #nbPageIndicator{ font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--ink-soft); }
+  .nb-sheet.flip-out-next{ transform-origin:left center; animation:nbFlipOutNext .26s ease forwards; }
+  .nb-sheet.flip-in-next{ transform-origin:left center; animation:nbFlipInNext .26s ease forwards; }
+  .nb-sheet.flip-out-prev{ transform-origin:left center; animation:nbFlipOutPrev .26s ease forwards; }
+  .nb-sheet.flip-in-prev{ transform-origin:left center; animation:nbFlipInPrev .26s ease forwards; }
+  /* Foto & gambar */
+  .nb-photos{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+  .nb-photo{ position:absolute; pointer-events:auto; touch-action:none; cursor:pointer; user-select:none; -webkit-user-select:none; line-height:0;
+    border:3px solid #fff; border-radius:5px; background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.28); }
+  .nb-photo img{ width:100%; height:auto; display:block; pointer-events:none; -webkit-user-drag:none; }
+  .nb-reader.mode-photo .nb-photo{ cursor:grab; }
+  .nb-reader.mode-photo .nb-photo.sel{ outline:2px dashed var(--accent); outline-offset:3px; }
+  .nb-reader.mode-draw .nb-photo{ pointer-events:none; }
+  .nb-photo-del, .nb-photo-resize{ display:none; }
+  .nb-reader.mode-photo .nb-photo.sel .nb-photo-del, .nb-reader.mode-photo .nb-photo.sel .nb-photo-resize{ display:flex; }
+  .nb-photo-del{ position:absolute; top:-15px; right:-15px; width:30px; height:30px; border-radius:50%; border:none; background:var(--red); color:#fff; font-size:14px; line-height:1; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); cursor:pointer; }
+  .nb-photo-resize{ position:absolute; right:-15px; bottom:-15px; width:30px; height:30px; border-radius:50%; background:var(--accent); border:3px solid #fff; cursor:nwse-resize; touch-action:none; box-shadow:var(--shadow-sm); }
+  .nb-draw{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; touch-action:none; }
+  .nb-reader.mode-draw .nb-draw{ pointer-events:auto; cursor:crosshair; }
+  /* Footer halaman & bar alat */
+  .nb-r-foot{ flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:10px; padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px)); }
+  .nb-r-foot #nbPageIndicator{ min-width:64px; text-align:center; font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--ink-soft); }
+  .nb-r-foot .nb-save-indicator{ position:absolute; right:14px; margin:0; }
   .nb-save-indicator{ opacity:0; color:var(--accent); transition:opacity .35s ease; }
   .nb-save-indicator.show{ opacity:1; }
+  .nb-reader.mode-draw .nb-r-foot, .nb-reader.mode-photo .nb-r-foot{ display:none; }
+  .nb-bar{ display:none; flex:0 0 auto; background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -4px 16px rgba(0,0,0,.08); padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px)); }
+  .nb-reader.mode-draw .nb-drawbar, .nb-reader.mode-photo .nb-photobar{ display:block; }
+  .nb-bar-inner{ display:flex; align-items:center; gap:12px; max-width:560px; margin:0 auto; }
+  .nb-tools4{ flex:1; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .nb-tool{ min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:4px 2px; border-radius:var(--radius-m);
+    border:1px solid var(--border); background:var(--surface); color:var(--ink-soft); font-size:10.5px; font-weight:600; cursor:pointer; }
+  .nb-tool svg{ width:21px; height:21px; }
+  .nb-tool.active{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .nb-tool:disabled{ opacity:.35; cursor:default; }
+  .nb-check{ flex:0 0 auto; width:54px; height:54px; border-radius:50%; border:none; padding:0; display:flex; align-items:center; justify-content:center;
+    background:var(--gradient-primary); color:var(--accent-ink); box-shadow:var(--shadow-accent-glow); cursor:pointer; }
+  .nb-check svg{ width:26px; height:26px; }
+  .nb-check:active{ transform:scale(.94); }
+  .nb-sliders{ max-width:560px; margin:8px auto 0; display:flex; flex-direction:column; gap:2px; }
+  .nb-slider-row{ display:flex; align-items:center; gap:10px; padding:0 2px; border-radius:var(--radius-s); opacity:.62; }
+  .nb-slider-row.on{ opacity:1; }
+  .nb-slider-label{ flex:0 0 74px; font-size:12px; font-weight:700; color:var(--ink-soft); }
+  .nb-slider-dot{ flex:0 0 32px; height:32px; display:flex; align-items:center; justify-content:center; }
+  .nb-slider-dot i{ display:block; border-radius:50%; background:var(--ink); }
+  .nb-range{ -webkit-appearance:none; appearance:none; flex:1; min-width:0; height:36px; margin:0; background:transparent; cursor:pointer; }
+  .nb-range:focus{ outline:none; }
+  .nb-range::-webkit-slider-runnable-track{ height:6px; border-radius:3px; background:linear-gradient(to right,var(--accent) var(--p,0%),var(--border) var(--p,0%)); }
+  .nb-range::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:26px; height:26px; margin-top:-10px; border-radius:50%; background:var(--accent); border:3px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.35); }
+  .nb-range::-moz-range-track{ height:6px; border-radius:3px; background:var(--border); }
+  .nb-range::-moz-range-progress{ height:6px; border-radius:3px; background:var(--accent); }
+  .nb-range::-moz-range-thumb{ width:20px; height:20px; border-radius:50%; background:var(--accent); border:3px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.35); }
+  .nb-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px var(--accent-soft); }
+  .nb-range:disabled{ opacity:.4; }
+  .nb-hint-photo{ max-width:560px; margin:0 auto 6px; text-align:center; font-size:11.5px; color:var(--ink-faint); }
+  /* Menu ⋮ & dialog */
+  .nb-menu-backdrop{ position:fixed; inset:0; z-index:159; }
+  .nb-menu{ position:fixed; z-index:160; min-width:210px; max-width:calc(100vw - 16px); padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow-lg); animation:nbPop .14s ease; }
+  .nb-menu-item{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:8px 12px; border:none; background:transparent; color:var(--ink); border-radius:var(--radius-s); font-size:14px; font-weight:500; text-align:left; cursor:pointer; }
+  .nb-menu-item:hover, .nb-menu-item:focus-visible{ background:var(--surface-2); outline:none; }
+  .nb-menu-item .mi{ width:22px; text-align:center; flex:0 0 auto; }
+  .nb-menu-item.danger{ color:var(--red); }
+  .nb-menu-item.dim{ opacity:.5; }
+  .nb-dialog-input{ width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface-2); color:var(--ink); font:inherit; font-size:15px; margin-bottom:16px; box-sizing:border-box; text-align:center; }
+  .nb-dialog-input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .nb-dialog-actions{ display:flex; justify-content:center; }
+  @media (prefers-reduced-motion: reduce){ .nb-cover, .nb-menu, .nb-book-cell .nb-cover-wrap, .nb-reader.closing{ animation:none !important; transition:none !important; } }
   .sb-overlay-card{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:150; padding:16px;}
   .sb-overlay-card.show{display:flex;}
   .sb-overlay-inner{background:var(--surface); border-radius:var(--radius-xl); padding:28px 26px; max-width:320px; width:100%; text-align:center; box-shadow:var(--shadow-lg); animation:sbPop .25s ease;}
@@ -1965,34 +2056,64 @@
     </div>
 
     <section class="page" id="page-notebook">
-      <div class="topbar">
-        <h1 class="page-title">Notebook</h1>
-        <div class="topbar-actions">
-          <button class="btn btn-icon btn-ghost" id="nbDeleteBtn" aria-label="Hapus halaman ini" title="Hapus halaman ini">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v13a2 2 0 01-2 2H9a2 2 0 01-2-2V7h10z"/></svg>
-          </button>
-          <button class="btn btn-primary btn-sm" id="nbAddBtn">+ Halaman</button>
-        </div>
+      <div class="topbar"><h1 class="page-title">Notebook</h1></div>
+      <div class="nb-shelf-wrap">
+        <div class="nb-shelf" id="nbShelf"></div>
+        <div class="nb-shelf-empty" id="nbShelfEmpty" style="display:none;"><span class="emoji">📚</span>Rak masih kosong. Tambahkan buku pertamamu!</div>
       </div>
-      <div class="nb-book" id="nbBook">
-        <button class="nb-arrow nb-arrow-prev" id="nbPrevBtn" aria-label="Halaman sebelumnya">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <div class="nb-pages-stack" aria-hidden="true"></div>
-        <div class="nb-sheet" id="nbSheet">
-          <div class="nb-sheet-spine" aria-hidden="true"></div>
-          <textarea class="nb-textarea" id="nbTextarea" placeholder="Tulis catatanmu di sini..." spellcheck="false"></textarea>
-        </div>
-        <button class="nb-arrow nb-arrow-next" id="nbNextBtn" aria-label="Halaman berikutnya">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-      <div class="nb-foot">
-        <span id="nbPageIndicator">1 / 1</span>
-        <span class="hint nb-save-indicator" id="nbSaveIndicator" aria-live="polite"></span>
-        <span class="hint">Geser ke kiri/kanan untuk ganti halaman, seperti membuka buku.</span>
-      </div>
+      <div class="nb-shelf-actions"><button class="btn btn-primary" id="nbAddBookBtn">+ Tambah Buku</button></div>
     </section>
+
+    <div class="nb-reader" id="nbReader" role="dialog" aria-label="Notebook" aria-hidden="true">
+      <div class="nb-r-head">
+        <button class="nb-r-btn" id="nbBackBtn" aria-label="Kembali ke rak buku" title="Kembali ke rak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
+        <div class="nb-r-title" id="nbReaderTitle"></div>
+        <button class="nb-r-btn" id="nbMoreBtn" aria-label="Menu notebook" aria-haspopup="menu" title="Menu"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+      </div>
+      <div class="nb-stage" id="nbStage">
+        <div class="nb-sheet-wrap" id="nbSheetWrap">
+          <div class="nb-pages-stack" aria-hidden="true"></div>
+          <div class="nb-sheet" id="nbSheet">
+            <textarea class="nb-textarea" id="nbTextarea" placeholder="Tulis catatanmu di sini..." spellcheck="false"></textarea>
+            <div class="nb-photos" id="nbPhotos"></div>
+            <canvas class="nb-draw" id="nbCanvas" width="768" height="1024"></canvas>
+            <div class="nb-sheet-spine" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+      <div class="nb-r-foot" id="nbFoot">
+        <button class="nb-r-btn" id="nbPrevBtn" aria-label="Halaman sebelumnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <span id="nbPageIndicator">1 / 1</span>
+        <button class="nb-r-btn" id="nbNextBtn" aria-label="Halaman berikutnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <span class="hint nb-save-indicator" id="nbSaveIndicator" aria-live="polite"></span>
+      </div>
+      <div class="nb-bar nb-drawbar" id="nbDrawBar">
+        <div class="nb-bar-inner">
+          <div class="nb-tools4" role="toolbar" aria-label="Alat gambar">
+            <button class="nb-tool active" id="nbToolPen" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Pulpen</span></button>
+            <button class="nb-tool" id="nbToolEraser" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg><span>Penghapus</span></button>
+            <button class="nb-tool" id="nbUndoBtn" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg><span>Undo</span></button>
+            <button class="nb-tool" id="nbRedoBtn" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg><span>Redo</span></button>
+          </div>
+          <button class="nb-check" id="nbDrawDone" aria-label="Simpan gambar dan selesai" title="Simpan &amp; selesai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+        </div>
+        <div class="nb-sliders">
+          <label class="nb-slider-row on" id="nbPenRow"><span class="nb-slider-label">Pulpen</span>
+            <input type="range" class="nb-range" id="nbPenSize" min="1" max="20" step="1" aria-label="Ukuran pulpen"><span class="nb-slider-dot"><i id="nbPenDot"></i></span></label>
+          <label class="nb-slider-row" id="nbEraserRow"><span class="nb-slider-label">Penghapus</span>
+            <input type="range" class="nb-range" id="nbEraserSize" min="4" max="60" step="1" aria-label="Ukuran penghapus"><span class="nb-slider-dot"><i id="nbEraserDot"></i></span></label>
+        </div>
+      </div>
+      <div class="nb-bar nb-photobar" id="nbPhotoBar">
+        <div class="nb-hint-photo">Geser foto untuk memindahkan. Ketuk foto lain untuk memilihnya.</div>
+        <div class="nb-bar-inner">
+          <label class="nb-slider-row on" style="flex:1;"><span class="nb-slider-label">Ukuran foto</span>
+            <input type="range" class="nb-range" id="nbPhotoSize" min="12" max="100" step="1" aria-label="Ukuran foto"></label>
+          <button class="nb-check" id="nbPhotoDone" aria-label="Simpan foto dan selesai" title="Simpan &amp; selesai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="nbPhotoInput" accept="image/*" style="display:none;">
 
     <section class="page" id="page-settings">
       <div class="topbar"><h1 class="page-title">Pengaturan</h1></div>
@@ -2634,7 +2755,7 @@
    STORAGE MANAGER
 ========================================================= */
 const APP_VERSION = "6.0.0";
-const CURRENT_DATA_VERSION = 14;
+const CURRENT_DATA_VERSION = 15;
 const StorageManager = (function(){
   const KEY = "studiflow_data_v1"; // key dipertahankan agar data lama user tetap terbaca
   function defaultData(){
@@ -2652,6 +2773,7 @@ const StorageManager = (function(){
       notifications: [],
       focusSessions: [],
       notebookPages: [],
+      notebooks: [],
       settings: {
         theme:"system", notifDaily:false, notifTime:"19:00", userName:"", startOfWeek:"mon",
         verityEnabled:true, verityPersonality:"balanced", verityLastProactiveAt:null, verityLastCompletedCount:0,
@@ -2782,6 +2904,22 @@ const StorageManager = (function(){
         if(!Array.isArray(c.attendanceRecords)) c.attendanceRecords = [];
       });
       d.version = 14;
+    }
+    if(d.version < 15){
+      // v14 -> v15: Notebook jamak (tiap notebook punya judul & halaman sendiri) +
+      // gambar coretan & foto per halaman. Halaman lama dipindah ke notebook pertama,
+      // notebookPages lama dibiarkan apa adanya.
+      const mk = (p)=>"nb-"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+      if(!Array.isArray(d.notebooks)) d.notebooks = [];
+      if(d.notebooks.length===0){
+        const old = Array.isArray(d.notebookPages) ? d.notebookPages : [];
+        d.notebooks.push({
+          id: mk(), title: "Catatan 1",
+          pages: old.length ? old.map(p=>({id:p.id||mk(), text:p.text||"", images:[], drawing:null}))
+                            : [{id:mk(), text:"", images:[], drawing:null}]
+        });
+      }
+      d.version = 15;
     }
     return d;
   }
@@ -3608,6 +3746,13 @@ function applyFilters(list, f){
     return true;
   });
 }
+// Tugas yang sudah dicentang turun ke bawah daftar, supaya tugas aktif/baru naik ke atas.
+// Urutan di dalam tiap kelompok tetap mengikuti sort yang dipilih.
+function doneLast(list){
+  const active = [], finished = [];
+  list.forEach(t=>(t.status==="done" ? finished : active).push(t));
+  return active.concat(finished);
+}
 function sortTasks(list, mode){
   const arr = list.slice();
   if(mode==="planning-asc"){
@@ -3625,7 +3770,7 @@ function sortTasks(list, mode){
   else if(mode==="deadline-desc") arr.sort((a,b)=>new Date(b.deadline)-new Date(a.deadline));
   else if(mode==="created-desc") arr.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
   else if(mode==="az") arr.sort((a,b)=>a.title.localeCompare(b.title));
-  return arr;
+  return doneLast(arr);
 }
 
 /* =========================================================
@@ -5965,17 +6110,70 @@ const ChessGame = (function(){
    turning a physical book, per spec.
 ========================================================= */
 const NotebookManager = (function(){
-  let idx = 0;
-  let saveTimer = null;
-  let touchStartX = null, touchStartY = null;
-  // V7 spec §9: autosave every 10s + subtle "Tersimpan" indicator, on top of
-  // the existing fast debounce (kept as-is so typing still feels instant).
-  let autosaveTimer = null;
-  let lastSavedText = null;
-  let indicatorTimer = null;
+  const CW = 768, CH = 1024;                       // resolusi kanvas gambar (rasio 3:4, sama dengan kertas)
+  const COVERS = [["#3E6259","#284840"],["#B5573A","#8A3D26"],["#2F4A6B","#1E3351"],["#C79A3B","#9A7020"],["#6B3F63","#4B2946"],["#3C7A82","#27565C"]];
+  const PEN_COLOR = "#1f2a44";
+  const $ = (id)=>document.getElementById(id);
 
+  let nbId = null;                 // buku yang sedang dibuka
+  const pageIdx = {};              // id buku -> index halaman terakhir
+  let shownPage = null;            // halaman yang sedang tampil
+  let readerOpen = false, opening = false;
+  let mode = "normal";             // normal | draw | photo
+  let saveTimer = null, autosaveTimer = null, indicatorTimer = null, warnedQuota = false;
+  let touchStartX = null, touchStartY = null;
+  let menuEl = null, menuBackdrop = null;
+  // gambar
+  let tool = "pen", penSize = 3, eraserSize = 18;
+  let strokes = [], redoStack = [], baseImg = null, drawing = false, curStroke = null, dirtyDraw = false;
+  // foto
+  let selPhotoId = null;
+
+  const reduced = ()=> !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* ================= DATA ================= */
+  function newPage(){ return {id:uid("nb"), text:"", images:[], drawing:null}; }
+  function books(){
+    if(!Array.isArray(DB.notebooks)) DB.notebooks = [];
+    return DB.notebooks;
+  }
+  function book(){
+    const b = books().find(x=>x.id===nbId) || null;
+    if(b && (!Array.isArray(b.pages) || b.pages.length===0)) b.pages = [newPage()];
+    return b;
+  }
+  function pages(){ return book().pages; }
+  function getIdx(){
+    const p = pages();
+    let i = pageIdx[nbId] || 0;
+    if(i < 0) i = 0;
+    if(i > p.length-1) i = p.length-1;
+    pageIdx[nbId] = i;
+    return i;
+  }
+  function setIdx(i){ pageIdx[nbId] = i; }
+  function curPage(){
+    const p = pages()[getIdx()];
+    if(!Array.isArray(p.images)) p.images = [];
+    if(p.drawing===undefined) p.drawing = null;
+    return p;
+  }
+  function coverOf(b, i){
+    const n = (b.color!=null ? b.color : i);
+    return COVERS[((n%COVERS.length)+COVERS.length)%COVERS.length];
+  }
+
+  /* ================= SIMPAN ================= */
+  function safePersist(){
+    const ok = persist();
+    if(ok===false && !warnedQuota){
+      warnedQuota = true;
+      alert("Penyimpanan browser penuh, perubahan terakhir mungkin tidak tersimpan. Hapus beberapa foto/gambar besar di Notebook, lalu coba lagi.");
+    }
+    return ok!==false;
+  }
   function showSavedIndicator(){
-    const el = document.getElementById("nbSaveIndicator");
+    const el = $("nbSaveIndicator");
     if(!el) return;
     el.textContent = "✓ Tersimpan";
     el.classList.add("show");
@@ -5983,128 +6181,691 @@ const NotebookManager = (function(){
     indicatorTimer = setTimeout(()=>el.classList.remove("show"), 1600);
   }
   function saveIfChanged(){
-    const ta = document.getElementById("nbTextarea");
-    if(!ta) return;
-    const p = pages();
-    if(!p[idx]) return;
-    const current = ta.value;
-    if(current === (p[idx].text||"") ) return; // avoid excessive writes when nothing changed
-    p[idx].text = current;
-    persist();
-    lastSavedText = current;
+    if(!readerOpen || !shownPage) return;
+    const ta = $("nbTextarea");
+    if(ta.value === (shownPage.text||"")) return;
+    shownPage.text = ta.value;
+    safePersist();
     showSavedIndicator();
   }
-  function startAutosaveLoop(){
-    clearInterval(autosaveTimer);
-    autosaveTimer = setInterval(saveIfChanged, 10000);
-  }
-
-  function pages(){
-    if(!DB.notebookPages || DB.notebookPages.length===0){
-      DB.notebookPages = [{id:uid("nb"), text:""}];
-      persist();
-    }
-    return DB.notebookPages;
-  }
-  function clampIdx(){
-    const p = pages();
-    if(idx < 0) idx = 0;
-    if(idx > p.length-1) idx = p.length-1;
-  }
-  function renderIndicator(){
-    document.getElementById("nbPageIndicator").textContent = (idx+1) + " / " + pages().length;
-    document.getElementById("nbDeleteBtn").style.visibility = pages().length>1 ? "" : "hidden";
-  }
-  function renderSheetContent(){
-    clampIdx();
-    document.getElementById("nbTextarea").value = pages()[idx].text || "";
-    renderIndicator();
-  }
-  function render(){ renderSheetContent(); }
-
   function scheduleSave(){
     clearTimeout(saveTimer);
     saveTimer = setTimeout(()=>{
-      const p = pages();
-      if(p[idx]){ p[idx].text = document.getElementById("nbTextarea").value; persist(); }
+      if(readerOpen && shownPage){ shownPage.text = $("nbTextarea").value; persist(); }
     }, 350);
   }
+  // Simpan apa pun yang sedang dikerjakan (teks + coretan yang belum di-✓).
+  function flushAll(){
+    saveIfChanged();
+    if(mode==="draw") flushDraw();
+    if(mode==="photo") safePersist();
+  }
 
-  function flip(direction){
-    // direction: 1 = next page, -1 = previous page
-    const p = pages();
-    if(direction>0 && idx>=p.length-1){
-      // Swiping/clicking past the last page reveals a fresh blank sheet —
-      // "buku"-nya nambah lembar baru sendiri, seperti membalik ke halaman kosong.
-      p.push({id:uid("nb"), text:""});
-      persist();
+  /* ================= MENU & DIALOG ================= */
+  function closeMenu(){
+    if(menuEl){ menuEl.remove(); menuEl = null; }
+    if(menuBackdrop){ menuBackdrop.remove(); menuBackdrop = null; }
+  }
+  function openMenu(anchor, items){
+    closeMenu();
+    menuBackdrop = document.createElement("div");
+    menuBackdrop.className = "nb-menu-backdrop";
+    menuBackdrop.addEventListener("pointerdown", closeMenu);
+    menuEl = document.createElement("div");
+    menuEl.className = "nb-menu";
+    menuEl.setAttribute("role","menu");
+    items.forEach(it=>{
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role","menuitem");
+      b.className = "nb-menu-item" + (it.danger ? " danger" : "") + (it.dim ? " dim" : "");
+      const ic = document.createElement("span"); ic.className = "mi"; ic.textContent = it.icon || "";
+      const lb = document.createElement("span"); lb.textContent = it.label;
+      b.append(ic, lb);
+      b.addEventListener("click", ()=>{ closeMenu(); it.action(); });
+      menuEl.appendChild(b);
+    });
+    document.body.append(menuBackdrop, menuEl);
+    const r = anchor.getBoundingClientRect();
+    const mw = menuEl.offsetWidth, mh = menuEl.offsetHeight;
+    let left = Math.min(Math.max(8, r.right - mw), window.innerWidth - mw - 8);
+    let top = r.bottom + 6;
+    if(top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+    menuEl.style.left = left + "px";
+    menuEl.style.top = top + "px";
+    const first = menuEl.querySelector(".nb-menu-item");
+    if(first) first.focus({preventScroll:true});
+  }
+
+  const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  function askTitle(heading, initial, onOk){
+    const ov = document.createElement("div");
+    ov.className = "sb-overlay-card show";
+    ov.innerHTML = '<div class="sb-overlay-inner" role="dialog" aria-modal="true"><h3></h3>' +
+      '<input class="nb-dialog-input" type="text" maxlength="60" placeholder="Nama buku" aria-label="Nama buku">' +
+      '<div class="nb-dialog-actions"><button class="nb-check" type="button" aria-label="Simpan nama buku" title="Simpan">' + CHECK_SVG + '</button></div></div>';
+    ov.querySelector("h3").textContent = heading;
+    const input = ov.querySelector("input");
+    input.value = initial || "";
+    document.body.appendChild(ov);
+    const close = ()=>ov.remove();
+    const ok = ()=>{
+      const v = input.value.trim();
+      if(!v){ input.focus(); return; }
+      close(); onOk(v);
+    };
+    ov.querySelector(".nb-check").addEventListener("click", ok);
+    input.addEventListener("keydown", e=>{
+      if(e.key==="Enter"){ e.preventDefault(); ok(); }
+      if(e.key==="Escape"){ e.stopPropagation(); close(); }
+    });
+    ov.addEventListener("pointerdown", e=>{ if(e.target===ov) close(); });
+    setTimeout(()=>{ input.focus(); input.select(); }, 30);
+  }
+
+  /* ================= RAK BUKU ================= */
+  const KEBAB = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+  function coverInner(){
+    return '<span class="nb-cover-band"></span><span class="nb-cover-plate"><span class="nb-cover-title"></span></span>';
+  }
+  function renderShelf(popId){
+    const shelf = $("nbShelf");
+    shelf.innerHTML = "";
+    const list = books();
+    $("nbShelfEmpty").style.display = list.length ? "none" : "";
+    list.forEach((b, i)=>{
+      const c = coverOf(b, i);
+      const cell = document.createElement("div");
+      cell.className = "nb-book-cell" + (b.id===popId ? " nb-pop" : "");
+      const wrap = document.createElement("div");
+      wrap.className = "nb-cover-wrap";
+      const cover = document.createElement("button");
+      cover.type = "button";
+      cover.className = "nb-cover";
+      cover.style.setProperty("--c1", c[0]); cover.style.setProperty("--c2", c[1]);
+      cover.setAttribute("aria-label", "Buka buku " + b.title);
+      cover.innerHTML = coverInner();
+      cover.querySelector(".nb-cover-title").textContent = b.title || "Tanpa judul";
+      cover.addEventListener("click", ()=>openBook(b.id, cover));
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "nb-cover-menu";
+      more.setAttribute("aria-label", "Menu buku " + b.title);
+      more.setAttribute("aria-haspopup", "menu");
+      more.innerHTML = KEBAB;
+      more.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        openMenu(more, [
+          {icon:"✎", label:"Edit Nama Buku", action:()=>editBookName(b.id)},
+          {icon:"🗑️", label:"Hapus Buku", danger:true, action:()=>deleteBook(b.id)}
+        ]);
+      });
+      wrap.append(cover, more);
+      cell.appendChild(wrap);
+      shelf.appendChild(cell);
+    });
+  }
+  function addBook(){
+    askTitle("Buku baru", "Buku " + (books().length+1), title=>{
+      const b = {id:uid("nbk"), title:title, color:books().length % COVERS.length, pages:[newPage()]};
+      books().push(b);
+      safePersist();
+      renderShelf(b.id);
+      SoundManager.play("click");
+      requestAnimationFrame(()=>{
+        const cells = document.querySelectorAll("#nbShelf .nb-book-cell");
+        const last = cells[cells.length-1];
+        if(last && last.scrollIntoView) last.scrollIntoView({block:"nearest", behavior: reduced() ? "auto" : "smooth"});
+      });
+    });
+  }
+  function editBookName(id){
+    const b = books().find(x=>x.id===id);
+    if(!b) return;
+    askTitle("Edit nama buku", b.title, title=>{
+      b.title = title;
+      safePersist();
+      renderShelf();
+    });
+  }
+  function deleteBook(id){
+    const b = books().find(x=>x.id===id);
+    if(!b) return;
+    openConfirm("Hapus buku \"" + b.title + "\"?", "Semua halaman, gambar, dan foto di buku ini akan hilang.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        DB.notebooks = books().filter(x=>x.id!==id);
+        delete pageIdx[id];
+        safePersist();
+        renderShelf();
+      }}
+    ]);
+  }
+
+  /* ================= BUKA / TUTUP BUKU ================= */
+  function openBook(id, coverEl){
+    if(opening || readerOpen) return;
+    const b = books().find(x=>x.id===id);
+    if(!b) return;
+    opening = true;
+    nbId = id;
+    const idx = books().indexOf(b);
+    const c = coverOf(b, idx);
+    const reader = $("nbReader");
+    reader.style.setProperty("--nb-c1", c[0]);
+    $("nbReaderTitle").textContent = b.title || "";
+    reader.classList.remove("closing");
+    reader.classList.add("open");
+    reader.setAttribute("aria-hidden","false");
+    reader.style.opacity = "0";
+    readerOpen = true;
+    setMode("normal");
+    renderSheetContent();
+    if(reduced() || !coverEl){
+      reader.style.opacity = "";
+      opening = false;
+      return;
     }
-    if(direction<0 && idx<=0) return; // already at the very first page
-    const sheet = document.getElementById("nbSheet");
-    // commit any pending edits on the page we're leaving before flipping away
-    if(p[idx]) p[idx].text = document.getElementById("nbTextarea").value;
+    const from = coverEl.getBoundingClientRect();
+    const to = $("nbSheetWrap").getBoundingClientRect();
+    const op = document.createElement("div");
+    op.className = "nb-opener";
+    const pg = document.createElement("div"); pg.className = "nb-opener-page";
+    const cv = document.createElement("div"); cv.className = "nb-cover nb-opener-cover";
+    cv.style.setProperty("--c1", c[0]); cv.style.setProperty("--c2", c[1]);
+    cv.innerHTML = coverInner();
+    cv.querySelector(".nb-cover-title").textContent = b.title || "";
+    op.append(pg, cv);
+    op.style.left = from.left+"px"; op.style.top = from.top+"px"; op.style.width = from.width+"px"; op.style.height = from.height+"px";
+    document.body.appendChild(op);
+    const dur = 560;
+    op.animate([
+      {left:from.left+"px", top:from.top+"px", width:from.width+"px", height:from.height+"px"},
+      {left:to.left+"px", top:to.top+"px", width:to.width+"px", height:to.height+"px"}
+    ], {duration:dur, easing:"cubic-bezier(.3,.7,.2,1)", fill:"forwards"});
+    cv.animate([{transform:"rotateY(0deg)"},{transform:"rotateY(-168deg)"}], {duration:dur, easing:"ease-in-out", fill:"forwards"});
+    setTimeout(()=>{
+      reader.style.transition = "opacity .2s ease";
+      reader.style.opacity = "1";
+      setTimeout(()=>{ op.remove(); reader.style.transition = ""; reader.style.opacity = ""; opening = false; }, 230);
+    }, dur);
+  }
+  function hideReader(){
+    const reader = $("nbReader");
+    reader.classList.remove("open","closing");
+    reader.setAttribute("aria-hidden","true");
+    reader.style.opacity = ""; reader.style.transition = "";
+  }
+  function closeBook(instant){
+    if(!readerOpen) return;
+    closeMenu();
+    if(mode==="draw") commitDraw(true);
+    if(mode==="photo") commitPhoto(true);
+    clearTimeout(saveTimer);
+    saveIfChanged();
+    readerOpen = false; shownPage = null;
+    setMode("normal");
+    if(instant || reduced()){ hideReader(); }
+    else {
+      $("nbReader").classList.add("closing");
+      setTimeout(()=>{ if(!readerOpen) hideReader(); }, 210);
+    }
+    renderShelf();
+  }
+
+  /* ================= ISI HALAMAN ================= */
+  function renderIndicator(){
+    $("nbPageIndicator").textContent = (getIdx()+1) + " / " + pages().length;
+    $("nbPrevBtn").style.visibility = getIdx()>0 ? "" : "hidden";
+  }
+  function renderDrawing(){
+    const cv = $("nbCanvas"), ctx = cv.getContext("2d");
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0,0,CW,CH);
+    const p = shownPage;
+    if(!p || !p.drawing) return;
+    const img = new Image();
+    img.onload = ()=>{ if(shownPage===p && mode!=="draw") ctx.drawImage(img,0,0,CW,CH); };
+    img.src = p.drawing;
+  }
+  function renderSheetContent(){
+    shownPage = curPage();
+    $("nbTextarea").value = shownPage.text || "";
+    renderIndicator();
+    renderPhotos();
+    renderDrawing();
+  }
+  function setMode(m){
+    mode = m;
+    const r = $("nbReader");
+    r.classList.toggle("mode-draw", m==="draw");
+    r.classList.toggle("mode-photo", m==="photo");
+    if(m!=="normal") $("nbTextarea").blur();
+  }
+
+  /* ================= GAMBAR ================= */
+  const ctx2 = ()=>$("nbCanvas").getContext("2d");
+  function lineW(size){ return size * CW / 400; }
+  function styleFor(ctx, s){
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.globalCompositeOperation = s.tool==="eraser" ? "destination-out" : "source-over";
+    ctx.strokeStyle = PEN_COLOR;
+    ctx.lineWidth = s.w;
+  }
+  function drawSegment(s, a, b){
+    const ctx = ctx2();
+    styleFor(ctx, s);
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  function replayStroke(ctx, s){
+    styleFor(ctx, s);
+    ctx.beginPath();
+    ctx.moveTo(s.pts[0][0], s.pts[0][1]);
+    for(let i=1;i<s.pts.length;i++) ctx.lineTo(s.pts[i][0], s.pts[i][1]);
+    if(s.pts.length===1) ctx.lineTo(s.pts[0][0]+0.01, s.pts[0][1]);
+    ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  function redraw(){
+    const ctx = ctx2();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0,0,CW,CH);
+    if(baseImg) ctx.drawImage(baseImg,0,0,CW,CH);
+    strokes.forEach(s=>replayStroke(ctx, s));
+  }
+  function canvasHasInk(){
+    const d = ctx2().getImageData(0,0,CW,CH).data;
+    for(let i=3;i<d.length;i+=4) if(d[i]>8) return true;
+    return false;
+  }
+  function flushDraw(){
+    if(!shownPage || !dirtyDraw) return;
+    shownPage.drawing = canvasHasInk() ? $("nbCanvas").toDataURL("image/png") : null;
+    dirtyDraw = false;
+    safePersist();
+    showSavedIndicator();
+  }
+  function updateDrawUI(){
+    $("nbToolPen").classList.toggle("active", tool==="pen");
+    $("nbToolPen").setAttribute("aria-pressed", tool==="pen" ? "true":"false");
+    $("nbToolEraser").classList.toggle("active", tool==="eraser");
+    $("nbToolEraser").setAttribute("aria-pressed", tool==="eraser" ? "true":"false");
+    $("nbPenRow").classList.toggle("on", tool==="pen");
+    $("nbEraserRow").classList.toggle("on", tool==="eraser");
+    $("nbUndoBtn").disabled = strokes.length===0;
+    $("nbRedoBtn").disabled = redoStack.length===0;
+  }
+  function syncSlider(input, dot, val){
+    input.value = val;
+    const pct = (val - +input.min) / (+input.max - +input.min) * 100;
+    input.style.setProperty("--p", pct + "%");
+    const px = Math.max(3, Math.min(28, val * (dot===$("nbEraserDot") ? 0.5 : 1.4)));
+    dot.style.width = px + "px"; dot.style.height = px + "px";
+  }
+  function enterDraw(){
+    if(!readerOpen || mode!=="normal") return;
+    strokes = []; redoStack = []; baseImg = null; dirtyDraw = false; drawing = false;
+    const p = shownPage;
+    setMode("draw");
+    if(p.drawing){
+      const im = new Image();
+      im.onload = ()=>{ if(shownPage===p && mode==="draw"){ baseImg = im; redraw(); } };
+      im.src = p.drawing;
+    }
+    syncSlider($("nbPenSize"), $("nbPenDot"), penSize);
+    syncSlider($("nbEraserSize"), $("nbEraserDot"), eraserSize);
+    updateDrawUI();
+  }
+  function commitDraw(silent){
+    if(mode!=="draw") return;
+    flushDraw();
+    strokes = []; redoStack = []; baseImg = null; drawing = false; curStroke = null;
+    setMode("normal");
+    if(!silent) SoundManager.play("click");
+    renderDrawing();
+  }
+  function undo(){
+    if(!strokes.length) return;
+    redoStack.push(strokes.pop());
+    dirtyDraw = true; redraw(); updateDrawUI();
+  }
+  function redo(){
+    if(!redoStack.length) return;
+    strokes.push(redoStack.pop());
+    dirtyDraw = true; redraw(); updateDrawUI();
+  }
+  function canvasPt(e){
+    const r = $("nbCanvas").getBoundingClientRect();
+    return [(e.clientX - r.left) * CW / r.width, (e.clientY - r.top) * CH / r.height];
+  }
+
+  /* ================= FOTO ================= */
+  function buildPhoto(im){
+    const wrap = document.createElement("div");
+    wrap.className = "nb-photo" + (im.id===selPhotoId && mode==="photo" ? " sel" : "");
+    wrap.dataset.id = im.id;
+    wrap.style.left = im.x + "%"; wrap.style.top = im.y + "%"; wrap.style.width = im.w + "%";
+    const img = document.createElement("img");
+    img.src = im.src; img.alt = "Foto di halaman notebook"; img.draggable = false;
+    const del = document.createElement("button");
+    del.className = "nb-photo-del"; del.type = "button"; del.textContent = "✕"; del.setAttribute("aria-label","Hapus foto ini");
+    const rz = document.createElement("div");
+    rz.className = "nb-photo-resize"; rz.setAttribute("aria-label","Ubah ukuran foto");
+    wrap.append(img, del, rz);
+
+    del.addEventListener("pointerdown", e=>e.stopPropagation());
+    del.addEventListener("click", e=>{
+      e.stopPropagation();
+      const p = curPage();
+      p.images = p.images.filter(x=>x.id!==im.id);
+      if(selPhotoId===im.id) selPhotoId = null;
+      safePersist();
+      renderPhotos();
+      syncPhotoSlider();
+    });
+    // ketuk foto di mode normal -> masuk mode atur foto
+    wrap.addEventListener("click", ()=>{ if(mode==="normal" && readerOpen) enterPhotoMode(im.id); });
+
+    let act = null, sx=0, sy=0, ox=0, oy=0, ow=0, rect=null;
+    wrap.addEventListener("pointerdown", e=>{
+      if(mode!=="photo" || e.target===del) return;
+      selPhotoId = im.id;
+      document.querySelectorAll("#nbPhotos .nb-photo").forEach(n=>n.classList.toggle("sel", n.dataset.id===im.id));
+      syncPhotoSlider();
+      act = (e.target===rz) ? "resize" : "move";
+      rect = $("nbSheet").getBoundingClientRect();
+      sx = e.clientX; sy = e.clientY; ox = im.x; oy = im.y; ow = im.w;
+      wrap.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    wrap.addEventListener("pointermove", e=>{
+      if(!act) return;
+      const dx = (e.clientX - sx) / rect.width * 100;
+      const dy = (e.clientY - sy) / rect.height * 100;
+      if(act==="move"){
+        im.x = Math.max(-5, Math.min(105 - im.w, ox + dx));
+        im.y = Math.max(-2, Math.min(96, oy + dy));
+        wrap.style.left = im.x + "%"; wrap.style.top = im.y + "%";
+      } else {
+        im.w = Math.max(12, Math.min(100, ow + dx));
+        wrap.style.width = im.w + "%";
+        syncPhotoSlider();
+      }
+    });
+    const end = ()=>{ if(!act) return; act = null; safePersist(); };
+    wrap.addEventListener("pointerup", end);
+    wrap.addEventListener("pointercancel", end);
+    return wrap;
+  }
+  function renderPhotos(){
+    const layer = $("nbPhotos");
+    layer.innerHTML = "";
+    if(!shownPage) return;
+    shownPage.images.forEach(im=>layer.appendChild(buildPhoto(im)));
+  }
+  function selPhoto(){
+    return shownPage ? shownPage.images.find(x=>x.id===selPhotoId) || null : null;
+  }
+  function syncPhotoSlider(){
+    const s = $("nbPhotoSize"), im = selPhoto();
+    s.disabled = !im;
+    if(im){
+      s.value = Math.round(im.w);
+      s.style.setProperty("--p", ((im.w - 12) / 88 * 100) + "%");
+    } else { s.value = 12; s.style.setProperty("--p", "0%"); }
+  }
+  function enterPhotoMode(id){
+    if(!readerOpen || mode!=="normal") return;
+    selPhotoId = id || null;
+    setMode("photo");
+    renderPhotos();
+    syncPhotoSlider();
+  }
+  function commitPhoto(silent){
+    if(mode!=="photo") return;
+    safePersist();
+    selPhotoId = null;
+    setMode("normal");
+    renderPhotos();
+    if(!silent){ SoundManager.play("click"); showSavedIndicator(); }
+  }
+  // Perkecil foto sebelum disimpan supaya localStorage tidak cepat penuh.
+  function compressImage(file){
+    return new Promise((resolve, reject)=>{
+      const fr = new FileReader();
+      fr.onerror = ()=>reject(new Error("read"));
+      fr.onload = ()=>{
+        const img = new Image();
+        img.onerror = ()=>reject(new Error("decode"));
+        img.onload = ()=>{
+          const MAX = 900;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width*scale)), h = Math.max(1, Math.round(img.height*scale));
+          const c = document.createElement("canvas"); c.width = w; c.height = h;
+          const x = c.getContext("2d");
+          x.fillStyle = "#fff"; x.fillRect(0,0,w,h);
+          x.drawImage(img,0,0,w,h);
+          resolve(c.toDataURL("image/jpeg", 0.76));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  async function addPhoto(file){
+    if(!file || !file.type || !file.type.startsWith("image/") || !readerOpen || !shownPage) return;
+    const p = shownPage;
+    try{
+      const src = await compressImage(file);
+      const n = p.images.length;
+      const im = {id:uid("img"), src:src, x:18 + (n%4)*5, y:14 + (n%4)*5, w:52};
+      p.images.push(im);
+      if(!safePersist()){ p.images = p.images.filter(x=>x.id!==im.id); persist(); return; }
+      if(readerOpen && shownPage===p){
+        if(mode==="photo"){ selPhotoId = im.id; renderPhotos(); syncPhotoSlider(); }
+        else enterPhotoMode(im.id);
+      }
+    }catch(err){
+      alert("Foto tidak bisa dimuat. Coba file gambar lain.");
+    }
+  }
+
+  /* ================= HALAMAN ================= */
+  function flip(direction){
+    if(!readerOpen || mode!=="normal") return;
+    const p = pages();
+    if(direction>0 && getIdx()>=p.length-1){ p.push(newPage()); persist(); }
+    if(direction<0 && getIdx()<=0) return;
+    const sheet = $("nbSheet");
+    if(shownPage) shownPage.text = $("nbTextarea").value;
     persist();
     sheet.classList.remove("flip-out-next","flip-out-prev","flip-in-next","flip-in-prev");
     void sheet.offsetWidth;
+    if(reduced()){ setIdx(getIdx()+direction); renderSheetContent(); return; }
     sheet.classList.add(direction>0 ? "flip-out-next" : "flip-out-prev");
     SoundManager.play("click");
     setTimeout(()=>{
-      idx += direction;
+      if(!readerOpen) return;
+      setIdx(getIdx() + direction);
       renderSheetContent();
       sheet.classList.remove("flip-out-next","flip-out-prev");
       sheet.classList.add(direction>0 ? "flip-in-next" : "flip-in-prev");
-      setTimeout(()=>sheet.classList.remove("flip-in-next","flip-in-prev"), 280);
-    }, 260);
+      setTimeout(()=>sheet.classList.remove("flip-in-next","flip-in-prev"), 270);
+    }, 250);
   }
-
   function addPage(){
     const p = pages();
-    p.splice(idx+1, 0, {id:uid("nb"), text:""});
+    p.splice(getIdx()+1, 0, newPage());
     persist();
     flip(1);
   }
   function deletePage(){
     const p = pages();
-    if(p.length<=1) return;
-    openConfirm("Hapus halaman ini?", "Isi catatan di halaman ini akan hilang.", [
+    if(p.length<=1){ toast("Buku harus punya minimal 1 halaman."); return; }
+    openConfirm("Hapus halaman ini?", "Isi catatan, gambar, dan foto di halaman ini akan hilang.", [
       {label:"Batal", cls:"btn"},
       {label:"Hapus", cls:"btn btn-danger", action:()=>{
-        p.splice(idx,1);
-        if(idx > p.length-1) idx = p.length-1;
-        persist();
+        p.splice(getIdx(),1);
+        if(getIdx() > p.length-1) setIdx(p.length-1);
+        safePersist();
         renderSheetContent();
       }}
     ]);
   }
-  function onEnterPage(){ clampIdx(); render(); }
+  function deletePhotos(){
+    const p = curPage();
+    if(!p.images.length){ toast("Tidak ada foto di halaman ini."); return; }
+    openConfirm("Hapus foto?", p.images.length>1 ? "Semua foto di halaman ini akan dihapus." : "Foto di halaman ini akan dihapus.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        p.images = [];
+        safePersist();
+        if(shownPage===p) renderPhotos();
+      }}
+    ]);
+  }
+  function deleteDrawing(){
+    const p = curPage();
+    if(!p.drawing){ toast("Tidak ada gambar di halaman ini."); return; }
+    openConfirm("Hapus gambar?", "Coretan di halaman ini akan dihapus. Teks dan foto tidak ikut terhapus.", [
+      {label:"Batal", cls:"btn"},
+      {label:"Hapus", cls:"btn btn-danger", action:()=>{
+        p.drawing = null;
+        safePersist();
+        if(shownPage===p) renderDrawing();
+      }}
+    ]);
+  }
+  function openReaderMenu(){
+    if(mode!=="normal") return;
+    const p = curPage();
+    openMenu($("nbMoreBtn"), [
+      {icon:"✏️", label:"Beralih ke Mode Gambar", action:enterDraw},
+      {icon:"🖼️", label:"Pasang Foto", action:()=>{ $("nbPhotoInput").click(); }},
+      {icon:"🧹", label:"Hapus Foto", dim:!p.images.length, action:deletePhotos},
+      {icon:"🧽", label:"Hapus Gambar", dim:!p.drawing, action:deleteDrawing},
+      {icon:"📄", label:"Halaman Baru", action:()=>{ SoundManager.play("click"); addPage(); }},
+      {icon:"🗑️", label:"Hapus Halaman", danger:true, dim:pages().length<=1, action:deletePage}
+    ]);
+  }
+
+  /* ================= WIRING ================= */
+  function onEnterPage(){
+    if(readerOpen) closeBook(true);
+    renderShelf();
+  }
+  function onLeavePage(){
+    if(readerOpen) closeBook(true);
+    closeMenu();
+  }
 
   function wire(){
-    const book = document.getElementById("nbBook");
-    document.getElementById("nbTextarea").addEventListener("input", scheduleSave);
-    startAutosaveLoop();
-    // Save immediately on tab hide/close and app close, per spec §9,
-    // without touching the existing debounce/manual-save behavior.
-    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") saveIfChanged(); });
-    window.addEventListener("beforeunload", saveIfChanged);
-    window.addEventListener("pagehide", saveIfChanged);
-    document.getElementById("nbAddBtn").addEventListener("click", ()=>{ SoundManager.play("click"); addPage(); });
-    document.getElementById("nbDeleteBtn").addEventListener("click", deletePage);
-    document.getElementById("nbNextBtn").addEventListener("click", ()=>flip(1));
-    document.getElementById("nbPrevBtn").addEventListener("click", ()=>flip(-1));
-    book.addEventListener("touchstart", (e)=>{
+    // pembaca dipindah ke <body> supaya tidak terpengaruh transformasi halaman
+    document.body.appendChild($("nbReader"));
+    const st = DB.settings || {};
+    if(st.nbPenSize) penSize = Math.max(1, Math.min(20, +st.nbPenSize));
+    if(st.nbEraserSize) eraserSize = Math.max(4, Math.min(60, +st.nbEraserSize));
+
+    $("nbAddBookBtn").addEventListener("click", addBook);
+    $("nbBackBtn").addEventListener("click", ()=>closeBook());
+    $("nbMoreBtn").addEventListener("click", openReaderMenu);
+    $("nbPrevBtn").addEventListener("click", ()=>flip(-1));
+    $("nbNextBtn").addEventListener("click", ()=>flip(1));
+    $("nbTextarea").addEventListener("input", scheduleSave);
+
+    // foto
+    $("nbPhotoInput").addEventListener("change", e=>{
+      const f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      addPhoto(f);
+    });
+    $("nbPhotoDone").addEventListener("click", ()=>commitPhoto());
+    $("nbPhotoSize").addEventListener("input", e=>{
+      const im = selPhoto();
+      if(!im) return;
+      im.w = +e.target.value;
+      im.x = Math.min(im.x, 105 - im.w);
+      const el = document.querySelector('#nbPhotos .nb-photo[data-id="'+im.id+'"]');
+      if(el){ el.style.width = im.w + "%"; el.style.left = im.x + "%"; }
+      e.target.style.setProperty("--p", ((im.w - 12) / 88 * 100) + "%");
+    });
+    $("nbPhotoSize").addEventListener("change", ()=>safePersist());
+
+    // gambar
+    $("nbToolPen").addEventListener("click", ()=>{ tool = "pen"; updateDrawUI(); });
+    $("nbToolEraser").addEventListener("click", ()=>{ tool = "eraser"; updateDrawUI(); });
+    $("nbUndoBtn").addEventListener("click", undo);
+    $("nbRedoBtn").addEventListener("click", redo);
+    $("nbDrawDone").addEventListener("click", ()=>commitDraw());
+    $("nbPenSize").addEventListener("input", e=>{ penSize = +e.target.value; syncSlider(e.target, $("nbPenDot"), penSize); tool = "pen"; updateDrawUI(); });
+    $("nbEraserSize").addEventListener("input", e=>{ eraserSize = +e.target.value; syncSlider(e.target, $("nbEraserDot"), eraserSize); tool = "eraser"; updateDrawUI(); });
+    const saveSizes = ()=>{ DB.settings = DB.settings || {}; DB.settings.nbPenSize = penSize; DB.settings.nbEraserSize = eraserSize; persist(); };
+    $("nbPenSize").addEventListener("change", saveSizes);
+    $("nbEraserSize").addEventListener("change", saveSizes);
+
+    const cv = $("nbCanvas");
+    cv.addEventListener("pointerdown", e=>{
+      if(mode!=="draw" || (e.button!==undefined && e.button>0)) return;
+      cv.setPointerCapture(e.pointerId);
+      drawing = true;
+      const pt = canvasPt(e);
+      curStroke = {tool:tool, w:lineW(tool==="eraser" ? eraserSize : penSize), pts:[pt]};
+      redoStack = [];
+      drawSegment(curStroke, pt, [pt[0]+0.01, pt[1]]);
+      e.preventDefault();
+    });
+    cv.addEventListener("pointermove", e=>{
+      if(!drawing || !curStroke) return;
+      const pts = curStroke.pts;
+      const pt = canvasPt(e);
+      drawSegment(curStroke, pts[pts.length-1], pt);
+      pts.push(pt);
+      e.preventDefault();
+    });
+    const endStroke = ()=>{
+      if(!drawing) return;
+      drawing = false;
+      if(curStroke){ strokes.push(curStroke); dirtyDraw = true; }
+      curStroke = null;
+      updateDrawUI();
+    };
+    cv.addEventListener("pointerup", endStroke);
+    cv.addEventListener("pointercancel", endStroke);
+
+    // geser kiri/kanan untuk ganti halaman (hanya mode normal, bukan di atas foto)
+    const stage = $("nbStage");
+    stage.addEventListener("touchstart", e=>{
+      if(mode!=="normal" || (e.target.closest && e.target.closest(".nb-photo"))){ touchStartX = null; return; }
       touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
     }, {passive:true});
-    book.addEventListener("touchend", (e)=>{
+    stage.addEventListener("touchend", e=>{
       if(touchStartX===null) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = e.changedTouches[0].clientY - touchStartY;
       touchStartX = null;
-      if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)*1.4){
-        if(dx < 0) flip(1); else flip(-1);
-      }
+      if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)*1.4){ if(dx < 0) flip(1); else flip(-1); }
     }, {passive:true});
+
+    // Esc: tutup menu, atau kembali ke rak
+    document.addEventListener("keydown", e=>{
+      if(e.key!=="Escape" || !readerOpen) return;
+      if(menuEl){ closeMenu(); return; }
+      if(document.querySelector(".sb-overlay-card.show, #confirmModalOverlay.open")) return;
+      if(mode==="draw") commitDraw();
+      else if(mode==="photo") commitPhoto();
+      else closeBook();
+    });
+
+    // autosave & simpan saat tab disembunyikan / ditutup
+    clearInterval(autosaveTimer);
+    autosaveTimer = setInterval(saveIfChanged, 10000);
+    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") flushAll(); });
+    window.addEventListener("beforeunload", flushAll);
+    window.addEventListener("pagehide", flushAll);
   }
-  return {wire, onEnterPage, render, saveIfChanged};
+  return {wire, onEnterPage, onLeavePage, saveIfChanged:flushAll, render:renderShelf};
 })();
 
 /* =========================================================
@@ -6443,7 +7204,7 @@ function renderCalSelected(){
       }).join("");
     list.appendChild(extra);
   }
-  tasks.forEach(t=>list.appendChild(renderTaskCard(t)));
+  doneLast(tasks).forEach(t=>list.appendChild(renderTaskCard(t)));
 }
 
 /* ---- Folders page ---- */
@@ -6496,7 +7257,7 @@ function openFolderTasks(folderId){
   // Folder behaves like an archive first, task list second — no "belum ada
   // tugas" placeholder clutter; the tasks block simply stays hidden when empty.
   document.getElementById("folderTasksWrap").style.display = tasks.length===0 ? "none" : "";
-  tasks.forEach(t=>list.appendChild(renderTaskCard(t)));
+  doneLast(tasks).forEach(t=>list.appendChild(renderTaskCard(t)));
 }
 const FILE_ICONS = [
   {test:/\.pdf$/i,            icon:"📕", color:"#B5462F", label:"PDF"},
@@ -6851,7 +7612,7 @@ function openCourseDashboard(courseId){
   const listEl = document.getElementById("courseDashTasks");
   listEl.innerHTML="";
   if(tasks.length===0){ renderEmpty(listEl,"Belum ada tugas untuk mata kuliah ini.","",false); }
-  else tasks.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).forEach(t=>listEl.appendChild(renderTaskCard(t)));
+  else doneLast(tasks.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline))).forEach(t=>listEl.appendChild(renderTaskCard(t)));
 }
 
 /* ---- Nyawa Mata Kuliah: Alpa/Sakit/Izin share ONE attendance-allowance pool ---- */
@@ -7902,7 +8663,7 @@ function goToPage(page, opts){
     FocusTimer.requestExit(()=>goToPage(page, {confirmedExit:true}));
     return;
   }
-  if(currentPage==="notebook" && page!=="notebook" && window.NotebookManager) NotebookManager.saveIfChanged();
+  if(currentPage==="notebook" && page!=="notebook" && window.NotebookManager) NotebookManager.onLeavePage();
   currentPage = page;
   if(!(opts && opts.skipHistory) && window.NavHistory) NavHistory.pushPage(page);
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
