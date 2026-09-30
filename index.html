@@ -208,6 +208,8 @@
   .task-deadline.overdue{color:var(--red); font-weight:700;}
   .task-card-wrap{display:flex; flex-direction:column;}
   .task-card-wrap .task-card{border-radius:var(--radius-m) var(--radius-m) 0 0; border-bottom:none;}
+  /* No plan bubble under the card -> keep a full border + rounded bottom (it looked cut off). */
+  .task-card-wrap .task-card:only-child{border-radius:var(--radius-m); border-bottom:1px solid var(--border);}
   .task-plan-bubble{
     position:relative; display:flex; align-items:center; gap:6px; cursor:pointer;
     background:var(--accent-soft); color:var(--accent); border:1px solid var(--border); border-top:none;
@@ -324,6 +326,8 @@
     background:var(--surface); z-index:2; border-radius:var(--radius-l) var(--radius-l) 0 0;
   }
   .modal-head h2{font-size:19px;}
+  .modal.modal-wide{max-width:720px;}
+  #folderFilesList{max-height:45vh; overflow-y:auto;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
   .field input[type=text], .field input[type=url], .field input[type=date], .field input[type=time],
@@ -496,8 +500,18 @@
     background:var(--surface); width:100%; max-width:560px; border-radius:20px 20px 0 0; padding:10px 10px calc(env(safe-area-inset-bottom,0px) + 14px);
     max-height:78vh; overflow-y:auto; box-shadow:0 -10px 40px rgba(0,0,0,.25);
   }
-  .sheet-handle{width:36px; height:4px; border-radius:99px; background:var(--border); margin:6px auto 10px;}
-  .sheet-head{display:flex; align-items:center; justify-content:space-between; padding:2px 10px 12px;}
+  .sheet-handle{width:36px; height:4px; border-radius:99px; background:var(--border); margin:6px auto 10px; flex-shrink:0;}
+  .sheet-head{
+    display:flex; align-items:center; justify-content:space-between; padding:10px 10px 12px;
+    /* Same fix as .modal-head (V7 §10), applied to the bottom-sheet close
+       button too (spec item "audit tombol close di SEMUA jenis overlay",
+       .sheet-overlay specifically): .sheet scrolls its own content
+       (max-height:78vh; overflow-y:auto), so on a long sheet the ✕ used
+       to scroll away with the list below it. Stick it to the top of that
+       scroll port instead. */
+    position:sticky; top:0; margin:-10px -10px 12px; background:var(--surface);
+    z-index:2; border-radius:20px 20px 0 0;
+  }
   .sheet-head h2{font-size:17px;}
   .sheet-list{display:flex; flex-direction:column; gap:2px;}
   .sheet-item{
@@ -701,6 +715,9 @@
   .verity-input-row{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border);}
   .verity-input-row input{flex:1; padding:10px 13px; border-radius:999px; border:1px solid var(--border); background:var(--bg); color:var(--ink);}
   .verity-input-row button{width:40px; height:40px; border-radius:50%; background:var(--accent); color:var(--accent-ink); border:none; flex-shrink:0;}
+  /* Verity steps aside (fades out, not clickable) while any window/sheet is open. */
+  .verity-dock, .verity-fab-dock{transition:opacity .18s ease;}
+  body.verity-away .verity-dock, body.verity-away .verity-fab-dock{opacity:0; pointer-events:none;}
   .verity-toast{
     position:fixed; left:18px; bottom:140px; max-width:260px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
     padding:11px 13px; display:flex; gap:9px; align-items:flex-start; box-shadow:var(--shadow); z-index:305; opacity:0; transform:translateY(8px);
@@ -1384,6 +1401,112 @@
     .session-actions .btn, .meeting-actions .btn, .subtask-actions .btn, .agenda-actions .btn{min-height:40px;}
     .subtask-check{width:24px; height:24px;}
   }
+
+  /* =====================================================================
+     UPDATE 8 — POLISH & RASA
+     ===================================================================== */
+  :root{
+    --dur-1:.15s; --dur-2:.24s; --dur-3:.4s;
+    --fs-xs:11.5px; --fs-sm:13px; --fs-md:15px; --fs-lg:19px;
+    --tap-min:44px; --z-window:100; --z-toast:400;
+  }
+  /* --- satu bahasa window: semua .modal-overlay (Folder, Mata Kuliah, Kalender, form, dll) --- */
+  .modal-overlay{
+    display:flex; visibility:hidden; opacity:0; pointer-events:none;
+    transition:opacity var(--dur-2) var(--ease-standard), visibility 0s linear var(--dur-2);
+  }
+  .modal-overlay.open{
+    visibility:visible; opacity:1; pointer-events:auto;
+    transition:opacity var(--dur-2) var(--ease-standard), visibility 0s;
+  }
+  .modal-overlay .modal{
+    animation:none; opacity:0; transform:translateY(10px) scale(.94);
+    transform-origin:var(--ox,50%) var(--oy,30%);
+    transition:transform var(--dur-2) var(--ease-standard), opacity var(--dur-2) var(--ease-standard);
+  }
+  .modal-overlay.open .modal{opacity:1; transform:none;}
+  [data-theme="dark"] .modal{border:1px solid var(--border); box-shadow:var(--shadow-lg);}
+
+  /* --- centang tugas yang memuaskan --- */
+  .task-check{position:relative;}
+  .task-check::after{content:""; position:absolute; inset:-12px;}
+  .task-title{transition:color var(--dur-3) var(--ease-standard), text-decoration-color var(--dur-3) var(--ease-standard);
+    text-decoration:line-through; text-decoration-color:transparent;}
+  .task-card.done .task-title{text-decoration-color:currentColor;}
+  .task-card{transition:opacity var(--dur-3) var(--ease-standard), border-color var(--dur-1), background var(--dur-3);}
+  .task-card.done{opacity:.72;}
+  .progress-fill,.bar-fill,[class*="progress"]>span,[class*="progress"]>div{transition:width .7s var(--ease-standard);}
+
+  /* --- Verity: minggir dengan halus (mengecil, pindah ke pojok) --- */
+  body.verity-away .verity-dock, body.verity-away .verity-fab-dock{
+    opacity:.6; pointer-events:none; transform-origin:100% 100%;
+    transform:translate(var(--away-x,0px), var(--away-y,0px)) scale(.55);
+  }
+  .verity-dock, .verity-fab-dock{transition:opacity var(--dur-2) var(--ease-standard), transform .32s var(--ease-standard);}
+  /* satu suara: gelembung dock diam saat toast tampil */
+  body.toast-on .verity-dock-bubble, body.toast-on .verity-fab-bubble{opacity:0!important; visibility:hidden;}
+  /* ekspresi kontekstual */
+  body.verity-sleepy .verity-dock, body.verity-sleepy .verity-fab-dock{filter:saturate(.55) brightness(.94);}
+  body.verity-sleepy .verity-dock::after, body.verity-sleepy .verity-fab-dock::after{content:"💤"; position:absolute; top:-8px; right:-4px; font-size:14px; animation:v8zzz 2.4s ease-in-out infinite;}
+  @keyframes v8zzz{0%,100%{transform:translateY(0); opacity:.5;} 50%{transform:translateY(-5px); opacity:1;}}
+  body.verity-tense:not(.verity-away):not(.verity-sleepy) .verity-dock, body.verity-tense:not(.verity-away):not(.verity-sleepy) .verity-fab-dock{animation:v8jitter 5s ease-in-out infinite;}
+  @keyframes v8jitter{0%,88%,100%{transform:none;} 90%{transform:translateX(-2px);} 92%{transform:translateX(2px);} 94%{transform:translateX(-2px);} 96%{transform:translateX(1px);}}
+  body.verity-relaxed:not(.verity-away):not(.verity-sleepy) .verity-dock, body.verity-relaxed:not(.verity-away):not(.verity-sleepy) .verity-fab-dock{animation:v8bob 4.5s ease-in-out infinite;}
+  @keyframes v8bob{0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px);}}
+
+  /* --- kepadatan --- */
+  body[data-density="compact"] .task-card{padding:8px 12px; gap:9px;}
+  body[data-density="compact"] .task-meta{gap:4px;}
+  body[data-density="compact"] .modal{padding:20px 20px 16px;}
+  body[data-density="compact"] .field{margin-bottom:9px;}
+  body[data-density="comfy"] .task-card{padding:17px 19px; gap:15px;}
+  body[data-density="comfy"] .task-meta{gap:8px;}
+  body[data-density="comfy"] .field{margin-bottom:18px;}
+
+  /* --- layar sentuh: tap minimal 44px --- */
+  @media (pointer:coarse){
+    .btn-icon,.nav-item,.bn-item,.theme-seg button,.seg button{min-width:var(--tap-min); min-height:var(--tap-min);}
+  }
+  /* --- HP: window jadi bottom sheet, chip tidak memanjang ke bawah --- */
+  @media (max-width:640px){
+    .modal-overlay{align-items:flex-start; padding:0;}
+    .modal-overlay .modal,.modal.modal-wide{margin-top:auto; max-width:none; border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+      transform:translateY(100%); transform-origin:50% 100%; max-height:92vh; overflow-y:auto; padding-bottom:calc(22px + env(safe-area-inset-bottom,0px));}
+    .modal-overlay.open .modal{transform:none;}
+    .modal-head{touch-action:none; border-radius:var(--radius-xl) var(--radius-xl) 0 0;}
+    .modal-head::before{content:""; position:absolute; top:7px; left:50%; width:38px; height:4px; margin-left:-19px; border-radius:4px; background:var(--border);}
+    .task-meta{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;}
+    .task-meta::-webkit-scrollbar{display:none;}
+    .task-meta .chip{flex-shrink:0; white-space:nowrap;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .modal-overlay .modal{transform:none!important;}
+    body.verity-tense .verity-dock, body.verity-relaxed .verity-dock, .verity-dock::after, .verity-fab-dock::after{animation:none!important;}
+  }
+
+  /* ---- Update 8b: blok Hari ini + empty state ---- */
+  .today-focus{background:var(--gradient-hero); border:1px solid var(--border); border-radius:var(--radius-l); padding:18px 20px; box-shadow:var(--shadow-md);}
+  [data-theme="dark"] .today-focus{box-shadow:var(--shadow-accent-glow);}
+  .today-focus-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:10px;}
+  .today-focus-head h2{font-size:var(--fs-lg);}
+  .today-focus-count{font-size:var(--fs-sm); color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+  .today-bar{height:8px; border-radius:8px; background:var(--grey-soft); overflow:hidden; margin-bottom:12px;}
+  .today-bar span{display:block; height:100%; width:0; border-radius:8px; background:var(--gradient-primary); transition:width .8s var(--ease-standard);}
+  .today-item{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); color:var(--ink); border-radius:var(--radius-m); padding:10px 12px; min-height:var(--tap-min); margin-bottom:6px;}
+  .today-item:hover{border-color:var(--accent);}
+  .today-item .ti-title{flex:1; min-width:0; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .today-item .ti-when{font-size:var(--fs-xs); color:var(--ink-soft); flex-shrink:0;}
+  .today-item.late .ti-when{color:var(--red); font-weight:700;}
+  .today-empty{font-size:14px; color:var(--ink-soft); padding:4px 0 2px;}
+  .empty-art{width:110px; height:auto; display:block; margin:0 auto 12px; animation:emptyFloat 4s ease-in-out infinite;}
+  @keyframes emptyFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+  @media (prefers-reduced-motion: reduce){ .empty-art{animation:none;} .today-bar span{transition:none;} }
+
+  /* ---- Update 8c: satu suara Verity ---- */
+  body.voice-on .verity-dock-bubble, body.voice-on .verity-fab-bubble{opacity:0!important; visibility:hidden;}
+  body.v8-startle .verity-dock, body.v8-startle .verity-fab-dock{animation:v8startle .55s var(--ease-standard) 1;}
+  @keyframes v8startle{0%{transform:scale(1);}18%{transform:scale(1.22) rotate(-6deg);}36%{transform:scale(1.18) rotate(6deg);}54%{transform:scale(1.1) rotate(-3deg);}100%{transform:scale(1) rotate(0);}}
+  @media (prefers-reduced-motion: reduce){ body.v8-startle .verity-dock, body.v8-startle .verity-fab-dock{animation:none;} }
 </style>
 </head>
 <body>
@@ -1479,6 +1602,15 @@
         </div>
       </div>
 
+      <section class="block today-focus" id="todayFocus" aria-labelledby="todayFocusTitle">
+        <div class="today-focus-head">
+          <h2 id="todayFocusTitle">🎯 Hari ini</h2>
+          <div class="today-focus-count" id="todayFocusCount" aria-live="polite"></div>
+        </div>
+        <div class="today-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="todayBar"><span id="todayBarFill"></span></div>
+        <div id="todayFocusList"></div>
+      </section>
+
       <section class="block" id="todayBlock">
         <div class="block-head"><h2>🗓️ Agenda Hari Ini</h2></div>
         <div id="todayContent"></div>
@@ -1550,10 +1682,6 @@
       </div>
       <div class="cal-grid" id="calGrid"></div>
 
-      <section class="block" style="margin-top:26px;" id="calSelectedBlock" style="display:none;">
-        <div class="block-head"><h2 id="calSelectedLabel">Tugas pada tanggal terpilih</h2></div>
-        <div class="task-list" id="calSelectedList"></div>
-      </section>
     </section>
 
     <!-- TASKS -->
@@ -1613,23 +1741,6 @@
         </div>
       </div>
       <div class="folder-list" id="folderList"></div>
-
-      <section class="block" id="folderTasksBlock" style="display:none; margin-top:24px;">
-        <div class="block-head"><h2 id="folderTasksLabel"></h2><button class="link-btn" id="backToFolders">‹ Kembali ke folder</button></div>
-
-        <div class="block-head" style="margin-bottom:10px;">
-          <h3 style="font-size:14.5px;">📎 File</h3>
-          <button class="btn btn-sm btn-primary" id="addFolderFileBtn">+ Tambah File</button>
-          <input type="file" id="folderFileInput" multiple style="display:none;">
-        </div>
-        <p class="hint" style="margin-bottom:10px;">Unggah file sungguhan (PDF, gambar, dokumen, dll) ke folder ini — folder ini bekerja seperti arsip/zip, jadi file betulan tersimpan di sini. Tap tombol ⋮ pada file untuk membuka, mengunduh, atau melihat detail lokasi penyimpanannya.</p>
-        <div id="folderFilesList"></div>
-
-        <div id="folderTasksWrap" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
-          <div class="block-head" style="margin-bottom:10px;"><h3 style="font-size:14.5px;">✅ Tugas di folder ini</h3></div>
-          <div class="task-list" id="folderTasksList"></div>
-        </div>
-      </section>
     </section>
 
     <!-- COURSES -->
@@ -1642,11 +1753,6 @@
         </div>
       </div>
       <div id="courseList"></div>
-
-      <section class="block" id="courseDashboardBlock" style="display:none; margin-top:24px;">
-        <div class="block-head"><h2 id="courseDashTitle"></h2><button class="link-btn" id="backToCourses">‹ Kembali ke Mata Kuliah</button></div>
-        <div id="courseDashBody"></div>
-      </section>
     </section>
 
     <!-- SCHEDULE -->
@@ -1924,6 +2030,17 @@
             <button data-theme-opt="dark">Dark</button>
             <button data-theme-opt="system">System</button>
           </div>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Kepadatan</div><div class="sub">Ringkas muat lebih banyak, lega lebih longgar</div></div>
+          <div class="theme-seg" id="densitySeg">
+            <button data-density-opt="compact">Ringkas</button>
+            <button data-density-opt="normal">Normal</button>
+            <button data-density-opt="comfy">Lega</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div><div class="label">Pintasan keyboard</div><div class="sub"><b>N</b> tugas baru · <b>/</b> cari · <b>Esc</b> tutup · <b>←</b> <b>→</b> ganti bulan (Kalender) · <b>Ctrl+K</b> menu cepat</div></div>
         </div>
       </div>
 
@@ -2254,6 +2371,39 @@
 
 <!-- ABOUT / CHANGELOG MODAL -->
 <!-- TASK MODAL -->
+<!-- FOLDER & MATA KULIAH DETAIL WINDOWS (opened as their own window instead of a block under the list) -->
+<div class="modal-overlay" id="folderTasksBlock" role="dialog" aria-modal="true" aria-labelledby="folderTasksLabel">
+  <div class="modal modal-wide">
+    <div class="modal-head"><h2 id="folderTasksLabel"></h2><button class="btn btn-icon btn-ghost" id="backToFolders" aria-label="Tutup">✕</button></div>
+        
+        <div class="block-head" style="margin-bottom:10px;">
+          <h3 style="font-size:14.5px;">📎 File</h3>
+          <button class="btn btn-sm btn-primary" id="addFolderFileBtn">+ Tambah File</button>
+          <input type="file" id="folderFileInput" multiple style="display:none;">
+        </div>
+        <p class="hint" style="margin-bottom:10px;">Unggah file sungguhan (PDF, gambar, dokumen, dll) ke folder ini — folder ini bekerja seperti arsip/zip, jadi file betulan tersimpan di sini. Tap tombol ⋮ pada file untuk membuka, mengunduh, atau melihat detail lokasi penyimpanannya.</p>
+        <div id="folderFilesList"></div>
+
+        <div id="folderTasksWrap" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
+          <div class="block-head" style="margin-bottom:10px;"><h3 style="font-size:14.5px;">✅ Tugas di folder ini</h3></div>
+          <div class="task-list" id="folderTasksList"></div>
+        </div>
+  </div>
+</div>
+<div class="modal-overlay" id="courseDashboardBlock" role="dialog" aria-modal="true" aria-labelledby="courseDashTitle">
+  <div class="modal modal-wide">
+    <div class="modal-head"><h2 id="courseDashTitle"></h2><button class="btn btn-icon btn-ghost" id="backToCourses" aria-label="Tutup">✕</button></div>
+    <div id="courseDashBody"></div>
+  </div>
+</div>
+
+<!-- KALENDER: detail tanggal terpilih sebagai window sendiri -->
+<div class="modal-overlay" id="calSelectedBlock" role="dialog" aria-modal="true" aria-labelledby="calSelectedLabel">
+  <div class="modal modal-wide">
+    <div class="modal-head"><h2 id="calSelectedLabel">Tugas pada tanggal terpilih</h2><button class="btn btn-icon btn-ghost" id="calSelectedClose" aria-label="Tutup">✕</button></div>
+    <div class="task-list" id="calSelectedList"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="taskModalOverlay">
   <div class="modal">
     <div class="modal-head">
@@ -2801,6 +2951,10 @@ function uid(prefix){ return prefix+"-"+Date.now().toString(36)+Math.random().to
    TOAST
 ========================================================= */
 function toast(msg){
+  if(window.V8) return V8.say("sys:"+msg, ()=>{ toastNow(msg); return 2200; });
+  toastNow(msg);
+}
+function toastNow(msg){
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.classList.add("show");
@@ -3502,7 +3656,7 @@ function renderTaskCard(task){
   const div = document.createElement("div");
   div.className = "task-card"+(done?" done":"");
   div.innerHTML = `
-    <div class="task-check ${done?'checked':''}" data-quickcheck="${task.id}">${done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>':''}</div>
+    <div class="task-check ${done?'checked':''}" data-quickcheck="${task.id}" role="checkbox" tabindex="0" aria-checked="${done}" aria-label="Tandai selesai: ${escapeHtml(task.title)}">${done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>':''}</div>
     <div class="task-main">
       <div class="task-title">${escapeHtml(task.title)}</div>
       <div class="task-meta">
@@ -3540,7 +3694,12 @@ function renderTaskCard(task){
     TaskManager.setStatus(task.id, done ? "todo" : "done");
     toast(done ? "Ditandai belum selesai." : "Tugas selesai! 🎉");
     if(!done) VerityEngine.notifyTaskCompleted(task);
-    renderAll();
+    // v8: beri waktu animasi coretan/centang sebelum kartu dirender ulang
+    const chk=div.querySelector("[data-quickcheck]");
+    div.classList.toggle("done", !done); chk.classList.toggle("checked", !done);
+    chk.setAttribute("aria-checked", String(!done));
+    clearTimeout(window.__v8rr);
+    window.__v8rr=setTimeout(()=>renderAll(), (window.V8&&V8.reduced())?0:360);
   });
   wireTaskSwipe(div, task, done);
   return wrap;
@@ -3603,13 +3762,20 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
-function renderEmpty(container, msg, sub, showBtn, emotion){
+const EMPTY_ART = {
+  folder:'<svg viewBox="0 0 96 72" class="empty-art" aria-hidden="true"><path d="M8 20a6 6 0 016-6h20l8 9h40a6 6 0 016 6v29a6 6 0 01-6 6H14a6 6 0 01-6-6z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 32h80" stroke="var(--accent)" stroke-width="2.5"/><circle cx="72" cy="12" r="3" fill="var(--amber)"/></svg>',
+  course:'<svg viewBox="0 0 96 72" class="empty-art" aria-hidden="true"><path d="M48 14L8 32l40 18 40-18z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 42v12c0 5 11 10 24 10s24-5 24-10V42" fill="none" stroke="var(--accent)" stroke-width="2.5"/><path d="M88 34v18" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  calendar:'<svg viewBox="0 0 96 72" class="empty-art" aria-hidden="true"><rect x="14" y="14" width="68" height="52" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.5"/><path d="M14 30h68M32 8v12M64 8v12" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/><path d="M38 48l7 7 14-14" fill="none" stroke="var(--amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+function renderEmpty(container, msg, sub, showBtn, emotion, extra){
   container.innerHTML = "";
   const div = document.createElement("div");
   div.className = "empty-state";
   const face = (DB.settings.verityEnabled!==false) ? (VERITY_EMOTIONS[emotion]||VERITY_EMOTIONS.relaxed) : "🎉";
-  div.innerHTML = `<span class="emoji">${face}</span><h3>${msg}</h3><p>${sub||""}</p>${showBtn?'<button class="btn btn-primary" id="emptyAddBtn">+ Tambah Tugas</button>':''}`;
+  const art = extra && EMPTY_ART[extra.art];
+  div.innerHTML = `${art || `<span class="emoji">${face}</span>`}<h3>${msg}</h3><p>${sub||""}</p>${showBtn?'<button class="btn btn-primary" id="emptyAddBtn">+ Tambah Tugas</button>':''}${extra&&extra.cta?`<button class="btn btn-primary" data-empty-cta>${extra.cta.label}</button>`:''}`;
   container.appendChild(div);
+  if(extra && extra.cta) div.querySelector("[data-empty-cta]").addEventListener("click", extra.cta.run);
   if(showBtn) div.querySelector("#emptyAddBtn").addEventListener("click", ()=>openTaskModal());
 }
 
@@ -3717,6 +3883,7 @@ function renderDashboard(){
   renderWeekly();
   renderProfilePhoto();
   renderBadges();
+  if(window.V8) V8.afterRender();
   VerityEngine.onDataRefresh();
 }
 
@@ -3916,6 +4083,7 @@ const VerityEngine = (function(){
     const m = currentPageMoodOverride || computeMood();
     if(currentPageMoodOverride) verityMood = m.mood;
     document.getElementById("verityDockFace").textContent = MOODS[m.mood]||MOODS.neutral;
+    if(window.V8) V8.moodChanged(m.mood);
     const dock = document.getElementById("verityDock");
     if(m.text !== lastDockText){
       verityType(document.getElementById("verityDockMsg"), m.text, {onDone:syncDockBubble});
@@ -3943,6 +4111,10 @@ const VerityEngine = (function(){
     return (Date.now()-last) > PROACTIVE_COOLDOWN_MS;
   }
   function showToast(text, mood){
+    if(window.V8) return V8.say("v:"+text, ()=>{ showToastNow(text, mood); return 4200; });
+    showToastNow(text, mood);
+  }
+  function showToastNow(text, mood){
     const el = document.getElementById("verityToast");
     document.getElementById("verityToastFace").textContent = MOODS[mood]||MOODS.neutral;
     el.classList.add("show");
@@ -3963,10 +4135,10 @@ const VerityEngine = (function(){
   function notifyTaskCompleted(task){
     SoundManager.play("taskComplete");
     if(!DB.settings.verityEnabled || !canProactive()) return;
+    // No separate toast bubble anymore — Verity herself (dock/fab bubble) already
+    // reacts to the new task state, so a second bubble was just duplicate noise.
     currentPageMoodOverride = null;
-    const s = stats();
-    if(s.overdue>0){ showToast(pick("overdueTaskDone", POOLS.overdueTaskDone(task.title, s.overdue)), "sad"); }
-    else { showToast(pick("taskCelebrate", POOLS.taskCelebrate(task.title)), "happy"); }
+    renderDock();
   }
   function notifyFocusComplete(minutes){
     SoundManager.play("focusComplete");
@@ -4068,7 +4240,7 @@ const VerityEngine = (function(){
     } else {
       left = r.left + r.width/2 - panelW/2;
     }
-    left = Math.max(margin, Math.min(left, window.innerWidth - margin - panelW));
+    left = Math.max(leftMenuEdge() + margin, Math.min(left, window.innerWidth - margin - panelW));
     let bottom = window.innerHeight - r.bottom;
     if(bottom + panelH > window.innerHeight - margin) bottom = Math.max(margin, window.innerHeight - margin - panelH);
     overlay.style.setProperty("--vp-left", left+"px");
@@ -4168,6 +4340,11 @@ const VerityEngine = (function(){
   // Verity in the bottom half of the screen -> bubble above her; Verity in
   // the top half -> bubble below her. Shared with the desktop dock so both
   // behave identically.
+  // Right edge of the left menu (desktop sidebar), 0 when it's hidden (mobile).
+  function leftMenuEdge(){
+    const sb = document.querySelector(".sidebar");
+    return (sb && getComputedStyle(sb).display !== "none") ? sb.getBoundingClientRect().right : 0;
+  }
   function decideBubbleBelow(avatarRect){
     const center = avatarRect.top + avatarRect.height/2;
     return center < window.innerHeight/2;
@@ -4189,10 +4366,11 @@ const VerityEngine = (function(){
     const bw = bubbleEl.offsetWidth;
     if(!bw) return; // not laid out yet (e.g. display:none)
     const margin = 8;
+    const minLeft = leftMenuEdge() + margin; // never slide under the desktop sidebar
     const dockRect = dockEl.getBoundingClientRect();
     const avatarCenter = dockRect.left + dockRect.width/2;
     let left = avatarCenter - bw/2;
-    left = Math.max(margin, Math.min(left, window.innerWidth - margin - bw));
+    left = Math.max(minLeft, Math.min(left, window.innerWidth - margin - bw));
     bubbleEl.style.left = (left - dockRect.left) + "px";
     bubbleEl.style.transform = "translateX(0)";
     let tailLeft = avatarCenter - left;
@@ -4205,6 +4383,7 @@ const VerityEngine = (function(){
     if(!wrap || !bubble) return;
     const fab = document.getElementById("verityFab");
     const r = fab.getBoundingClientRect();
+    if(!r.width) return; // hidden (desktop) or not laid out yet
     const nav = document.querySelector(".bottom-nav");
     const navVisible = nav && getComputedStyle(nav).display !== "none";
     const navTop = navVisible ? nav.getBoundingClientRect().top : window.innerHeight;
@@ -4232,6 +4411,7 @@ const VerityEngine = (function(){
     const avatar = dock.querySelector(".verity-avatar");
     if(!avatar) return;
     const r = avatar.getBoundingClientRect();
+    if(!r.width) return; // dock not laid out yet (e.g. onboarding still covering it) — retry on the next re-sync
     const topBoundary = 52, bottomBoundary = window.innerHeight - 10;
     const spaceAbove = r.top - topBoundary;
     const spaceBelow = bottomBoundary - r.bottom;
@@ -4252,6 +4432,23 @@ const VerityEngine = (function(){
     }
     positionVerityBubble(dock, bubble);
   }
+  // Keep bubble side/position correct even when nothing about the text changed
+  // (window resize, onboarding closing, layout shifting) — cheap, only while visible.
+  window.addEventListener("resize", ()=>{ syncDockBubble(); syncFabFlip(); });
+  (function(){
+    let raf=0;
+    const run=()=>{ raf=0; if(!document.hidden){ syncDockBubble(); syncFabFlip(); } };
+    const schedule=()=>{ if(!raf) raf=requestAnimationFrame(run); };
+    ["verityDock","verityFabDock"].forEach(id=>{ const el=document.getElementById(id);
+      if(el) new MutationObserver(schedule).observe(el,{attributes:true,attributeFilter:["style"]}); });
+    ["verityDockBubble","verityFabBubble"].forEach(id=>{ const el=document.getElementById(id); if(!el) return;
+      new MutationObserver(schedule).observe(el,{childList:true,characterData:true,subtree:true});
+      if(window.ResizeObserver) new ResizeObserver(schedule).observe(el); });
+    document.addEventListener("visibilitychange",schedule);
+    window.addEventListener("scroll",schedule,{passive:true});
+    window.addEventListener("orientationchange",schedule);
+    schedule();
+  })();
   function makeVerityDraggable(el, opts){
     let startX, startY, origLeft, origTop, dragging=false, moved=false, pointerId=null;
     const faceEl = opts.faceEl ? document.getElementById(opts.faceEl) : null;
@@ -4322,6 +4519,10 @@ const VerityEngine = (function(){
         }, 300);
         const swallowClick = (ev)=>{ ev.stopPropagation(); ev.preventDefault(); el.removeEventListener("click", swallowClick, true); };
         el.addEventListener("click", swallowClick, true);
+        // If the browser doesn't fire a click on Verity after the drag (pointerup landed
+        // on a different element), the swallower used to stay armed and eat the user's NEXT
+        // real tap — so the first tap after moving her did nothing. Disarm it right after.
+        setTimeout(()=>el.removeEventListener("click", swallowClick, true), 60);
       }
       dragging = false; pointerId = null;
     }
@@ -4330,13 +4531,46 @@ const VerityEngine = (function(){
   function wireDraggable(){
     makeVerityDraggable(document.getElementById("verityFabDock"), {
       faceEl:"verityFabFace", getBounds:fabBounds, onMove:syncFabFlip,
-      onSettle:()=>{ renderDock(); syncFabFlip(); }
+      onSettle:()=>{ saveVerityPos("fab", document.getElementById("verityFabDock")); renderDock(); syncFabFlip(); }
     });
     makeVerityDraggable(document.getElementById("verityDock"), {
       faceEl:"verityDockFace", getBounds:dockBounds, onMove:syncDockBubble,
-      onSettle:()=>{ renderDock(); syncDockBubble(); }
+      onSettle:()=>{ saveVerityPos("dock", document.getElementById("verityDock")); renderDock(); syncDockBubble(); }
     });
-    window.addEventListener("resize", ()=>{ syncFabFlip(); syncDockBubble(); });
+    window.addEventListener("resize", ()=>{ applySavedVerityPos(); syncFabFlip(); syncDockBubble(); });
+    applySavedVerityPos();
+    wireVerityAutoHide();
+  }
+  /* ---- remember where the user dropped Verity (separate spot for desktop dock / mobile fab) ---- */
+  const VERITY_POS_TARGETS = [["dock","verityDock",()=>dockBounds()],["fab","verityFabDock",()=>fabBounds()]];
+  function saveVerityPos(key, el){
+    const l = parseFloat(el.style.left), t = parseFloat(el.style.top);
+    if(isNaN(l) || isNaN(t)) return;
+    DB.settings.verityPos = Object.assign({}, DB.settings.verityPos, {[key]:{l, t}});
+    persist();
+  }
+  function applySavedVerityPos(){
+    const saved = DB.settings.verityPos;
+    if(!saved) return;
+    VERITY_POS_TARGETS.forEach(([key,id,getB])=>{
+      const el = document.getElementById(id), pos = saved[key];
+      if(!el || !pos || getComputedStyle(el).display==="none") return;
+      const b = getB(), w = el.offsetWidth||60, h = el.offsetHeight||60;
+      el.style.right = "auto"; el.style.bottom = "auto";
+      el.style.left = Math.max(b.left, Math.min(pos.l, b.right-w))+"px";
+      el.style.top  = Math.max(b.top,  Math.min(pos.t, b.bottom-h))+"px";
+    });
+  }
+  /* ---- Verity steps aside while any window/sheet is open so she never covers it ---- */
+  function wireVerityAutoHide(){
+    const overlays = document.querySelectorAll(".modal-overlay, .sheet-overlay, .cmdk-overlay");
+    const update = ()=>{
+      const any = !!document.querySelector(".modal-overlay.open, .sheet-overlay.open, .cmdk-overlay.open");
+      document.body.classList.toggle("verity-away", any);
+    };
+    const mo = new MutationObserver(update);
+    overlays.forEach(o=>mo.observe(o, {attributes:true, attributeFilter:["class"]}));
+    update();
   }
 
   /* =========================================================
@@ -6168,10 +6402,10 @@ function renderCalendar(){
       dayNumStyle = ` style="color:${dominant}; font-weight:800;"`;
     }
     cell.innerHTML = `<div class="cal-daynum"${dayNumStyle}>${dayNum}</div>${dotsHtml}`;
-    cell.addEventListener("click", ()=>{ calSelectedDate = key; renderCalSelected(); });
+    cell.addEventListener("click", ()=>{ calSelectedDate = key; renderCalSelected(); document.getElementById("calSelectedBlock").classList.add("open"); });
     grid.appendChild(cell);
   }
-  if(calSelectedDate) renderCalSelected(); else document.getElementById("calSelectedBlock").style.display="none";
+  if(calSelectedDate) renderCalSelected();
   sizeCalGrid();
 }
 
@@ -6179,8 +6413,7 @@ function renderCalSelected(){
   const block = document.getElementById("calSelectedBlock");
   const list = document.getElementById("calSelectedList");
   const label = document.getElementById("calSelectedLabel");
-  if(!calSelectedDate){ block.style.display="none"; return; }
-  block.style.display="block";
+  if(!calSelectedDate) return;
   const d = new Date(calSelectedDate+"T00:00:00");
   const months=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   label.textContent = `Tugas pada ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
@@ -6190,7 +6423,7 @@ function renderCalSelected(){
   const subtasks = PlanningManager.subtasksOn(calSelectedDate);
   list.innerHTML="";
   if(tasks.length===0 && sessions.length===0 && meetings.length===0 && subtasks.length===0){
-    renderEmpty(list, "Tidak ada event atau deadline untuk tanggal ini.", "", false, "relaxed"); return;
+    renderEmpty(list, "Tanggal ini masih kosong.", "Tidak ada deadline atau sesi. Mau tambah tugas?", false, "relaxed", {art:"calendar", cta:{label:"+ Tambah Tugas", run:()=>openTaskModal()}}); return;
   }
   if(sessions.length>0 || meetings.length>0 || subtasks.length>0){
     const extra = document.createElement("div");
@@ -6219,7 +6452,7 @@ function renderFolders(){
   const folders = FolderManager.all();
   list.innerHTML = "";
   if(folders.length===0){
-    renderEmpty(list, "Belum ada folder.", "Buat folder untuk mengorganisasi tugasmu.", false, "neutral");
+    renderEmpty(list, "Belum ada folder.", "Kelompokkan tugasmu per topik biar gampang dicari.", false, "neutral", {art:"folder", cta:{label:"+ Buat Folder", run:()=>document.getElementById("addFolderBtn").click()}});
     return;
   }
   folders.forEach(f=>{
@@ -6254,7 +6487,7 @@ function renderFolders(){
 function openFolderTasks(folderId){
   currentFolderView = folderId;
   const folder = FolderManager.all().find(f=>f.id===folderId);
-  document.getElementById("folderTasksBlock").style.display="block";
+  document.getElementById("folderTasksBlock").classList.add("open");
   document.getElementById("folderTasksLabel").textContent = "📁 "+folder.name;
   const list = document.getElementById("folderTasksList");
   list.innerHTML="";
@@ -6547,7 +6780,7 @@ function renderCourses(){
   const filterSem = fsel.value;
   const courses = CourseManager.all().filter(c=> filterSem==="all" || !filterSem || c.semesterId===filterSem );
   wrap.innerHTML="";
-  if(courses.length===0){ renderEmpty(wrap, "Belum ada mata kuliah.", "Yuk tambahkan yang pertama.", false, "thinking"); return; }
+  if(courses.length===0){ renderEmpty(wrap, "Belum ada mata kuliah.", "Mulai dari satu mata kuliah, tugas dan jadwal bisa menyusul.", false, "thinking", {art:"course", cta:{label:"+ Tambah Mata Kuliah", run:()=>document.getElementById("addCourseBtn").click()}}); return; }
   courses.forEach(c=>{
     const lect = LecturerManager.get(c.lecturerId);
     const cTasks = DB.tasks.filter(t=>t.courseId===c.id);
@@ -6604,7 +6837,7 @@ function openCourseDashboard(courseId){
   const sched = DB.schedules.filter(s=>s.courseId===c.id).sort((a,b)=>DOW_ORDER.indexOf(a.day)-DOW_ORDER.indexOf(b.day));
   const schedLine = sched.map(s=>DOW_LABEL[s.day]+" "+s.startTime+"–"+s.endTime+(s.room?(" • "+escapeHtml(s.room)):"")).join(" | ");
   document.getElementById("courseDashTitle").textContent = "📚 "+c.name;
-  document.getElementById("courseDashboardBlock").style.display="block";
+  document.getElementById("courseDashboardBlock").classList.add("open");
   document.getElementById("courseDashBody").innerHTML = `
     <div class="detail-grid">
       <div class="detail-item"><div class="k">Dosen</div><div class="v">${lect?escapeHtml(lect.name):"—"}</div></div>
@@ -7683,11 +7916,12 @@ function goToPage(page, opts){
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
   document.querySelectorAll(".bn-item[data-page]").forEach(n=>n.classList.toggle("active", n.dataset.page===page));
   document.querySelectorAll(".bn-item[data-more]").forEach(n=>n.classList.toggle("active", MOBILE_NAV.secondary.includes(page)));
-  if(page==="folders"){ currentFolderView=null; document.getElementById("folderTasksBlock").style.display="none"; }
+  currentFolderView=null; document.getElementById("folderTasksBlock").classList.remove("open");
   // Navigating to any page resets the Mata Kuliah dashboard sub-view — the
   // user explicitly clicks a course row (openCourseDashboard) to open it again.
   currentCourseDashboardId = null;
-  if(page==="courses"){ document.getElementById("courseDashboardBlock").style.display="none"; }
+  document.getElementById("courseDashboardBlock").classList.remove("open");
+  document.getElementById("calSelectedBlock").classList.remove("open");
   if(page==="statistics") renderStatisticsPage();
   if(page==="focus") renderFocusPage();
   if(page==="studyblock") StudyBlockGame.onEnterPage();
@@ -7704,8 +7938,7 @@ document.querySelectorAll("[data-page-jump]").forEach(el=>{
   el.addEventListener("click", ()=>goToPage(el.dataset.pageJump));
 });
 document.getElementById("backToFolders").addEventListener("click", ()=>{
-  currentFolderView=null;
-  document.getElementById("folderTasksBlock").style.display="none";
+  document.getElementById("folderTasksBlock").classList.remove("open");
 });
 document.getElementById("calInfoSwatchRow").innerHTML = CAL_TASK_COLORS.map((c,i)=>`<span class="sw"><i style="background:${c};"></i>Tugas ${i+1}</span>`).join("");
 function toggleCalInfoBubble(show){
@@ -7932,8 +8165,15 @@ document.getElementById("addCourseBtn").addEventListener("click", ()=>openCourse
 document.getElementById("addLecturerBtn").addEventListener("click", ()=>openLecturerForm(null));
 document.getElementById("semesterFilterCourses").addEventListener("change", renderCourses);
 document.getElementById("backToCourses").addEventListener("click", ()=>{
-  currentCourseDashboardId = null;
-  document.getElementById("courseDashboardBlock").style.display="none";
+  document.getElementById("courseDashboardBlock").classList.remove("open");
+});
+/* The two detail windows can be closed several ways (✕, backdrop, Esc, Android
+   Back via NavHistory). Reset their "currently open" state whenever the open
+   class goes away so renderAll() never re-opens a window the user closed. */
+[["folderTasksBlock", ()=>{ currentFolderView=null; }], ["courseDashboardBlock", ()=>{ currentCourseDashboardId=null; }]].forEach(([id, reset])=>{
+  const el = document.getElementById(id);
+  new MutationObserver(()=>{ if(!el.classList.contains("open")) reset(); }).observe(el, {attributes:true, attributeFilter:["class"]});
+  el.addEventListener("click", (e)=>{ if(e.target===el) el.classList.remove("open"); });
 });
 document.getElementById("addScheduleBtn").addEventListener("click", ()=>openScheduleForm(null));
 document.getElementById("addSemesterBtn").addEventListener("click", ()=>openSemesterForm(null));
@@ -7941,6 +8181,8 @@ document.getElementById("semesterFilterSchedule").addEventListener("change", ren
 
 document.getElementById("calPrev").addEventListener("click", ()=>{ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
 document.getElementById("calNext").addEventListener("click", ()=>{ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
+document.getElementById("calSelectedClose").addEventListener("click", ()=>document.getElementById("calSelectedBlock").classList.remove("open"));
+document.getElementById("calSelectedBlock").addEventListener("click", (e)=>{ if(e.target.id==="calSelectedBlock") e.currentTarget.classList.remove("open"); });
 document.getElementById("calToday").addEventListener("click", ()=>{ calDate = new Date(); calSelectedDate = ymd(new Date()); renderCalendar(); });
 
 ["searchInput","searchInputTasks"].forEach(id=>{
@@ -8268,23 +8510,29 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
 /* =========================================================
    RENDER ALL
 ========================================================= */
-function renderAll(){
-  renderDashboard();
-  renderCalendar();
-  renderTasksPage();
-  if(currentFolderView){
-    openFolderTasks(currentFolderView);
+let _renderedFull=false;
+function renderAll(full){
+  // v8: render hanya halaman aktif + window yang terbuka (goToPage memanggil
+  // renderAll lagi, jadi halaman lain otomatis segar saat dibuka).
+  if(full===true || !_renderedFull){
+    _renderedFull=true;
+    renderDashboard(); renderCalendar(); renderTasksPage(); renderFolders(); renderCourses();
+    renderLecturers(); renderScheduleWeekly(); renderSemesterList();
   } else {
-    renderFolders();
+    switch(currentPage){
+      case "dashboard": renderDashboard(); break;
+      case "calendar": renderCalendar(); break;
+      case "tasks": renderTasksPage(); break;
+      case "folders": renderFolders(); break;
+      case "courses": renderCourses(); break;
+      case "lecturers": renderLecturers(); break;
+      case "schedule": renderScheduleWeekly(); break;
+      case "settings": renderSemesterList(); break;
+    }
   }
-  renderCourses();
-  // Keep an open Mata Kuliah dashboard (Nyawa + task checklist) in sync with
-  // any data change elsewhere, exactly like the folder-view handling above —
-  // this is what was missing and caused stale progress/checkbox state (bug C/D).
+  if(currentFolderView) openFolderTasks(currentFolderView);
   if(currentCourseDashboardId) openCourseDashboard(currentCourseDashboardId);
-  renderLecturers();
-  renderScheduleWeekly();
-  renderSemesterList();
+  if(window.V8) V8.afterRender();
 }
 
 /* countdown live refresh every 60s */
@@ -8586,6 +8834,202 @@ const NavHistory = (function(){
   return { pushPage };
 })();
 window.NavHistory = NavHistory;
+
+/* =========================================================
+   UPDATE 8 — POLISH & RASA (perilaku)
+========================================================= */
+window.V8 = (function(){
+  const reduced=()=>!!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  let lastPt={x:innerWidth/2,y:innerHeight*0.3};
+  document.addEventListener("pointerdown",e=>{ lastPt={x:e.clientX,y:e.clientY}; },true);
+
+  // 1) Window muncul dari titik yang diklik (kotak tanggal, baris folder, dst.)
+  function setOrigin(ov){
+    const m=ov.querySelector(".modal"); if(!m) return;
+    if(innerWidth<=640){ m.style.removeProperty("--ox"); m.style.removeProperty("--oy"); return; }
+    const r=m.getBoundingClientRect();
+    m.style.setProperty("--ox",Math.max(0,Math.min(r.width,lastPt.x-r.left))+"px");
+    m.style.setProperty("--oy",Math.max(0,Math.min(r.height,lastPt.y-r.top))+"px");
+  }
+  const mo=new MutationObserver(list=>list.forEach(rec=>{
+    const ov=rec.target;
+    if(ov.classList.contains("open") && !(rec.oldValue||"").split(" ").includes("open")) setOrigin(ov);
+  }));
+  document.querySelectorAll(".modal-overlay").forEach(ov=>mo.observe(ov,{attributes:true,attributeFilter:["class"],attributeOldValue:true}));
+
+  // 2) Tarik header window ke bawah untuk menutup (HP)
+  document.querySelectorAll(".modal-overlay .modal-head").forEach(head=>{
+    const modal=head.closest(".modal"), ov=head.closest(".modal-overlay"); let sy=null, dy=0;
+    head.addEventListener("pointerdown",e=>{
+      if(e.pointerType==="mouse"||innerWidth>640||e.target.closest("button")) return;
+      sy=e.clientY; dy=0; modal.style.transition="none"; try{head.setPointerCapture(e.pointerId);}catch(_){}
+    });
+    head.addEventListener("pointermove",e=>{ if(sy===null) return; dy=Math.max(0,e.clientY-sy); modal.style.transform="translateY("+dy+"px)"; });
+    const end=()=>{ if(sy===null) return; sy=null; modal.style.transition=""; modal.style.transform=""; if(dy>110) ov.classList.remove("open"); };
+    head.addEventListener("pointerup",end); head.addEventListener("pointercancel",end);
+  });
+
+  // 3) Aksesibilitas: role dialog, label tombol ikon, centang bisa lewat keyboard
+  let idn=0;
+  document.querySelectorAll(".modal-overlay").forEach(ov=>{
+    if(!ov.getAttribute("role")) ov.setAttribute("role","dialog");
+    ov.setAttribute("aria-modal","true");
+    const h=ov.querySelector(".modal-head h2");
+    if(h && !ov.getAttribute("aria-labelledby")){ if(!h.id) h.id="v8h"+(++idn); ov.setAttribute("aria-labelledby",h.id); }
+  });
+  const iconLabel={"✕":"Tutup","‹":"Bulan sebelumnya","›":"Bulan berikutnya"};
+  document.querySelectorAll("button.btn-icon:not([aria-label])").forEach(b=>{ const l=iconLabel[b.textContent.trim()]; if(l) b.setAttribute("aria-label",l); });
+  document.addEventListener("keydown",e=>{
+    const c=e.target.closest && e.target.closest("[data-quickcheck]");
+    if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); c.click(); }
+  });
+
+  // 4) Pintasan keyboard
+  const typing=t=>t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  document.addEventListener("keydown",e=>{
+    if(e.ctrlKey||e.metaKey||e.altKey||typing(e.target)) return;
+    if(window.FocusTimer && FocusTimer.isRunning()) return;
+    if(getOpenOverlay()) return;
+    if(e.key==="n"||e.key==="N"){ e.preventDefault(); openTaskModal(); }
+    else if(e.key==="/"){
+      e.preventDefault();
+      const s=["searchInputTasks","searchInput"].map(id=>document.getElementById(id)).find(el=>el && el.offsetParent!==null);
+      if(s) s.focus(); else openCmdk();
+    }
+    else if(currentPage==="calendar" && e.key==="ArrowLeft"){ document.getElementById("calPrev").click(); }
+    else if(currentPage==="calendar" && e.key==="ArrowRight"){ document.getElementById("calNext").click(); }
+  });
+
+  // 5) Kepadatan tampilan
+  function applyDensity(){
+    const d=(DB.settings&&DB.settings.density)||"normal";
+    document.body.dataset.density=d;
+    document.querySelectorAll("[data-density-opt]").forEach(b=>b.classList.toggle("active",b.dataset.densityOpt===d));
+  }
+  document.querySelectorAll("[data-density-opt]").forEach(b=>b.addEventListener("click",()=>{
+    DB.settings.density=b.dataset.densityOpt; persist(); applyDensity();
+  }));
+
+  // 6) Verity: satu antrean suara, menyingkir ke pojok, ekspresi konteks
+  const toastEl=document.getElementById("toast");
+  new MutationObserver(()=>document.body.classList.toggle("toast-on",toastEl.classList.contains("show"))).observe(toastEl,{attributes:true,attributeFilter:["class"]});
+  function awayOffsets(){
+    const nav=document.querySelector(".bottom-nav");
+    const navH=(nav && getComputedStyle(nav).display!=="none")?nav.offsetHeight:0;
+    ["verityDock","verityFabDock"].forEach(id=>{
+      const el=document.getElementById(id); if(!el||!el.offsetWidth) return;
+      el.style.setProperty("--away-x",(innerWidth-12-(el.offsetLeft+el.offsetWidth))+"px");
+      el.style.setProperty("--away-y",(innerHeight-navH-12-(el.offsetTop+el.offsetHeight))+"px");
+    });
+  }
+  new MutationObserver(awayOffsets).observe(document.body,{attributes:true,attributeFilter:["class"]});
+  let sleepT; const wake=()=>{ document.body.classList.remove("verity-sleepy"); clearTimeout(sleepT); sleepT=setTimeout(()=>document.body.classList.add("verity-sleepy"),5*60*1000); };
+  ["pointerdown","keydown","scroll","touchstart"].forEach(ev=>window.addEventListener(ev,wake,{passive:true,capture:true})); wake();
+
+  // 7) Cadangan data: catat ekspor terakhir + ingatkan tiap 7 hari
+  const exportBtn=document.getElementById("exportBtn");
+  function backupSub(){
+    const sub=exportBtn && exportBtn.closest(".setting-row").querySelector(".sub"); if(!sub) return;
+    const t=DB.settings.lastBackupAt;
+    sub.textContent="Unduh seluruh data sebagai file JSON"+(t?" · terakhir: "+new Date(t).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}):" · belum pernah");
+  }
+  if(exportBtn) exportBtn.addEventListener("click",()=>{ DB.settings.lastBackupAt=Date.now(); persist(); backupSub(); });
+  function backupNudge(){
+    if(!DB.tasks.length && !DB.courses.length) return;
+    const now=Date.now(), week=7*864e5;
+    if(now-(DB.settings.lastBackupAt||0)>week && now-(DB.settings.backupNudgeAt||0)>week){
+      DB.settings.backupNudgeAt=now; persist();
+      setTimeout(()=>toast("Data tersimpan di browser ini saja. Coba Export cadangan di Pengaturan. 💾"),4000);
+    }
+  }
+
+
+  // 9) Blok "Hari ini" + angka bergulir (update 8b)
+  function ease(t){ return 1-Math.pow(1-t,3); }
+  function rollNumber(el,from,to){
+    if(reduced()||from===to){ el.textContent=to; return; }
+    const t0=performance.now(), D=600;
+    (function step(now){ const k=Math.min(1,(now-t0)/D); el.textContent=Math.round(from+(to-from)*ease(k)); if(k<1) requestAnimationFrame(step); })(t0);
+  }
+  const prevNums={};
+  function rollSummary(){
+    document.querySelectorAll("#summaryRow .summary-card").forEach(card=>{
+      const lbl=card.querySelector(".lbl").textContent, num=card.querySelector(".num"), to=+num.textContent;
+      const from=prevNums[lbl]===undefined?to:prevNums[lbl]; prevNums[lbl]=to;
+      if(from!==to){ num.textContent=from; rollNumber(num,from,to); }
+    });
+  }
+  function renderTodayFocus(){
+    const box=document.getElementById("todayFocusList"); if(!box) return;
+    const today=ymd(new Date());
+    const due=DB.tasks.filter(t=>ymd(new Date(t.deadline))===today);
+    const doneN=due.filter(t=>t.status==="done").length;
+    const late=DB.tasks.filter(t=>t.status!=="done" && ymd(new Date(t.deadline))<today);
+    const open=due.filter(t=>t.status!=="done");
+    const pct=due.length?Math.round(doneN/due.length*100):(late.length?0:100);
+    const bar=document.getElementById("todayBar");
+    document.getElementById("todayBarFill").style.width=pct+"%"; bar.setAttribute("aria-valuenow",pct);
+    const cnt=document.getElementById("todayFocusCount");
+    cnt.textContent= due.length? doneN+" dari "+due.length+" selesai" : (late.length? late.length+" terlambat" : "");
+    const items=[...late.map(t=>({t,late:true})),...open.map(t=>({t,late:false}))].slice(0,4);
+    box.innerHTML="";
+    if(!items.length){
+      const p=document.createElement("div"); p.className="today-empty";
+      p.textContent= due.length? "Semua deadline hari ini sudah beres. Santai dulu. 😌" : (DB.tasks.length? "Tidak ada deadline hari ini." : "Belum ada tugas. Tambah satu untuk mulai.");
+      box.appendChild(p); return;
+    }
+    items.forEach(({t,late:isLate})=>{
+      const b=document.createElement("button"); b.type="button"; b.className="today-item"+(isLate?" late":"");
+      const ti=document.createElement("span"); ti.className="ti-title"; ti.textContent=t.title;
+      const tw=document.createElement("span"); tw.className="ti-when"; tw.textContent=(isLate?"⚠ ":"")+countdownText(t);
+      b.append(ti,tw); b.addEventListener("click",()=>openDetail(t.id)); box.appendChild(b);
+    });
+    if(late.length+open.length>items.length){
+      const m=document.createElement("div"); m.className="today-empty"; m.textContent="+"+(late.length+open.length-items.length)+" lagi di halaman Tugas"; box.appendChild(m);
+    }
+  }
+
+
+  // 10) Satu suara Verity: semua toast (sistem + Verity) antre satu per satu
+  const voiceQ=[]; let voiceBusy=false, voiceBase=null;
+  function voiceNext(){
+    if(voiceBusy) return;
+    const item=voiceQ.shift();
+    if(!item){ document.body.classList.remove("voice-on"); return; }
+    voiceBusy=true; document.body.classList.add("voice-on");
+    let dur=2200; try{ dur=item.run()||2200; }catch(e){ console.error(e); }
+    // pesan yang menunggu di belakang dipercepat supaya antrean tidak terasa lambat
+    const hold=voiceQ.length? Math.min(dur,1600) : dur;
+    setTimeout(()=>{ voiceBusy=false; setTimeout(voiceNext, 220); }, hold);
+  }
+  function say(key, run){
+    if(voiceQ.some(q=>q.key===key)) return;                 // pesan sama tidak diantre dua kali
+    voiceQ.push({key,run});
+    while(voiceQ.length>3) voiceQ.splice(1,1);              // maksimal 3, buang yang paling basi
+    voiceNext();
+  }
+  // 11) Ekspresi kaget saat mood berubah jadi tegang
+  let lastMood=null;
+  function moodChanged(m){
+    const tense=["angry","concerned","surprised"];
+    if(lastMood!==null && lastMood!==m && tense.includes(m) && !tense.includes(lastMood) && !reduced()){
+      document.body.classList.add("v8-startle");
+      setTimeout(()=>document.body.classList.remove("v8-startle"),600);
+    }
+    lastMood=m;
+  }
+
+  // 8) Setelah render: status emosi Verity dari kondisi tugas
+  function afterRender(){
+    try{ renderTodayFocus(); rollSummary(); }catch(e){ console.error(e); }
+    const open=DB.tasks.filter(t=>t.status!=="done");
+    document.body.classList.toggle("verity-tense",open.some(t=>{ try{return isUrgent(t)||isOverdue(t);}catch(_){return false;} }));
+    document.body.classList.toggle("verity-relaxed",DB.tasks.length>0 && open.length===0);
+  }
+  applyDensity(); backupSub(); backupNudge(); afterRender();
+  window.__SF={ get DB(){return DB;}, toast, goToPage, renderAll, openTaskModal, openCmdk, TaskManager, CourseManager, applyTheme }; // hook untuk paket regresi
+  return {reduced,afterRender,applyDensity,say,moodChanged};
+})();
 })();
 </script>
 </body>
