@@ -2557,9 +2557,10 @@
       </div>
       <div class="field-row">
         <div class="field" id="f-date">
-          <label>Tanggal Deadline *</label>
+          <label>Tanggal Deadline</label>
           <input type="date" id="f_date">
-          <div class="err-text">Deadline wajib diisi.</div>
+          <div class="hint" id="f_dateAutoHint" style="margin-top:4px;"></div>
+          <div class="err-text">Isi tanggal deadline, atau pilih mata kuliah yang sudah punya jadwal agar deadline otomatis mengikuti pertemuan berikutnya.</div>
         </div>
         <div class="field">
           <label>Jam Deadline</label>
@@ -8246,6 +8247,42 @@ function populateTaskFormSelects(){
   folderSel.innerHTML = '<option value="">— Tanpa Folder —</option>' + FolderManager.all().map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join("");
 }
 
+/* Deadline otomatis: kalau tanggal dikosongkan, pakai pertemuan kuliah berikutnya
+   dari mata kuliah yang dipilih (berdasarkan Jadwal yang sudah diisi user). */
+function nextClassMeeting(courseId){
+  if(!courseId) return null;
+  const now = new Date();
+  const scheds = ScheduleManager.all().filter(s=>
+    s.courseId===courseId && s.day && s.startTime &&
+    (!s.semesterId || !DB.activeSemesterId || s.semesterId===DB.activeSemesterId));
+  let best = null;
+  scheds.forEach(s=>{
+    const dowIdx = JS_DAY_TO_DOW.indexOf(s.day);
+    if(dowIdx<0) return;
+    const [h,m] = s.startTime.split(":").map(Number);
+    for(let add=0; add<=7; add++){
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate()+add, h||0, m||0, 0, 0);
+      if(d.getDay()===dowIdx && d>now){
+        if(!best || d<best.date) best = {date:d, sched:s};
+        break;
+      }
+    }
+  });
+  return best;
+}
+function updateDeadlineAutoHint(){
+  const hint = document.getElementById("f_dateAutoHint");
+  if(!hint) return;
+  if(document.getElementById("f_date").value){ hint.textContent = ""; return; }
+  const nm = nextClassMeeting(document.getElementById("f_course").value);
+  hint.textContent = nm
+    ? "Kosongkan = otomatis ke pertemuan berikutnya: " + fmtDate(nm.date.toISOString())
+    : "";
+}
+document.getElementById("f_date").addEventListener("input", updateDeadlineAutoHint);
+document.getElementById("f_date").addEventListener("change", updateDeadlineAutoHint);
+document.getElementById("f_course").addEventListener("change", updateDeadlineAutoHint);
+
 document.getElementById("f_course").addEventListener("change", (e)=>{
   const course = CourseManager.get(e.target.value);
   if(course && course.lecturerId){
@@ -8270,6 +8307,7 @@ function resetTaskForm(){
   document.getElementById("f_desc").value = "";
   document.getElementById("f_date").value = "";
   document.getElementById("f_time").value = "23:59";
+  const _ah = document.getElementById("f_dateAutoHint"); if(_ah) _ah.textContent = "";
   document.getElementById("f_link").value = "";
   document.getElementById("f_groupName").value = "";
   document.getElementById("membersWrap").innerHTML = "";
@@ -8359,8 +8397,17 @@ document.getElementById("taskForm").addEventListener("submit", (e)=>{
   let valid = true;
   const title = document.getElementById("f_title").value.trim();
   const courseId = document.getElementById("f_course").value;
-  const date = document.getElementById("f_date").value;
-  const time = document.getElementById("f_time").value || "23:59";
+  let date = document.getElementById("f_date").value;
+  let time = document.getElementById("f_time").value || "23:59";
+  // Deadline kosong -> otomatis ikut jadwal kuliah berikutnya dari mata kuliah terpilih.
+  // Jam yang sengaja diubah user (bukan default 23:59) tetap dihormati.
+  if(!date){
+    const nm = nextClassMeeting(courseId);
+    if(nm){
+      date = ymd(nm.date);
+      if(time==="23:59") time = nm.sched.startTime;
+    }
+  }
   const link = document.getElementById("f_link").value.trim();
   const type = getSeg("f_type");
   const members = type==="group" ? Array.from(document.querySelectorAll("#membersWrap input")).map(i=>i.value.trim()).filter(Boolean) : [];
@@ -9105,6 +9152,7 @@ const CHANGELOG_V10 = [
   "⌨️ Pintasan keyboard dan command palette (Ctrl+K) untuk aksi cepat",
   "🧭 Tur panduan untuk pengguna baru yang bisa diputar ulang dari Pengaturan",
   "🕵️ Ada rahasia tersembunyi di Verity — kalau kamu cukup iseng, mungkin kamu akan menemukannya",
+  "🗓️ Deadline otomatis: kalau tanggal deadline dikosongkan, tugas langsung mengikuti jadwal pertemuan berikutnya dari mata kuliah yang dipilih",
   "🛠️ Perbaikan: setelah membuka buku di Notebook, pindah ke menu lain (mis. Pengaturan) kini langsung menutup buku dan membuka halaman yang dipilih",
   "🧹 Tombol Halaman Baru dihapus dari menu buku agar lebih ringkas",
   "✅ Semua data &amp; fitur sebelumnya tetap utuh — migrasi otomatis"
